@@ -43,6 +43,13 @@ export class WhatsAppBotController {
   }
 
   @Public()
+  @Get('vps/start')
+  @ApiOperation({ summary: 'Start VPS WhatsApp session (GET for easy trigger)' })
+  async vpsStartGet() {
+    return this.service.startVpsSession();
+  }
+
+  @Public()
   @Post('vps/start')
   @ApiOperation({ summary: 'Start VPS WhatsApp session' })
   async vpsStart() {
