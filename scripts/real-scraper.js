@@ -9,6 +9,7 @@ const axios = require('axios');
 const CONFIG = {
   // Search queries for finding potential plot buyers
   queries: [
+    // Google Maps - real estate businesses
     'real estate agents Wagholi Pune',
     'property dealers Bakori Pune',
     'plot dealers Wagholi',
@@ -16,6 +17,9 @@ const CONFIG = {
     'real estate Hadapsar Pune',
     'property consultants Kharadi Pune',
     'plots Wagholi Bakori road',
+    'NA plot dealers Pune',
+    'land brokers Haveli taluka',
+    'real estate investment Pune',
   ],
   // Where to send scraped leads
   webhookUrl: 'http://127.0.0.1:4000/api/v1/lead-scraper/webhook',
