@@ -21,7 +21,7 @@ export default function WhatsAppBotPage() {
   const { data: vpsStatus, refetch: refetchStatus } = useQuery({
     queryKey: ['vps-status'],
     queryFn: async () => { const r = await axios.get(`${VPS_API}/whatsapp-bot/vps/status`); return r.data; },
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
 
   const { data: vpsHealth } = useQuery({
@@ -40,12 +40,13 @@ export default function WhatsAppBotPage() {
     queryFn: () => api.get('/whatsapp-bot/conversations'),
   });
 
-  // Start session (direct call)
-  const startMutation = useMutation({
-    mutationFn: async () => { const r = await axios.post(`${VPS_API}/whatsapp-bot/vps/start`); return r.data; },
-    onSuccess: () => { toast.success('Session starting... scan QR code'); setTimeout(() => refetchStatus(), 5000); },
-    onError: (e: any) => toast.error(`Failed: ${e?.message || 'unknown error'}`),
-  });
+  // Auto-start session if not connected
+  useEffect(() => {
+    const status = vpsStatus?.data?.status;
+    if (status === 'none' || status === 'disconnected') {
+      axios.post(`${VPS_API}/whatsapp-bot/vps/start`).catch(() => {});
+    }
+  }, [vpsStatus]);
 
   // Test bot
   const testMutation = useMutation({
@@ -57,7 +58,7 @@ export default function WhatsAppBotPage() {
   const sendMutation = useMutation({
     mutationFn: async (data: { to: string; message: string }) => { const r = await axios.post(`${VPS_API}/whatsapp-bot/vps/send`, data); return r.data; },
     onSuccess: () => toast.success('Message sent via WhatsApp!'),
-    onError: () => toast.error('Send failed — check connection'),
+    onError: () => toast.error('Send failed'),
   });
 
   const status = vpsStatus?.data || {};
@@ -67,6 +68,7 @@ export default function WhatsAppBotPage() {
 
   const isConnected = status.status === 'connected';
   const hasQR = status.status === 'qr' && status.qr;
+  const isInitializing = status.status === 'init' || status.status === 'none';
 
   return (
     <div className="space-y-6">
@@ -78,7 +80,7 @@ export default function WhatsAppBotPage() {
       </div>
 
       {/* Connection Status Bar */}
-      <div className={`border rounded-xl p-5 flex items-center justify-between ${
+      <div className={`border rounded-xl p-5 ${
         isConnected ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' :
         hasQR ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800' :
         'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
@@ -86,48 +88,40 @@ export default function WhatsAppBotPage() {
         <div className="flex items-center gap-4">
           {isConnected ? <Wifi className="h-6 w-6 text-green-600" /> :
            hasQR ? <QrCode className="h-6 w-6 text-amber-600" /> :
+           isInitializing ? <RefreshCw className="h-6 w-6 text-blue-600 animate-spin" /> :
            <WifiOff className="h-6 w-6 text-red-600" />}
           <div>
             <p className="font-semibold">
-              {isConnected ? '✅ WhatsApp Connected' :
-               hasQR ? '📱 Scan QR Code to Connect' :
-               status.status === 'init' ? '⏳ Initializing...' :
-               '❌ Not Connected'}
+              {isConnected ? '✅ WhatsApp Connected & Auto-Replying' :
+               hasQR ? '📱 Scan QR Code Below to Connect' :
+               isInitializing ? '⏳ Starting WhatsApp session...' :
+               '🔄 Connecting to WhatsApp...'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {isConnected ? `Auto-reply: ${status.autoReply ? 'ON' : 'OFF'} | Today: ${status.dayCount || 0} messages | Cap: ${status.cap || 250}` :
-               hasQR ? 'Open WhatsApp on your phone → Linked Devices → Scan below' :
-               `Status: ${status.status || health.status || 'offline'} | Sessions: ${health.sessions || 0}/${health.max || 8}`}
+              {isConnected ? `Auto-reply: ON | Today: ${status.dayCount || 0} messages | Cap: ${status.cap || 250}` :
+               hasQR ? 'Open WhatsApp → Settings → Linked Devices → Link a Device → Scan below' :
+               `Bot status: ${health.status || 'connecting'} | Sessions: ${health.sessions || 0}/${health.max || 8}`}
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {!isConnected && (
-            <button
-              onClick={() => startMutation.mutate()}
-              disabled={startMutation.isPending}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
-            >
-              {startMutation.isPending ? 'Starting...' : '🔌 Connect WhatsApp'}
-            </button>
-          )}
-          <button onClick={() => refetchStatus()} className="p-2 hover:bg-white/50 rounded-lg">
-            <RefreshCw className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
-      {/* QR Code Display */}
+      {/* QR Code - shown automatically when available */}
       {hasQR && (
-        <div className="bg-card border rounded-xl p-8 text-center">
-          <h3 className="font-semibold text-lg mb-4">Scan this QR Code with WhatsApp</h3>
-          <div className="inline-block p-4 bg-white rounded-2xl shadow-lg">
-            <img src={status.qr} alt="WhatsApp QR Code" className="w-64 h-64" />
+        <div className="bg-card border-2 border-amber-300 rounded-xl p-8 text-center">
+          <h3 className="font-semibold text-xl mb-2">📱 Scan to Connect WhatsApp</h3>
+          <p className="text-sm text-muted-foreground mb-6">Open WhatsApp → Linked Devices → Link a Device → Point camera at code below</p>
+          <div className="inline-block p-4 bg-white rounded-2xl shadow-xl">
+            <img src={status.qr} alt="WhatsApp QR Code" className="w-72 h-72" />
           </div>
-          <p className="text-sm text-muted-foreground mt-4">
-            Open WhatsApp → Settings → Linked Devices → Link a Device → Scan this code
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">QR refreshes automatically every 30 seconds</p>
+          <p className="text-xs text-muted-foreground mt-4">QR refreshes every 30 seconds automatically</p>
+        </div>
+      )}
+
+      {isInitializing && !hasQR && (
+        <div className="bg-card border rounded-xl p-8 text-center">
+          <RefreshCw className="h-12 w-12 mx-auto text-blue-500 animate-spin mb-4" />
+          <p className="text-muted-foreground">Generating QR code... please wait 10-15 seconds</p>
         </div>
       )}
 
