@@ -13,9 +13,26 @@ export class SocialMediaController {
   constructor(private readonly service: SocialMediaService) {}
 
   @Post('generate')
-  @ApiOperation({ summary: 'Generate social media content with AI' })
-  async generate(@WorkspaceId() workspaceId: string, @Body() dto: { platform: string; topic: string; style?: string }) {
+  @ApiOperation({ summary: 'Generate social media caption + AI ad image' })
+  async generate(
+    @WorkspaceId() workspaceId: string,
+    @Body() dto: { platform: string; topic: string; style?: string; withImage?: boolean },
+  ) {
     return this.service.generateContent(workspaceId, dto);
+  }
+
+  @Post('generate-image')
+  @ApiOperation({ summary: 'Generate AI ad image(s) without creating a post' })
+  async generateImage(
+    @Body() dto: { topic: string; platform?: string; style?: string; headline?: string; count?: number },
+  ) {
+    return this.service.generateAdImage(dto);
+  }
+
+  @Post(':id/image')
+  @ApiOperation({ summary: 'Generate or regenerate the ad image for a post' })
+  async postImage(@Param('id') id: string, @Body() dto: { style?: string; prompt?: string }) {
+    return this.service.generateImageForPost(id, dto);
   }
 
   @Get('posts')

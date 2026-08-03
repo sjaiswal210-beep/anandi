@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Share2, Sparkles, Calendar, Send, Copy } from 'lucide-react';
-import api from '@/lib/api';
+import { Share2, Sparkles, Calendar, Send, Copy, ImagePlus, Download, RefreshCw } from 'lucide-react';
+import api, { mediaUrl } from '@/lib/api';
 
 const platformStyles: Record<string, string> = {
   INSTAGRAM: 'bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300',
@@ -29,13 +29,33 @@ export default function SocialMediaPage() {
     },
   });
 
+  const [withImage, setWithImage] = useState(true);
+
   const generate = useMutation({
-    mutationFn: async () => api.post('/social-media/generate', { platform, topic }),
-    onSuccess: () => {
-      setNotice('Post generated.');
+    mutationFn: async () => api.post('/social-media/generate', { platform, topic, withImage }),
+    onSuccess: (res: any) => {
+      const imgErr = res?.data?.imageError;
+      setNotice(
+        imgErr
+          ? `Caption created, but the ad image failed: ${imgErr}`
+          : withImage
+            ? 'Post and ad image generated.'
+            : 'Post generated.',
+      );
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
     },
-    onError: (err: any) => setNotice(`Generate failed: ${err?.message || 'request failed'}`),
+    onError: (err: any) =>
+      setNotice(`Generate failed: ${err?.response?.data?.message || err?.message || 'request failed'}`),
+  });
+
+  const makeImage = useMutation({
+    mutationFn: async (id: string) => api.post(`/social-media/${id}/image`, {}),
+    onSuccess: () => {
+      setNotice('Ad image generated.');
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+    },
+    onError: (err: any) =>
+      setNotice(`Image failed: ${err?.response?.data?.message || err?.message || 'request failed'}`),
   });
 
   const publish = useMutation({
@@ -92,13 +112,32 @@ export default function SocialMediaPage() {
           className="w-full rounded-lg border bg-background p-3 text-sm"
           placeholder="What should the post be about?"
         />
-        <button
-          onClick={() => generate.mutate()}
-          disabled={generate.isPending || !topic.trim()}
-          className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
-        >
-          {generate.isPending ? 'Generating…' : 'Generate Post'}
-        </button>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={withImage}
+            onChange={(e) => setWithImage(e.target.checked)}
+            className="h-4 w-4 rounded border"
+          />
+          Also generate an AI ad image
+        </label>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => generate.mutate()}
+            disabled={generate.isPending || !topic.trim()}
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+          >
+            {generate.isPending
+              ? withImage
+                ? 'Generating caption + image…'
+                : 'Generating…'
+              : 'Generate Post'}
+          </button>
+          {withImage && (
+            <span className="text-xs text-muted-foreground">Image generation takes 10-30 seconds</span>
+          )}
+        </div>
       </div>
 
       {/* Posts */}
@@ -127,13 +166,28 @@ export default function SocialMediaPage() {
                   {post.platform}
                 </span>
                 <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-muted">{post.status}</span>
-                {post.bestTime && (
+                {(post.adapterResponse?.bestTime || post.bestTime) && (
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" /> {post.bestTime}
+                    <Calendar className="h-3.5 w-3.5" /> {post.adapterResponse?.bestTime || post.bestTime}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => makeImage.mutate(post.id)}
+                  disabled={makeImage.isPending}
+                  className="px-3 py-1.5 rounded-lg border text-xs font-medium hover:bg-muted disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {post.mediaUrls?.length ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5" /> New image
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus className="h-3.5 w-3.5" /> Generate image
+                    </>
+                  )}
+                </button>
                 <button
                   onClick={() => copy(post.content || post.caption || '')}
                   className="px-3 py-1.5 rounded-lg border text-xs font-medium hover:bg-muted flex items-center gap-1.5"
@@ -152,16 +206,56 @@ export default function SocialMediaPage() {
               </div>
             </div>
 
+            {/* AI-generated ad creatives — newest first */}
+            {Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0 && (
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {post.mediaUrls.map((m: string, idx: number) => (
+                  <div key={m} className="relative shrink-0 group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={mediaUrl(m)}
+                      alt={`Ad creative ${idx + 1} for ${post.platform} post`}
+                      className="h-48 w-48 rounded-lg border object-cover"
+                    />
+                    {idx === 0 && post.mediaUrls.length > 1 && (
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-white text-[10px]">
+                        Latest
+                      </span>
+                    )}
+                    <a
+                      href={mediaUrl(m)}
+                      download
+                      target="_blank"
+                      rel="noreferrer"
+                      className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Download ad creative ${idx + 1}`}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {post.adapterResponse?.imageError && (
+              <p className="text-xs text-red-600">Image generation failed: {post.adapterResponse.imageError}</p>
+            )}
+
             <p className="text-sm whitespace-pre-wrap">{post.content || post.caption}</p>
 
             {Array.isArray(post.hashtags) && post.hashtags.length > 0 && (
               <p className="text-xs text-primary">{post.hashtags.map((h: string) => (h.startsWith('#') ? h : `#${h}`)).join(' ')}</p>
             )}
 
-            {post.imagePrompt && (
+            {(post.adapterResponse?.imagePrompt || post.imagePrompt) && (
               <p className="text-xs text-muted-foreground">
-                <span className="font-medium">Image idea:</span> {post.imagePrompt}
+                <span className="font-medium">Image idea:</span>{' '}
+                {post.adapterResponse?.imagePrompt || post.imagePrompt}
               </p>
+            )}
+
+            {post.adapterResponse?.imageModel && (
+              <p className="text-xs text-muted-foreground">Generated by {post.adapterResponse.imageModel}</p>
             )}
           </div>
         ))}

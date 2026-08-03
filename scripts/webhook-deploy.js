@@ -6,9 +6,36 @@ const http = require('http');
 const { exec } = require('child_process');
 const crypto = require('crypto');
 
-const PORT = 9000;
-const SECRET = 'anandi-park-deploy-secret-2026';
-const APP_DIR = '/opt/anandi-park/anandi';
+const fs = require('fs');
+const path = require('path');
+
+const APP_DIR = process.env.APP_DIR || '/opt/anandi-park/anandi';
+const PORT = Number(process.env.DEPLOY_PORT || 9000);
+
+// Load DEPLOY_SECRET from the environment, falling back to APP_DIR/.env
+// (gitignored). Never hardcode it here — this file is committed.
+function readSecret() {
+  if (process.env.DEPLOY_SECRET) return process.env.DEPLOY_SECRET;
+
+  try {
+    const envFile = fs.readFileSync(path.join(APP_DIR, '.env'), 'utf8');
+    const match = envFile.match(/^DEPLOY_SECRET=(.*)$/m);
+    if (match) return match[1].trim().replace(/^["']|["']$/g, '');
+  } catch {
+    // .env unreadable — handled below
+  }
+
+  return null;
+}
+
+const SECRET = readSecret();
+
+if (!SECRET) {
+  console.error('DEPLOY_SECRET is not set.');
+  console.error(`Add DEPLOY_SECRET=<value> to ${path.join(APP_DIR, '.env')}, then:`);
+  console.error('  pm2 restart anandi-deploy');
+  process.exit(1);
+}
 
 const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {

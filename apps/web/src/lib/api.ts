@@ -18,6 +18,21 @@ function resolveApiUrl(): string {
 
 const API_URL = resolveApiUrl();
 
+/**
+ * Origin of the API without the /api/v1 suffix — for static assets such as
+ * AI-generated ad images served from /uploads.
+ */
+export function apiOrigin(): string {
+  return resolveApiUrl().replace(/\/api\/v\d+\/?$/, '');
+}
+
+/** Turns a stored media path into a loadable absolute URL. */
+export function mediaUrl(pathOrUrl: string): string {
+  if (!pathOrUrl) return '';
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  return `${apiOrigin()}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
 // Hardcoded for single-project setup (Anandi Park)
 const WORKSPACE_ID = 'cmsai8kh50001rapl8ioxehxe';
 

@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { join } from 'path';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import * as compression from 'compression';
@@ -11,16 +13,25 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
 
   const configService = app.get(ConfigService);
 
-  // Security
-  app.use(helmet());
+  // Security. CORP is relaxed to cross-origin so the dashboard on :3000 can
+  // load AI-generated ad images served from this API on :4000.
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
   app.use(compression());
   app.use(cookieParser());
+
+  // Serve generated media (AI ad images) from <repoRoot>/uploads
+  const uploadsRoot = join(process.cwd().replace(/[/\\](apps[/\\]api|dist).*/, ''), 'uploads');
+  app.useStaticAssets(uploadsRoot, { prefix: '/uploads/' });
 
   // CORS — allowlist of origins. Supports a comma-separated CORS_ORIGINS or
   // APP_URL env var, and always permits local dev + the deployed VPS host.

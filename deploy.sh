@@ -2,6 +2,10 @@
 # ================================================
 # Anandi Park Dashboard - VPS Deployment Script
 # Run this on: root@147.93.169.183
+#
+# SECRETS ARE NOT STORED IN THIS FILE.
+# Create /opt/anandi-park/anandi/.env before running.
+# See .env.example for the full list of keys.
 # ================================================
 
 set -e
@@ -24,18 +28,40 @@ if ! command -v pm2 &> /dev/null; then
   npm install -g pm2
 fi
 
-# 3. Create app directory
-APP_DIR="/opt/anandi-park"
-mkdir -p $APP_DIR
-cd $APP_DIR
-
-# 4. If repo exists, pull. Otherwise, copy files.
-# For now we'll use the tarball approach
+APP_DIR="/opt/anandi-park/anandi"
+cd "$APP_DIR"
 echo "📂 App directory: $APP_DIR"
+
+# 3. Require .env — never generate secrets into a tracked file
+if [ ! -f .env ]; then
+  echo ""
+  echo "❌ No .env found at $APP_DIR/.env"
+  echo ""
+  echo "Create it first, then re-run. Required keys:"
+  echo "  DATABASE_URL, JWT_SECRET, GEMINI_API_KEY, GEMINI_MODEL,"
+  echo "  VPS_WHATSAPP_URL, VPS_WHATSAPP_SECRET, VPS_WHATSAPP_BIZ_ID,"
+  echo "  DEPLOY_SECRET, APP_URL, API_URL"
+  echo ""
+  echo "See .env.example for the full list."
+  exit 1
+fi
+
+# 4. Verify the keys the app cannot start without
+MISSING=""
+for key in DATABASE_URL JWT_SECRET GEMINI_API_KEY; do
+  if ! grep -q "^${key}=." .env; then
+    MISSING="$MISSING $key"
+  fi
+done
+
+if [ -n "$MISSING" ]; then
+  echo "❌ .env is missing values for:$MISSING"
+  exit 1
+fi
 
 # 5. Install dependencies
 echo "📦 Installing dependencies..."
-npm install --legacy-peer-deps --production
+npm install --legacy-peer-deps
 
 # 6. Generate Prisma client
 echo "🗄️  Generating Prisma client..."
@@ -49,42 +75,17 @@ cd apps/api && npx nest build && cd ../..
 echo "🔨 Building Frontend..."
 cd apps/web && npx next build && cd ../..
 
-# 9. Create .env if not exists
-if [ ! -f .env ]; then
-  echo "⚙️  Creating .env..."
-  cat > .env << 'EOF'
-NODE_ENV=production
-APP_NAME=Anandi Park
-APP_URL=http://147.93.169.183:3000
-API_URL=http://147.93.169.183:4000
-
-DATABASE_URL=postgresql://neondb_owner:npg_ni3PFjTR2AJN@ep-winter-bar-axncjrf4.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require
-
-REDIS_URL=redis://localhost:6379
-
-JWT_SECRET=anandi-park-jwt-secret-change-this-in-production
-JWT_EXPIRATION=24h
-JWT_REFRESH_EXPIRATION=7d
-
-GEMINI_API_KEY=AIzaSyCqJLUhzTUzjwSXa6HXyBTdzJn_KJHOzIU
-GEMINI_MODEL=gemini-2.5-flash
-AI_PROVIDER=gemini
-
-VPS_WHATSAPP_URL=http://127.0.0.1:8300
-VPS_WHATSAPP_SECRET=454da352e67942e3b11a42edf2159f74
-VPS_WHATSAPP_BIZ_ID=anandi-park
-
-WHATSAPP_VERIFY_TOKEN=anandi-park-verify
-EOF
-fi
-
-# 10. Start with PM2
+# 9. Start with PM2
 echo "🚀 Starting services with PM2..."
 pm2 delete anandi-api 2>/dev/null || true
 pm2 delete anandi-web 2>/dev/null || true
 
 pm2 start apps/api/dist/apps/api/src/main.js --name anandi-api --env production
-pm2 start node_modules/.bin/next --name anandi-web -- start -p 3000 --dir apps/web
+
+# next must be started from apps/web so it resolves .next correctly
+cd apps/web
+pm2 start npx --name anandi-web -- next start -p 3000
+cd ../..
 
 pm2 save
 pm2 startup
@@ -95,5 +96,5 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "🌐 Dashboard: http://147.93.169.183:3000"
 echo "📡 API:       http://147.93.169.183:4000"
 echo "📚 Docs:      http://147.93.169.183:4000/docs"
-echo "💬 WhatsApp:  Connected via localhost:8300"
+echo "💬 WhatsApp:  Connected via 127.0.0.1:8300"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
