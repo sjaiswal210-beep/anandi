@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import * as path from 'path';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 export interface ScrapedLead {
@@ -21,6 +22,7 @@ export interface ScrapeJob {
   leadsFound: number;
   startedAt: Date;
   completedAt?: Date;
+  error?: string;
 }
 
 @Injectable()
@@ -118,50 +120,54 @@ export class LeadScraperService {
       }
     }
 
-    // Try to run real scraper via child process (works on VPS where scripts exist)
-    try {
-      const { exec } = await import('child_process');
-      const appRoot = process.cwd().includes('apps/api')
-        ? process.cwd().replace(/[/\\]apps[/\\]api.*/, '')
-        : process.cwd().replace(/[/\\]dist.*/, '');
+    // Run the real scraper. There is deliberately no synthetic fallback —
+    // fabricated leads are worse than none, because they pollute the CRM with
+    // numbers nobody can call.
+    const { exec } = await import('child_process');
+    const appRoot = process.cwd().includes(`apps${path.sep}api`)
+      ? process.cwd().replace(/[/\\]apps[/\\]api.*/, '')
+      : process.cwd().replace(/[/\\]dist.*/, '');
 
-      const scriptPath = dto.platform === 'google_maps'
-        ? `${appRoot}/scripts/real-scraper.js`
-        : `${appRoot}/scripts/scrape-listings.js`;
+    const scriptPath = dto.platform === 'google_maps'
+      ? path.join(appRoot, 'scripts', 'real-scraper.js')
+      : path.join(appRoot, 'scripts', 'scrape-listings.js');
 
-      const fs = await import('fs');
-      if (fs.existsSync(scriptPath)) {
-        this.logger.log(`Running real scraper: ${scriptPath}`);
-        exec(`node ${scriptPath}`, { cwd: appRoot, timeout: 180000 }, (err, stdout, stderr) => {
-          if (err) {
-            this.logger.warn(`Real scraper error: ${err.message}`);
-            job.status = 'completed';
-            job.completedAt = new Date();
-          } else {
-            this.logger.log(`Real scraper done`);
-            job.status = 'completed';
-            job.completedAt = new Date();
-          }
-        });
-      } else {
-        this.logger.log('Scraper scripts not found, using mock data');
-        this.runMockScrape(workspaceId, job, dto);
-      }
-    } catch {
-      this.runMockScrape(workspaceId, job, dto);
+    const fs = await import('fs');
+    if (!fs.existsSync(scriptPath)) {
+      job.status = 'failed';
+      job.completedAt = new Date();
+      job.error = `Scraper script not found at ${scriptPath}`;
+      this.logger.error(job.error);
+      throw new BadRequestException(
+        `Scraper script is missing on this host (${scriptPath}). ` +
+          'Scraping only runs on the VPS where Chromium is installed.',
+      );
     }
 
-    return { jobId: job.id, status: 'running', message: `Scraping ${dto.platform} for "${dto.targetArea}" with keywords: ${dto.keywords.join(', ')}` };
-  }
-
-  private async runMockScrape(workspaceId: string, job: ScrapeJob, dto: { platform: string; targetArea: string; keywords: string[] }) {
-    setTimeout(async () => {
-      const mockLeads = this.generateMockLeads(dto.platform, dto.targetArea, dto.keywords);
-      const result = await this.ingestScrapedLeads(workspaceId, mockLeads);
-      job.status = 'completed';
-      job.leadsFound = result.ingested;
+    this.logger.log(`Running real scraper: ${scriptPath}`);
+    exec(`node ${scriptPath}`, { cwd: appRoot, timeout: 180000 }, async (err, stdout) => {
       job.completedAt = new Date();
-    }, 3000);
+
+      if (err) {
+        job.status = 'failed';
+        job.error = err.message;
+        this.logger.error(`Scraper failed: ${err.message}`);
+        return;
+      }
+
+      job.status = 'completed';
+      // The script posts its findings to the ingest webhook, so count what
+      // actually landed rather than trusting stdout.
+      const found = stdout.match(/Total leads scraped:\s*(\d+)/);
+      job.leadsFound = found ? Number(found[1]) : 0;
+      this.logger.log(`Scraper finished, ${job.leadsFound} leads reported`);
+    });
+
+    return {
+      jobId: job.id,
+      status: 'running',
+      message: `Scraping ${dto.platform} for "${dto.targetArea}" with keywords: ${dto.keywords.join(', ')}`,
+    };
   }
 
   async getJobs() {
@@ -176,27 +182,4 @@ export class LeadScraperService {
     });
   }
 
-  private generateMockLeads(platform: string, area: string, keywords: string[]): ScrapedLead[] {
-    const names = [
-      'Rahul Sharma', 'Priya Verma', 'Amit Deshmukh', 'Sneha Patil', 'Vikram Joshi',
-      'Neha Kulkarni', 'Suresh Yadav', 'Kavita Nair', 'Manoj Tiwari', 'Anjali Gupta',
-      'Deepak Chauhan', 'Ritu Agarwal', 'Sanjay Mishra', 'Pooja Reddy', 'Kiran Mehta',
-    ];
-
-    const count = Math.floor(Math.random() * 8) + 5;
-    return Array.from({ length: count }, (_, i) => ({
-      name: names[i % names.length],
-      phone: '9' + String(Math.floor(Math.random() * 900000000) + 100000000),
-      email: i % 3 === 0 ? `${names[i % names.length].split(' ')[0].toLowerCase()}${Math.floor(Math.random() * 99)}@gmail.com` : undefined,
-      source: 'OTHER',
-      platform,
-      location: area,
-      intent: ['looking_to_buy', 'researching', 'investor', 'comparing'][Math.floor(Math.random() * 4)],
-      rawData: {
-        keywords: keywords.join(', '),
-        scrapedAt: new Date().toISOString(),
-        profileUrl: `https://${platform}.com/user/${i}`,
-      },
-    }));
-  }
 }
