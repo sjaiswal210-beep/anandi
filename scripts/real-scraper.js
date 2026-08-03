@@ -237,16 +237,34 @@ async function main() {
 
     console.log(`\nTotal leads scraped: ${allLeads.length}`);
 
-    if (allLeads.length > 0) {
-      // Send to our webhook
-      try {
-        const res = await axios.post(`${CONFIG.webhookUrl}/${workspaceId}`, {
-          leads: allLeads,
-        });
-        console.log(`Webhook response:`, res.data);
-      } catch (e) {
-        console.error('Webhook failed:', e.message);
+    if (allLeads.length === 0) {
+      console.warn('\nNothing to send. Most likely causes:');
+      console.warn('  - Google served a consent/bot-check page (check logs/scraper-debug/)');
+      console.warn('  - Result cards matched but none of the businesses list a phone number');
+      console.warn('  - Maps markup changed and the selectors need updating');
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${CONFIG.webhookUrl}/${workspaceId}`,
+        { leads: allLeads },
+        { timeout: 60000 },
+      );
+      const d = res.data?.data || res.data;
+      console.log(
+        `\nIngest result: ${d.ingested ?? '?'} new, ${d.duplicates ?? '?'} duplicates, ${d.errors ?? '?'} errors`,
+      );
+      if (d.reasons?.length) {
+        console.log('Reasons reported by the API:');
+        d.reasons.forEach((r) => console.log(`  - ${r}`));
       }
+    } catch (e) {
+      console.error(`\nWebhook POST failed: ${e.response?.status || ''} ${e.message}`);
+      if (e.response?.data) {
+        console.error('Response body:', JSON.stringify(e.response.data).slice(0, 500));
+      }
+      console.error(`Endpoint tried: ${CONFIG.webhookUrl}/${workspaceId}`);
     }
   } catch (e) {
     console.error('Scrape run failed:', e.message);

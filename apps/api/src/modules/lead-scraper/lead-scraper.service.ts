@@ -34,11 +34,33 @@ export class LeadScraperService {
 
   // Receives leads from n8n webhook or any external scraper
   async ingestScrapedLeads(workspaceId: string, leads: ScrapedLead[]) {
-    const results = { ingested: 0, duplicates: 0, errors: 0 };
+    const results = { ingested: 0, duplicates: 0, errors: 0, reasons: [] as string[] };
+
+    if (!Array.isArray(leads) || leads.length === 0) {
+      this.logger.warn('Ingest called with no leads in the payload');
+      return { ...results, reasons: ['payload contained no leads'] };
+    }
+
+    const admin = await this.prisma.user.findFirst({
+      where: {
+        workspaces: { some: { workspaceId } },
+        role: { in: ['SUPER_ADMIN', 'BUILDER', 'SALES_MANAGER'] },
+      },
+    });
+
+    if (!admin) {
+      const reason = `No SUPER_ADMIN/BUILDER/SALES_MANAGER user in workspace ${workspaceId}; cannot attribute leads`;
+      this.logger.error(reason);
+      return { ...results, errors: leads.length, reasons: [reason] };
+    }
 
     for (const lead of leads) {
       try {
-        if (!lead.phone && !lead.email) { results.errors++; continue; }
+        if (!lead.phone && !lead.email) {
+          results.errors++;
+          results.reasons.push(`${lead.name || 'unnamed'}: no phone or email`);
+          continue;
+        }
 
         // Deduplicate
         const existing = await this.prisma.lead.findFirst({
@@ -53,14 +75,10 @@ export class LeadScraperService {
 
         if (existing) { results.duplicates++; continue; }
 
-        const admin = await this.prisma.user.findFirst({
-          where: { workspaces: { some: { workspaceId } }, role: { in: ['SUPER_ADMIN', 'BUILDER', 'SALES_MANAGER'] } },
-        });
-
         await this.prisma.lead.create({
           data: {
             workspaceId,
-            createdById: admin?.id || '',
+            createdById: admin.id,
             name: lead.name || 'Scraped Lead',
             phone: lead.phone || '',
             email: lead.email,
@@ -76,13 +94,20 @@ export class LeadScraperService {
           },
         });
         results.ingested++;
-      } catch (e) {
+      } catch (e: any) {
         results.errors++;
+        const reason = `${lead.name || 'unnamed'}: ${e?.message || 'insert failed'}`;
+        results.reasons.push(reason);
+        this.logger.warn(`Lead insert failed — ${reason}`);
       }
     }
 
-    this.logger.log(`Scraped leads ingested: ${results.ingested} new, ${results.duplicates} dupes, ${results.errors} errors`);
-    return results;
+    this.logger.log(
+      `Scraped leads ingested: ${results.ingested} new, ${results.duplicates} dupes, ${results.errors} errors (of ${leads.length} received)`,
+    );
+
+    // Keep the response small but useful.
+    return { ...results, reasons: results.reasons.slice(0, 10) };
   }
 
   // Start a scrape job (triggers real scraper on VPS or returns mock for demo)
