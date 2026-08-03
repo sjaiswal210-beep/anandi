@@ -6,8 +6,8 @@ import { Providers } from '@/components/providers';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'RealtyOS AI - Business Operating System for Real Estate',
-  description: 'AI Powered Business Operating System for Real Estate Agents, Brokers and Builders',
+  title: 'Fame Developers - Business Operating System for Real Estate',
+  description: 'AI Powered Platform for Real Estate by Fame Developers',
   keywords: ['real estate', 'CRM', 'AI', 'property management', 'lead management'],
 };
 

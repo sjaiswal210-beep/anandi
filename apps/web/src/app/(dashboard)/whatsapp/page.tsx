@@ -117,7 +117,7 @@ export default function WhatsAppPage() {
               <Bot className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-semibold text-sm">RealtyOS Business</p>
+              <p className="font-semibold text-sm">Fame Developers Business</p>
               <p className="text-xs text-white/70">AI-powered</p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function WhatsAppPage() {
               <div className="w-64 h-64 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-100 to-green-50 dark:from-green-900/20 dark:to-green-800/10 flex items-center justify-center">
                 <Phone className="h-24 w-24 text-green-200 dark:text-green-800" />
               </div>
-              <h3 className="text-2xl font-light text-muted-foreground">RealtyOS WhatsApp Business</h3>
+              <h3 className="text-2xl font-light text-muted-foreground">Fame Developers WhatsApp Business</h3>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">
                 Send and receive messages from your leads. AI auto-replies when you are away.
                 Select a conversation to start chatting.

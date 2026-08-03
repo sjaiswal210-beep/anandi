@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>()(
         }),
     }),
     {
-      name: 'realtyos-auth',
+      name: 'Fame Developers-auth',
       partialize: (state) => ({
         token: state.token,
         refreshToken: state.refreshToken,

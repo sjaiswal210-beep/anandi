@@ -71,7 +71,7 @@ export default function LoginPage() {
         >
           <div className="flex items-center gap-3 mb-8">
             <Building2 className="h-10 w-10" />
-            <h1 className="text-3xl font-bold">RealtyOS AI</h1>
+            <h1 className="text-3xl font-bold">Fame Developers</h1>
           </div>
           <p className="text-xl mb-4 text-white/90">
             AI Powered Business Operating System for Real Estate
@@ -111,7 +111,7 @@ export default function LoginPage() {
         >
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <Building2 className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">RealtyOS AI</h1>
+            <h1 className="text-2xl font-bold">Fame Developers</h1>
           </div>
 
           <h2 className="text-2xl font-bold mb-2">Welcome back</h2>

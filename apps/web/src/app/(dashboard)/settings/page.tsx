@@ -138,7 +138,7 @@ export default function SettingsPage() {
                 </button>
               </div>
               <p className="text-sm text-muted-foreground">
-                Use API keys to integrate RealtyOS with external services.
+                Use API keys to integrate Fame Developers with external services.
               </p>
             </div>
           )}

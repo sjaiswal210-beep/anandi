@@ -60,7 +60,7 @@ export function SiteFooter() {
           <p>© {new Date().getFullYear()} {PROJECT.builder}. All rights reserved.</p>
           <p>
             Images are artistic impressions. Powered by{' '}
-            <span className="text-amber-400">RealtyOS AI</span>
+            <span className="text-amber-400">Fame Developers</span>
           </p>
         </div>
       </div>

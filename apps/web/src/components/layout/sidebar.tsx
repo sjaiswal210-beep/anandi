@@ -67,7 +67,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               animate={{ opacity: 1 }}
               className="font-bold text-lg"
             >
-              RealtyOS
+              Fame Developers
             </motion.span>
           )}
         </Link>
