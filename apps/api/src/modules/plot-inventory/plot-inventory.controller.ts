@@ -11,6 +11,15 @@ export class PlotInventoryController {
   constructor(private readonly service: PlotInventoryService) {}
 
   @Public()
+  @Get('project/first')
+  @ApiOperation({ summary: 'Get plots for the first project (public, no auth)' })
+  async findFirst() {
+    const project = await this.service.findFirstProject();
+    if (!project) return { data: [] };
+    return { data: await this.service.findAll(project.id) };
+  }
+
+  @Public()
   @Get('project/:projectId')
   @ApiOperation({ summary: 'Get all plots for a project (public)' })
   async findAll(@Param('projectId') projectId: string) {

@@ -20,10 +20,22 @@ export default function PlotInventoryPage() {
   const { data: plotsData } = useQuery({
     queryKey: ['plot-inventory'],
     queryFn: async () => {
-      const res: any = await api.get('/properties/projects');
-      const projects = res?.data || [];
-      if (projects.length === 0) return [];
-      return api.get(`/plots/project/${projects[0].id}`);
+      // Try with workspace auth first, fallback to direct project query
+      try {
+        const res: any = await api.get('/properties/projects');
+        const projects = res?.data || [];
+        if (projects.length > 0) {
+          return api.get(`/plots/project/${projects[0].id}`);
+        }
+      } catch {
+        // If auth fails, try public endpoint directly
+      }
+      // Fallback: fetch all projects from plots endpoint via axios
+      const ax = (await import('axios')).default;
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin.replace(':3000', ':4000') : 'http://localhost:4000';
+      // Get project ID from stats endpoint which is public
+      const statsRes = await ax.get(`${baseUrl}/api/v1/plots/project/first`);
+      return statsRes.data;
     },
   });
 

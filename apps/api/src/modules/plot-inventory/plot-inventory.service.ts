@@ -12,6 +12,10 @@ export class PlotInventoryService {
     });
   }
 
+  async findFirstProject() {
+    return this.prisma.project.findFirst({ orderBy: { createdAt: 'asc' } });
+  }
+
   async findById(id: string) {
     const plot = await this.prisma.plotInventory.findUnique({ where: { id } });
     if (!plot) throw new NotFoundException('Plot not found');
