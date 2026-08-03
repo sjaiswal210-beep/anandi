@@ -197,6 +197,74 @@ export class SocialImageService {
     );
   }
 
+  /**
+   * Reports what the running process actually loaded, so a rejected key can be
+   * told apart from a missing one. Deliberately exposes only the length and a
+   * short prefix, never the key itself.
+   */
+  async diagnostics() {
+    const key = this.apiKey;
+
+    const keyInfo = {
+      present: Boolean(key),
+      length: key?.length ?? 0,
+      prefix: key ? `${key.slice(0, 6)}…` : null,
+      format: !key
+        ? 'missing'
+        : key.startsWith('AQ.')
+          ? 'AQ (current AI Studio format)'
+          : key.startsWith('AIza')
+            ? 'AIza (legacy format — AI Studio no longer issues these)'
+            : 'unrecognised',
+      looksTruncated: key ? key.startsWith('AQ.') && key.length < 50 : false,
+      hasWhitespace: key ? /\s/.test(key) : false,
+      hasQuotes: key ? /^["']|["']$/.test(key) : false,
+    };
+
+    // Cheapest possible live check: list models rather than generate anything.
+    let liveCheck: Record<string, unknown> = { attempted: false };
+
+    if (key) {
+      try {
+        const axios = (await import('axios')).default;
+        const res = await axios.get(
+          `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`,
+          { timeout: 30000 },
+        );
+        const names: string[] = (res.data?.models ?? []).map((m: any) =>
+          String(m.name).replace('models/', ''),
+        );
+        liveCheck = {
+          attempted: true,
+          ok: true,
+          modelCount: names.length,
+          imageModels: names.filter((n) => n.includes('image')),
+        };
+      } catch (e: any) {
+        liveCheck = {
+          attempted: true,
+          ok: false,
+          status: e?.response?.status ?? null,
+          message: e?.response?.data?.error?.message || e?.message,
+        };
+      }
+    }
+
+    return {
+      key: keyInfo,
+      liveCheck,
+      cachedModel: this.workingModel,
+      cachedTransport: this.workingTransport,
+      configuredModelOverride: this.configService.get<string>('GEMINI_IMAGE_MODEL') ?? null,
+      processCwd: process.cwd(),
+      uploadDir: this.uploadDir,
+      hint:
+        'If liveCheck fails but the key is correct in .env, the process is holding a stale value. ' +
+        'PM2 keeps its own env: run "pm2 restart anandi-api --update-env", or "pm2 delete anandi-api" and start it again. ' +
+        'Also check for a .env.local in the app root, which ConfigModule loads before .env.',
+    };
+  }
+
   /** Generates several variations of the same ad concept. */
   async generateVariations(
     input: { topic: string; platform?: string; style?: string; headline?: string },

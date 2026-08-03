@@ -1,16 +1,30 @@
 import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SocialMediaService } from './social-media.service';
+import { SocialImageService } from './social-image.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
 import { WorkspaceId } from '../../common/decorators/workspace.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Social Media')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, WorkspaceGuard)
 @Controller('social-media')
 export class SocialMediaController {
-  constructor(private readonly service: SocialMediaService) {}
+  constructor(
+    private readonly service: SocialMediaService,
+    private readonly imageService: SocialImageService,
+  ) {}
+
+  // Public so it can be opened straight in a browser while debugging.
+  // Returns key length and prefix only, never the key.
+  @Public()
+  @Get('image-diagnostics')
+  @ApiOperation({ summary: 'Report what Gemini image config the running API loaded' })
+  async imageDiagnostics() {
+    return this.imageService.diagnostics();
+  }
 
   @Post('generate')
   @ApiOperation({ summary: 'Generate social media caption + AI ad image' })
