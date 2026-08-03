@@ -15,17 +15,19 @@ import * as path from 'path';
 export class SocialImageService {
   private readonly logger = new Logger(SocialImageService.name);
 
-  // Tried in order. The account's key may not have access to all of them,
-  // so a 404/403 on one falls through to the next.
+  // Tried in order. Verified against the project's key: gemini-3.1-flash-image
+  // works and is the cheapest good option. The rest are fallbacks in case
+  // access or availability changes.
   private readonly candidateModels = [
     'gemini-3.1-flash-image',
+    'gemini-3.1-flash-image-preview',
     'gemini-2.5-flash-image',
-    'gemini-2.5-flash-image-preview',
-    'gemini-2.0-flash-preview-image-generation',
+    'gemini-3-pro-image',
   ];
 
   // Remembered after the first success so later calls skip the probing.
   private workingModel: string | null = null;
+  private workingTransport: 'header' | 'query' | null = null;
 
   constructor(private configService: ConfigService) {}
 
@@ -112,8 +114,22 @@ export class SocialImageService {
 
     const failures: string[] = [];
 
-    for (const model of this.models) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    // Image models are known to 404 when the key is sent as x-goog-api-key
+    // while accepting the same key as a ?key= query parameter, so both are
+    // attempted. The winning combination is cached.
+    const transports: ('header' | 'query')[] = this.workingTransport
+      ? [this.workingTransport]
+      : ['query', 'header'];
+
+    const attempts = this.models.flatMap((model) =>
+      transports.map((transport) => ({ model, transport })),
+    );
+
+    for (const { model, transport } of attempts) {
+      const base = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      const url = transport === 'query' ? `${base}?key=${encodeURIComponent(this.apiKey!)}` : base;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (transport === 'header') headers['x-goog-api-key'] = this.apiKey!;
 
       try {
         const res = await axios.post(
@@ -122,13 +138,7 @@ export class SocialImageService {
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
           },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': this.apiKey,
-            },
-            timeout: 120000,
-          },
+          { headers, timeout: 120000 },
         );
 
         const parts = res.data?.candidates?.[0]?.content?.parts ?? [];
@@ -138,7 +148,7 @@ export class SocialImageService {
         const inline = imagePart?.inlineData || imagePart?.inline_data;
 
         if (!inline?.data) {
-          failures.push(`${model}: responded without image data`);
+          failures.push(`${model} (${transport}): responded without image data`);
           continue;
         }
 
@@ -153,7 +163,8 @@ export class SocialImageService {
         await fs.writeFile(filePath, Buffer.from(inline.data, 'base64'));
 
         this.workingModel = model;
-        this.logger.log(`Generated ad image with ${model}: ${fileName}`);
+        this.workingTransport = transport;
+        this.logger.log(`Generated ad image with ${model} (${transport} auth): ${fileName}`);
 
         return {
           url: `/uploads/social/${fileName}`,
@@ -165,21 +176,24 @@ export class SocialImageService {
         const status = e?.response?.status;
         const detail =
           e?.response?.data?.error?.message || e?.message || 'unknown error';
-        failures.push(`${model}: ${status ?? ''} ${detail}`.trim());
+        failures.push(`${model} (${transport}): ${status ?? ''} ${detail}`.trim());
 
-        // A quota/permission problem will repeat on every model — stop early.
+        // These repeat on every model, so stop rather than burn attempts.
         if (status === 429) {
           throw new BadRequestException(
             `Gemini image quota exceeded. Image models are a paid tier. Detail: ${detail}`,
           );
         }
+        if (status === 403) {
+          throw new BadRequestException(`Gemini rejected the API key: ${detail}`);
+        }
       }
     }
 
-    this.logger.warn(`All image models failed:\n${failures.join('\n')}`);
+    this.logger.warn(`All image attempts failed:\n${failures.join('\n')}`);
     throw new BadRequestException(
-      `Could not generate an image. Tried ${this.models.length} model(s). ` +
-        `Gemini image generation needs billing enabled on the API key. Details: ${failures.join(' | ')}`,
+      `Could not generate an image after ${attempts.length} attempt(s). ` +
+        `Details: ${failures.join(' | ')}`,
     );
   }
 
