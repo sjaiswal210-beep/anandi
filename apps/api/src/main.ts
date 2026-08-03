@@ -22,9 +22,35 @@ async function bootstrap() {
   app.use(compression());
   app.use(cookieParser());
 
-  // CORS
+  // CORS — allowlist of origins. Supports a comma-separated CORS_ORIGINS or
+  // APP_URL env var, and always permits local dev + the deployed VPS host.
+  const configuredOrigins = [
+    configService.get<string>('CORS_ORIGINS', ''),
+    configService.get<string>('APP_URL', ''),
+  ]
+    .filter(Boolean)
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+  const defaultOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://147.93.169.183:3000',
+  ];
+
+  const allowedOrigins = new Set([...defaultOrigins, ...configuredOrigins]);
+
   app.enableCors({
-    origin: configService.get<string>('APP_URL', 'http://localhost:3000'),
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // No Origin header: same-origin navigation, curl, or server-to-server.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, allowedOrigins.has(origin.replace(/\/$/, '')));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Workspace-Id', 'X-Api-Key'],

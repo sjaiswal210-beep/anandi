@@ -17,29 +17,19 @@ const statusColors: Record<string, string> = {
 export default function PlotInventoryPage() {
   const [selectedPlot, setSelectedPlot] = useState<any>(null);
 
-  const { data: plotsData } = useQuery({
+  const { data: plots = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['plot-inventory'],
     queryFn: async () => {
-      // Try with workspace auth first, fallback to direct project query
-      try {
-        const res: any = await api.get('/properties/projects');
-        const projects = res?.data || [];
-        if (projects.length > 0) {
-          return api.get(`/plots/project/${projects[0].id}`);
-        }
-      } catch {
-        // If auth fails, try public endpoint directly
-      }
-      // Fallback: fetch all projects from plots endpoint via axios
-      const ax = (await import('axios')).default;
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin.replace(':3000', ':4000') : 'http://localhost:4000';
-      // Get project ID from stats endpoint which is public
-      const statsRes = await ax.get(`${baseUrl}/api/v1/plots/project/first`);
-      return statsRes.data;
+      // /plots/project/first is public and returns { data: Plot[] },
+      // wrapped again by the API transform interceptor.
+      const res: any = await api.get('/plots/project/first');
+      const payload = res?.data;
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload?.data)) return payload.data;
+      return [];
     },
   });
 
-  const plots: any[] = (plotsData as any)?.data || [];
   const stats = {
     total: plots.length,
     available: plots.filter((p) => p.status === 'AVAILABLE').length,
@@ -93,7 +83,25 @@ export default function PlotInventoryPage() {
         <span className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-gray-400" /> Hold</span>
       </div>
 
+      {/* Load state */}
+      {isLoading && (
+        <div className="bg-card border rounded-xl p-6 text-sm text-muted-foreground">
+          Loading plot layout…
+        </div>
+      )}
+      {!isLoading && error && (
+        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl p-6 text-sm text-red-600">
+          Could not load plots: {(error as any)?.message || 'request failed'}
+        </div>
+      )}
+      {!isLoading && !error && plots.length === 0 && (
+        <div className="bg-card border rounded-xl p-6 text-sm text-muted-foreground">
+          No plots found. Run <code className="font-mono">scripts/seed-real-plots.ts</code> to load the 84-plot layout.
+        </div>
+      )}
+
       {/* Plot Grid */}
+      {plots.length > 0 && (
       <div className="bg-card border rounded-xl p-6 overflow-x-auto">
         <div className="min-w-[600px]">
           <div className="text-center text-xs text-muted-foreground mb-4 font-medium">— MAIN ROAD —</div>
@@ -120,6 +128,7 @@ export default function PlotInventoryPage() {
           <div className="text-center text-xs text-muted-foreground mt-4 font-medium">— INTERNAL ROAD —</div>
         </div>
       </div>
+      )}
 
       {/* Plot Detail Panel */}
       {selectedPlot && (

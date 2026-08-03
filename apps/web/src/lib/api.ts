@@ -1,6 +1,22 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+// Resolve the API base URL.
+// 1. NEXT_PUBLIC_API_URL wins when it is set at build time.
+// 2. In the browser, derive it from the current hostname so the same build
+//    works on localhost and on the VPS without a rebuild.
+// 3. Fall back to localhost for SSR.
+function resolveApiUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_API_URL;
+  if (fromEnv) return fromEnv;
+
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:4000/api/v1`;
+  }
+
+  return 'http://localhost:4000/api/v1';
+}
+
+const API_URL = resolveApiUrl();
 
 // Hardcoded for single-project setup (Anandi Park)
 const WORKSPACE_ID = 'cmsai8kh50001rapl8ioxehxe';
@@ -16,6 +32,10 @@ export const api = axios.create({
 
 // Request interceptor - add auth token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  // Re-resolve per request: the module may have been evaluated during SSR,
+  // where window was unavailable.
+  config.baseURL = resolveApiUrl();
+
   // Always set workspace ID
   config.headers['X-Workspace-Id'] = WORKSPACE_ID;
 
