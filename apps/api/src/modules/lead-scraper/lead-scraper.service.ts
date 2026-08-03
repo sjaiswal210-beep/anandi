@@ -83,7 +83,7 @@ export class LeadScraperService {
     return results;
   }
 
-  // Start a scrape job (returns mock data for demo — in production, triggers n8n workflow)
+  // Start a scrape job (triggers real scraper on VPS or returns mock for demo)
   async startScrapeJob(workspaceId: string, dto: {
     platform: string;
     targetArea: string;
@@ -118,7 +118,33 @@ export class LeadScraperService {
       }
     }
 
-    // Simulate scrape with realistic demo data
+    // Try to run real scraper via child process (works on VPS where scripts exist)
+    try {
+      const { exec } = await import('child_process');
+      const scriptPath = dto.platform === 'google_maps'
+        ? 'scripts/real-scraper.js'
+        : 'scripts/scrape-listings.js';
+
+      exec(`node ${scriptPath}`, { cwd: process.cwd().replace('/apps/api', '').replace('\\apps\\api', ''), timeout: 120000 }, (err, stdout, stderr) => {
+        if (err) {
+          this.logger.warn(`Real scraper failed (using mock): ${err.message}`);
+          // Fallback to mock data
+          this.runMockScrape(workspaceId, job, dto);
+        } else {
+          this.logger.log(`Real scraper completed: ${stdout.slice(-200)}`);
+          job.status = 'completed';
+          job.completedAt = new Date();
+        }
+      });
+    } catch {
+      // Fallback to mock data (for local dev or if scripts not available)
+      this.runMockScrape(workspaceId, job, dto);
+    }
+
+    return { jobId: job.id, status: 'running', message: `Scraping ${dto.platform} for "${dto.targetArea}" with keywords: ${dto.keywords.join(', ')}` };
+  }
+
+  private async runMockScrape(workspaceId: string, job: ScrapeJob, dto: { platform: string; targetArea: string; keywords: string[] }) {
     setTimeout(async () => {
       const mockLeads = this.generateMockLeads(dto.platform, dto.targetArea, dto.keywords);
       const result = await this.ingestScrapedLeads(workspaceId, mockLeads);
@@ -126,8 +152,6 @@ export class LeadScraperService {
       job.leadsFound = result.ingested;
       job.completedAt = new Date();
     }, 3000);
-
-    return { jobId: job.id, status: 'running', message: `Scraping ${dto.platform} for "${dto.targetArea}" with keywords: ${dto.keywords.join(', ')}` };
   }
 
   async getJobs() {
