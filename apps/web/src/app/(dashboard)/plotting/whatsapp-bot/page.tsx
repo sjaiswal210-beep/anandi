@@ -6,6 +6,9 @@ import { motion } from 'framer-motion';
 import { Bot, MessageSquare, Send, Zap, Clock, Users, TrendingUp, Wifi, WifiOff, QrCode, Power, Brain, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+import axios from 'axios';
+
+const VPS_API = (typeof window !== 'undefined' ? window.location.origin.replace(':3000', ':4000') : 'http://localhost:4000') + '/api/v1';
 
 export default function WhatsAppBotPage() {
   const queryClient = useQueryClient();
@@ -14,16 +17,16 @@ export default function WhatsAppBotPage() {
   const [testMessage, setTestMessage] = useState('');
   const [trainingContext, setTrainingContext] = useState('');
 
-  // VPS Bot Status
+  // VPS Bot Status (direct call, no auth needed)
   const { data: vpsStatus, refetch: refetchStatus } = useQuery({
     queryKey: ['vps-status'],
-    queryFn: () => api.get('/whatsapp-bot/vps/status'),
+    queryFn: async () => { const r = await axios.get(`${VPS_API}/whatsapp-bot/vps/status`); return r.data; },
     refetchInterval: 5000,
   });
 
   const { data: vpsHealth } = useQuery({
     queryKey: ['vps-health'],
-    queryFn: () => api.get('/whatsapp-bot/vps/health'),
+    queryFn: async () => { const r = await axios.get(`${VPS_API}/whatsapp-bot/vps/health`); return r.data; },
     refetchInterval: 10000,
   });
 
@@ -37,22 +40,22 @@ export default function WhatsAppBotPage() {
     queryFn: () => api.get('/whatsapp-bot/conversations'),
   });
 
-  // Start session
+  // Start session (direct call)
   const startMutation = useMutation({
-    mutationFn: () => api.post('/whatsapp-bot/vps/start'),
-    onSuccess: () => { toast.success('Session starting... scan QR code'); refetchStatus(); },
-    onError: () => toast.error('Failed to start session'),
+    mutationFn: async () => { const r = await axios.post(`${VPS_API}/whatsapp-bot/vps/start`); return r.data; },
+    onSuccess: () => { toast.success('Session starting... scan QR code'); setTimeout(() => refetchStatus(), 5000); },
+    onError: (e: any) => toast.error(`Failed: ${e?.message || 'unknown error'}`),
   });
 
   // Test bot
   const testMutation = useMutation({
-    mutationFn: (data: { from: string; message: string }) => api.post('/whatsapp-bot/incoming', data),
+    mutationFn: async (data: { from: string; message: string }) => { const r = await axios.post(`${VPS_API}/whatsapp-bot/incoming`, data); return r.data; },
     onSuccess: () => { toast.success('Bot replied!'); setTestMessage(''); },
   });
 
   // Send real message via VPS
   const sendMutation = useMutation({
-    mutationFn: (data: { to: string; message: string }) => api.post('/whatsapp-bot/vps/send', data),
+    mutationFn: async (data: { to: string; message: string }) => { const r = await axios.post(`${VPS_API}/whatsapp-bot/vps/send`, data); return r.data; },
     onSuccess: () => toast.success('Message sent via WhatsApp!'),
     onError: () => toast.error('Send failed — check connection'),
   });
