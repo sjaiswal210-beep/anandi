@@ -121,23 +121,33 @@ export class LeadScraperService {
     // Try to run real scraper via child process (works on VPS where scripts exist)
     try {
       const { exec } = await import('child_process');
-      const scriptPath = dto.platform === 'google_maps'
-        ? 'scripts/real-scraper.js'
-        : 'scripts/scrape-listings.js';
+      const appRoot = process.cwd().includes('apps/api')
+        ? process.cwd().replace(/[/\\]apps[/\\]api.*/, '')
+        : process.cwd().replace(/[/\\]dist.*/, '');
 
-      exec(`node ${scriptPath}`, { cwd: process.cwd().replace('/apps/api', '').replace('\\apps\\api', ''), timeout: 120000 }, (err, stdout, stderr) => {
-        if (err) {
-          this.logger.warn(`Real scraper failed (using mock): ${err.message}`);
-          // Fallback to mock data
-          this.runMockScrape(workspaceId, job, dto);
-        } else {
-          this.logger.log(`Real scraper completed: ${stdout.slice(-200)}`);
-          job.status = 'completed';
-          job.completedAt = new Date();
-        }
-      });
+      const scriptPath = dto.platform === 'google_maps'
+        ? `${appRoot}/scripts/real-scraper.js`
+        : `${appRoot}/scripts/scrape-listings.js`;
+
+      const fs = await import('fs');
+      if (fs.existsSync(scriptPath)) {
+        this.logger.log(`Running real scraper: ${scriptPath}`);
+        exec(`node ${scriptPath}`, { cwd: appRoot, timeout: 180000 }, (err, stdout, stderr) => {
+          if (err) {
+            this.logger.warn(`Real scraper error: ${err.message}`);
+            job.status = 'completed';
+            job.completedAt = new Date();
+          } else {
+            this.logger.log(`Real scraper done`);
+            job.status = 'completed';
+            job.completedAt = new Date();
+          }
+        });
+      } else {
+        this.logger.log('Scraper scripts not found, using mock data');
+        this.runMockScrape(workspaceId, job, dto);
+      }
     } catch {
-      // Fallback to mock data (for local dev or if scripts not available)
       this.runMockScrape(workspaceId, job, dto);
     }
 
