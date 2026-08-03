@@ -1,61 +1,47 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '@/store/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
+// Hardcoded for single-project setup (Anandi Park)
+const WORKSPACE_ID = 'cmsai8kh50001rapl8ioxehxe';
 
 export const api = axios.create({
   baseURL: API_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
+    'X-Workspace-Id': WORKSPACE_ID,
   },
 });
 
-// Request interceptor - add auth token and workspace
+// Request interceptor - add auth token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const { token, currentWorkspace } = useAuthStore.getState();
+  // Always set workspace ID
+  config.headers['X-Workspace-Id'] = WORKSPACE_ID;
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  if (currentWorkspace) {
-    config.headers['X-Workspace-Id'] = currentWorkspace.id;
+  // Try to get token from localStorage if available
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('realtyos-auth');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.state?.token) {
+          config.headers.Authorization = `Bearer ${parsed.state.token}`;
+        }
+      }
+    } catch {
+      // No auth stored, continue without token
+    }
   }
 
   return config;
 });
 
-// Response interceptor - handle errors
+// Response interceptor - handle errors silently
 api.interceptors.response.use(
   (response) => response.data,
-  async (error: AxiosError) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401) {
-      const { refreshToken, logout } = useAuthStore.getState();
-
-      if (refreshToken && originalRequest) {
-        try {
-          const response = await axios.post(`${API_URL}/auth/refresh`, {
-            refreshToken,
-          });
-
-          const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-          useAuthStore.getState().setTokens(accessToken, newRefreshToken);
-
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return api(originalRequest);
-        } catch {
-          logout();
-          window.location.href = '/login';
-        }
-      } else {
-        logout();
-        window.location.href = '/login';
-      }
-    }
-
+  (error: AxiosError) => {
+    // Don't redirect on 401/403 — just return empty
     return Promise.reject(error);
   },
 );
