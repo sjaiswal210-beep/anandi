@@ -5,6 +5,7 @@
 
 const puppeteer = require('puppeteer');
 const axios = require('axios');
+const { launchBrowser } = require('./lib/browser');
 
 const CONFIG = {
   // Search queries for finding potential plot buyers
@@ -26,7 +27,6 @@ const CONFIG = {
   workspaceId: '', // Will be fetched from API
   maxResultsPerQuery: 10,
   headless: true,
-  chromePath: '/usr/bin/chromium',
 };
 
 async function getWorkspaceId() {
@@ -44,6 +44,34 @@ async function getWorkspaceId() {
   } catch (e) {
     console.error('Failed to get workspace:', e.message);
     return null;
+  }
+}
+
+// When a query returns nothing, capture the page so the cause is diagnosable
+// instead of the run just reporting zero.
+async function dumpDebug(page, query) {
+  try {
+    const fs = require('fs');
+    const pathMod = require('path');
+    const dir = pathMod.join(__dirname, '..', 'logs', 'scraper-debug');
+    fs.mkdirSync(dir, { recursive: true });
+
+    const slug = query.replace(/[^a-z0-9]+/gi, '-').slice(0, 40);
+    const stamp = Date.now().toString(36);
+
+    await page.screenshot({ path: pathMod.join(dir, `${slug}-${stamp}.png`), fullPage: false });
+    const html = await page.content();
+    fs.writeFileSync(pathMod.join(dir, `${slug}-${stamp}.html`), html);
+
+    const title = await page.title();
+    console.warn(`    debug saved to logs/scraper-debug/${slug}-${stamp}.*  (page title: "${title}")`);
+
+    // A consent wall or bot check is the usual reason for an empty feed.
+    if (/consent|before you continue|sorry/i.test(html.slice(0, 5000))) {
+      console.warn('    page looks like a consent or bot-check wall, not results');
+    }
+  } catch (e) {
+    console.warn(`    could not save debug output: ${e.message}`);
   }
 }
 
@@ -71,20 +99,33 @@ async function scrapeGoogleMaps(query, browser) {
       }
     }
 
-    // Extract business data
+    // Extract business data. Anchored on href and aria-label rather than
+    // Google's generated class names, which change without notice.
     const results = await page.evaluate(() => {
-      const items = document.querySelectorAll('[role="feed"] > div > div > a');
+      const anchors = Array.from(document.querySelectorAll('a[href*="/maps/place/"]'));
+      const seen = new Set();
       const data = [];
-      items.forEach((item) => {
-        const nameEl = item.querySelector('[class*="fontHeadlineSmall"]') || item.querySelector('.fontHeadlineSmall');
-        const name = nameEl ? nameEl.textContent.trim() : '';
-        const href = item.getAttribute('href') || '';
-        if (name && href.includes('/maps/place/')) {
-          data.push({ name, url: href });
+
+      for (const a of anchors) {
+        const href = a.getAttribute('href') || '';
+        // aria-label carries the business name; fall back to inner text.
+        let name = (a.getAttribute('aria-label') || '').trim();
+        if (!name) {
+          const headline = a.querySelector('[class*="fontHeadline"]');
+          name = headline ? headline.textContent.trim() : '';
         }
-      });
-      return data.slice(0, 10);
+        if (!name || seen.has(href)) continue;
+        seen.add(href);
+        data.push({ name, url: href.startsWith('http') ? href : `https://www.google.com${href}` });
+      }
+
+      return data.slice(0, 20);
     });
+
+    if (results.length === 0) {
+      console.warn(`  no result cards matched for "${query}"`);
+      await dumpDebug(page, query);
+    }
 
     // Visit each result to get phone/details
     for (const result of results.slice(0, CONFIG.maxResultsPerQuery)) {
@@ -93,38 +134,65 @@ async function scrapeGoogleMaps(query, browser) {
         await new Promise((r) => setTimeout(r, 2000));
 
         const details = await page.evaluate(() => {
-          const getTextByAriaLabel = (label) => {
-            const el = document.querySelector(`[aria-label*="${label}"]`);
-            return el ? el.textContent.trim() : '';
-          };
+          // Most reliable source: the phone is embedded in the attribute
+          // itself, e.g. data-item-id="phone:tel:+912012345678"
+          let phone = '';
+          const phoneAttrEl = document.querySelector('[data-item-id^="phone:tel:"]');
+          if (phoneAttrEl) {
+            phone = (phoneAttrEl.getAttribute('data-item-id') || '').replace('phone:tel:', '');
+          }
 
-          // Try to find phone number
-          const phoneEl = document.querySelector('[data-tooltip="Copy phone number"]') ||
-            document.querySelector('button[aria-label*="Phone"]') ||
-            document.querySelector('[data-item-id*="phone"]');
-          const phone = phoneEl ? phoneEl.textContent.replace(/[^0-9+]/g, '') : '';
+          // Fallbacks for layout variants.
+          if (!phone) {
+            const alt =
+              document.querySelector('[data-tooltip="Copy phone number"]') ||
+              document.querySelector('button[aria-label*="Phone"]');
+            if (alt) {
+              phone = (alt.getAttribute('aria-label') || alt.textContent || '');
+            }
+          }
+          phone = phone.replace(/[^0-9+]/g, '');
 
-          // Try to find website
-          const websiteEl = document.querySelector('[data-tooltip="Open website"]') ||
+          const websiteEl =
+            document.querySelector('a[data-item-id="authority"]') ||
+            document.querySelector('[data-tooltip="Open website"]') ||
             document.querySelector('a[aria-label*="Website"]');
-          const website = websiteEl ? websiteEl.getAttribute('href') || websiteEl.textContent : '';
+          const website = websiteEl
+            ? websiteEl.getAttribute('href') || websiteEl.textContent.trim()
+            : '';
 
-          // Rating and reviews
-          const ratingEl = document.querySelector('[role="img"][aria-label*="stars"]');
+          const ratingEl = document.querySelector('[role="img"][aria-label*="star"]');
           const rating = ratingEl ? ratingEl.getAttribute('aria-label') : '';
 
-          return { phone, website, rating };
+          const addressEl = document.querySelector('[data-item-id="address"]');
+          const address = addressEl
+            ? (addressEl.getAttribute('aria-label') || addressEl.textContent).replace(/^Address:\s*/, '').trim()
+            : '';
+
+          return { phone, website, rating, address };
         });
 
-        if (details.phone && details.phone.length >= 10) {
+        const normalised = details.phone.replace(/^\+91/, '').replace(/^91/, '');
+
+        // Indian mobile/landline sanity check — rejects truncated garbage.
+        if (normalised.length >= 10) {
           leads.push({
             name: result.name,
-            phone: details.phone.replace(/^\+91/, '').replace(/^91/, ''),
+            phone: normalised,
             platform: 'google_maps',
-            location: query,
+            location: details.address || query,
             intent: 'researching',
             source: 'OTHER',
+            rawData: {
+              query,
+              website: details.website || undefined,
+              rating: details.rating || undefined,
+              mapsUrl: result.url,
+              scrapedAt: new Date().toISOString(),
+            },
           });
+        } else {
+          console.log(`    ${result.name}: no phone listed, skipped`);
         }
       } catch (e) {
         // Skip this result
@@ -153,17 +221,7 @@ async function main() {
 
   let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: CONFIG.headless,
-      executablePath: CONFIG.chromePath,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--single-process',
-      ],
-    });
+    browser = await launchBrowser(puppeteer, { headless: CONFIG.headless });
 
     const allLeads = [];
 
@@ -191,8 +249,8 @@ async function main() {
       }
     }
   } catch (e) {
-    console.error('Browser launch failed:', e.message);
-    console.error('Make sure chromium is installed: apt install chromium-browser');
+    console.error('Scrape run failed:', e.message);
+    process.exitCode = 1;
   } finally {
     if (browser) await browser.close();
   }

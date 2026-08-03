@@ -4,10 +4,10 @@
 
 const puppeteer = require('puppeteer');
 const axios = require('axios');
+const { launchBrowser } = require('./lib/browser');
 
 const CONFIG = {
   webhookUrl: 'http://127.0.0.1:4000/api/v1/lead-scraper/webhook',
-  chromePath: '/usr/bin/chromium',
   headless: true,
 };
 
@@ -171,11 +171,7 @@ async function main() {
 
   let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: CONFIG.headless,
-      executablePath: CONFIG.chromePath,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-    });
+    browser = await launchBrowser(puppeteer, { headless: CONFIG.headless });
 
     console.log('Scraping 99acres...');
     const leads99 = await scrape99acres(browser);
