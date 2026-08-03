@@ -34,41 +34,36 @@ export class WhatsAppBotController {
     return this.service.getBotMetrics(workspaceId);
   }
 
-  // VPS Bot endpoints
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  // VPS Bot endpoints (public - no auth needed for status checks)
+  @Public()
   @Get('vps/status')
   @ApiOperation({ summary: 'Get VPS WhatsApp bot session status' })
   async vpsStatus() {
     return this.service.getVpsStatus();
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Post('vps/start')
   @ApiOperation({ summary: 'Start VPS WhatsApp session' })
   async vpsStart() {
     return this.service.startVpsSession();
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Post('vps/send')
   @ApiOperation({ summary: 'Send message via VPS WhatsApp bot' })
   async vpsSend(@Body() body: { to: string; message: string }) {
     return this.service.sendViaVps(body.to, body.message);
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Post('vps/broadcast')
   @ApiOperation({ summary: 'Broadcast via VPS WhatsApp bot' })
   async vpsBroadcast(@Body() body: { numbers: string[]; message: string }) {
     return this.service.broadcastViaVps(body.numbers, body.message);
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Get('vps/health')
   @ApiOperation({ summary: 'VPS bot health check' })
   async vpsHealth() {
