@@ -5,21 +5,18 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
-  Users,
-  Building2,
-  Calendar,
-  FileText,
-  Bot,
-  BarChart3,
+  Map,
+  Target,
+  Phone,
   MessageSquare,
+  Share2,
+  Search,
+  Users,
   Globe,
-  IndianRupee,
+  BarChart3,
   Settings,
   ChevronLeft,
   ChevronRight,
-  Target,
-  BookOpen,
-  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,20 +27,15 @@ interface SidebarProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Plotting Project', href: '/plotting', icon: Target },
+  { name: 'Plot Inventory', href: '/plotting/inventory', icon: Map },
   { name: 'Leads', href: '/leads', icon: Target },
-  { name: 'Properties', href: '/properties', icon: Building2 },
-  { name: 'Bookings', href: '/bookings', icon: BookOpen },
-  { name: 'Site Visits', href: '/visits', icon: Calendar },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Documents', href: '/documents', icon: FileText },
-  { name: 'Finance', href: '/finance', icon: IndianRupee },
-  { name: 'AI Agents', href: '/ai-agents', icon: Bot },
-  { name: 'WhatsApp', href: '/whatsapp', icon: MessageSquare },
-  { name: 'Marketing', href: '/marketing', icon: BarChart3 },
-  { name: 'Website', href: '/website', icon: Globe },
+  { name: 'Voice Calls', href: '/plotting/calling', icon: Phone },
+  { name: 'WhatsApp Bot', href: '/plotting/whatsapp-bot', icon: MessageSquare },
+  { name: 'Social Media', href: '/plotting/social', icon: Share2 },
+  { name: 'Lead Scraper', href: '/plotting/scraper', icon: Search },
+  { name: 'Customers', href: '/plotting/customers', icon: Users },
+  { name: 'Project Website', href: '/project', icon: Globe },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -60,15 +52,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Building2 className="h-8 w-8 text-primary shrink-0" />
+          <Map className="h-8 w-8 text-emerald-600 shrink-0" />
           {!collapsed && (
-            <motion.span
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="font-bold text-lg"
+              className="leading-tight"
             >
-              Fame Developers
-            </motion.span>
+              <span className="font-bold text-base block">Anandi Park</span>
+              <span className="text-[10px] text-muted-foreground">by Yuvraj Gade & Rajan Kute</span>
+            </motion.div>
           )}
         </Link>
       </div>
@@ -84,18 +77,26 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                 collapsed && 'justify-center',
               )}
               title={collapsed ? item.name : undefined}
             >
-              <item.icon className="h-5 w-5 shrink-0" />
+              <item.icon className={cn('h-5 w-5 shrink-0', isActive && 'text-emerald-600')} />
               {!collapsed && <span>{item.name}</span>}
             </Link>
           );
         })}
       </nav>
+
+      {/* Project badge */}
+      {!collapsed && (
+        <div className="mx-3 mb-3 p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-lg">
+          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">84 Plots · Bakori, Wagholi</p>
+          <p className="text-[10px] text-emerald-600/70 mt-0.5">GAT No. 279, Taluka Haveli, Pune</p>
+        </div>
+      )}
 
       {/* Collapse Toggle */}
       <div className="border-t p-2">
