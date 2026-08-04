@@ -8,8 +8,6 @@ import { WorkspaceId } from '../../common/decorators/workspace.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('AI Calling')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, WorkspaceGuard)
 @Controller('ai-calling')
 export class AICallingController {
   constructor(
@@ -29,6 +27,8 @@ export class AICallingController {
     };
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
   @Post('generate-script/:leadId')
   @ApiOperation({ summary: 'Generate call script for a lead' })
   async generateScript(@Param('leadId') leadId: string, @Body() dto: { objective?: string }) {
