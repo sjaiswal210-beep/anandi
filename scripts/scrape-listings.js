@@ -92,19 +92,13 @@ async function scrapeMagicBricks(browser) {
       return listings;
     });
 
-    results.forEach((r) => {
-      if (r.name) {
-        leads.push({
-          name: r.name,
-          phone: '',
-          platform: 'magicbricks',
-          location: 'Wagholi Pune',
-          intent: 'agent_with_buyers',
-        });
-      }
-    });
-
-    console.log(`  MagicBricks: Found ${leads.length} agents`);
+    // MagicBricks does not expose seller phone numbers without a logged-in
+    // session and a click-to-reveal, so these can never pass the phone filter
+    // in main(). Names are reported for visibility only.
+    console.log(`  MagicBricks: ${results.length} seller names visible, 0 with phone numbers`);
+    if (results.length > 0) {
+      console.log('    (MagicBricks hides numbers behind login + click-to-reveal, so none are usable)');
+    }
   } catch (e) {
     console.error('  MagicBricks scrape failed:', e.message);
   } finally {
@@ -182,14 +176,33 @@ async function main() {
     console.log('Scraping Facebook Groups...');
     const leadsFB = await scrapeFacebookGroups(browser);
 
-    const allLeads = [...leads99, ...leadsMB, ...leadsFB].filter(l => l.phone && l.phone.length >= 10);
-    console.log(`\nTotal leads with phone numbers: ${allLeads.length}`);
+    const candidates = [...leads99, ...leadsMB, ...leadsFB];
+    const allLeads = candidates.filter((l) => l.phone && l.phone.length >= 10);
+    const dropped = candidates.length - allLeads.length;
 
-    if (allLeads.length > 0) {
-      try {
-        const res = await axios.post(`${CONFIG.webhookUrl}/${workspaceId}`, { leads: allLeads });
-        console.log('Webhook result:', res.data);
-      } catch (e) { console.error('Webhook failed:', e.message); }
+    console.log(`\nCandidates found: ${candidates.length}`);
+    console.log(`Dropped for no usable phone: ${dropped}`);
+    console.log(`Total leads with phone numbers: ${allLeads.length}`);
+
+    if (allLeads.length === 0) {
+      console.warn('\nNothing to send. These sources gate phone numbers behind a login:');
+      console.warn('  99acres    — number revealed only after sign-in / OTP');
+      console.warn('  MagicBricks— click-to-reveal behind login');
+      console.warn('  Facebook   — group post search requires an authenticated session');
+      console.warn('Google Maps (scripts/real-scraper.js) is the only source that publishes numbers openly.');
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${CONFIG.webhookUrl}/${workspaceId}`,
+        { leads: allLeads },
+        { timeout: 60000 },
+      );
+      const d = res.data?.data || res.data;
+      console.log(`Ingest result: ${d.ingested ?? '?'} new, ${d.duplicates ?? '?'} duplicates, ${d.errors ?? '?'} errors`);
+    } catch (e) {
+      console.error(`Webhook POST failed: ${e.response?.status || ''} ${e.message}`);
     }
   } catch (e) {
     console.error('Browser failed:', e.message);
