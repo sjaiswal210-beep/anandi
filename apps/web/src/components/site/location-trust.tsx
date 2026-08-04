@@ -29,10 +29,15 @@ export function SiteLocation() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}
-                className="flex items-center justify-between py-3.5"
+                className="flex items-center justify-between gap-3 py-3.5"
               >
-                <span className="text-sm text-slate-700 dark:text-slate-300">{n.place}</span>
-                <span className="flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-white">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm text-slate-700 dark:text-slate-300">{n.place}</span>
+                  {n.note && (
+                    <span className="block text-xs text-slate-400">{n.note}</span>
+                  )}
+                </span>
+                <span className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-white">
                   <Clock className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
                   {n.time}
                 </span>
@@ -41,7 +46,7 @@ export function SiteLocation() {
           </ul>
 
           <a
-            href="https://www.google.com/maps/search/Baner+Pune"
+            href="https://www.google.com/maps/search/Bakori+Wagholi+Pune"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-8 inline-flex rounded-full border border-slate-300 px-6 py-3 text-sm font-medium text-slate-900 transition hover:bg-white dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
@@ -57,10 +62,13 @@ export function SiteLocation() {
           transition={{ duration: 0.6 }}
           className="overflow-hidden rounded-2xl shadow-xl"
         >
-          <img
-            src={img('skh-map-aerial', 900, 800)}
-            alt="Aerial view of the neighbourhood around Skyline Heights"
-            className="h-full w-full bg-slate-200 object-cover"
+          <iframe
+            src={PROJECT.mapEmbed}
+            title="Anandi Park location on the map"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="h-[380px] w-full border-0 lg:h-full"
+            allowFullScreen
           />
         </motion.div>
       </div>

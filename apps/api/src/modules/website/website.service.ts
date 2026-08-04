@@ -107,41 +107,87 @@ export class WebsiteService {
     message?: string;
     propertyId?: string;
     source?: string;
+    config?: string;
   }) {
+    // Resolve the workspace. Prefer a published site matching the subdomain,
+    // but fall back to the first workspace so the form always works even
+    // before a Website record is configured. This is a single-project setup.
     const website = await this.prisma.website.findFirst({
-      where: { subdomain, isPublished: true },
-      include: { workspace: true },
+      where: { subdomain },
     });
 
-    if (!website) throw new NotFoundException('Website not found');
+    const workspaceId =
+      website?.workspaceId ||
+      (await this.prisma.workspace.findFirst({ select: { id: true } }))?.id;
 
-    // Create lead from inquiry
+    if (!workspaceId) {
+      throw new NotFoundException('No workspace configured');
+    }
+
+    if (!dto.name?.trim() || !dto.phone?.trim()) {
+      return { success: false, message: 'Name and phone are required' };
+    }
+
     const admin = await this.prisma.user.findFirst({
       where: {
-        workspaces: { some: { workspaceId: website.workspaceId } },
+        workspaces: { some: { workspaceId } },
+        role: { in: ['SUPER_ADMIN', 'BUILDER', 'SALES_MANAGER'] },
       },
     });
 
-    if (admin) {
-      await this.prisma.lead.create({
+    const createdById =
+      admin?.id ||
+      (await this.prisma.user.findFirst({ where: { workspaces: { some: { workspaceId } } } }))?.id;
+
+    if (!createdById) {
+      throw new NotFoundException('No user to attribute the lead to');
+    }
+
+    const phone = dto.phone.replace(/[^\d]/g, '').replace(/^91(?=\d{10}$)/, '');
+
+    // Dedupe: if this phone already exists, append a note instead of duplicating.
+    const existing = await this.prisma.lead.findFirst({
+      where: { workspaceId, phone },
+      select: { id: true },
+    });
+
+    if (existing) {
+      await this.prisma.lead.update({
+        where: { id: existing.id },
         data: {
-          workspaceId: website.workspaceId,
-          createdById: admin.id,
-          name: dto.name,
-          phone: dto.phone,
-          email: dto.email,
-          source: 'WEBSITE',
-          status: 'NEW',
           customFields: {
             message: dto.message,
-            propertyId: dto.propertyId,
-            inquirySource: dto.source || 'website_form',
+            config: dto.config,
+            repeatInquiry: true,
+            lastInquiryAt: new Date().toISOString(),
+            inquirySource: dto.source || 'project_website',
           },
         },
       });
+      return { success: true, message: 'Inquiry submitted successfully', duplicate: true };
     }
 
-    return { message: 'Inquiry submitted successfully' };
+    await this.prisma.lead.create({
+      data: {
+        workspaceId,
+        createdById,
+        name: dto.name.trim(),
+        phone,
+        email: dto.email?.trim() || undefined,
+        source: 'WEBSITE',
+        status: 'NEW',
+        tags: ['website', 'anandi-park'],
+        customFields: {
+          message: dto.message,
+          config: dto.config,
+          propertyId: dto.propertyId,
+          inquirySource: dto.source || 'project_website',
+          submittedAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    return { success: true, message: 'Inquiry submitted successfully' };
   }
 
   async getPageTemplates() {

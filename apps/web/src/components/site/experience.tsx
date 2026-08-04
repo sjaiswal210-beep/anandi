@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Waves, Building, Dumbbell, Trees, Baby, Trophy, Laptop, Zap,
-  Shield, Plug, Footprints, PartyPopper, X,
+  Shield, Plug, Footprints, PartyPopper, Route, X,
 } from 'lucide-react';
 import { AMENITIES, GALLERY, img } from './site-data';
 
@@ -12,13 +12,14 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   waves: Waves, building: Building, dumbbell: Dumbbell, trees: Trees,
   baby: Baby, trophy: Trophy, laptop: Laptop, zap: Zap,
   shield: Shield, plug: Plug, footprints: Footprints, party: PartyPopper,
+  road: Route,
 };
 
 export function SiteAmenities() {
   return (
     <section id="amenities" className="relative overflow-hidden bg-slate-950 py-24">
       <img
-        src={img('skh-amenity-bg', 1920, 1000)}
+        src={img('ap-amenity-bg-green', 1920, 1000)}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover opacity-20"

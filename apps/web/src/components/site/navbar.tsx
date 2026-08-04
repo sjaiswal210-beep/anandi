@@ -6,10 +6,10 @@ import { PROJECT } from './site-data';
 
 const links = [
   { href: '#overview', label: 'Overview' },
-  { href: '#plans', label: 'Floor Plans' },
+  { href: '#plans', label: 'Plot Sizes' },
   { href: '#amenities', label: 'Amenities' },
-  { href: '#gallery', label: 'Gallery' },
   { href: '#location', label: 'Location' },
+  { href: '#blog', label: 'Insights' },
   { href: '#contact', label: 'Contact' },
 ];
 

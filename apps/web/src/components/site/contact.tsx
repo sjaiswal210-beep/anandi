@@ -6,10 +6,16 @@ import { motion } from 'framer-motion';
 import { Loader2, CheckCircle2, Phone, Mail, MapPin } from 'lucide-react';
 import { PROJECT, CONFIGURATIONS } from './site-data';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+function resolveApiUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:4000/api/v1`;
+  }
+  return 'http://localhost:4000/api/v1';
+}
 
 export function SiteContact() {
-  const [form, setForm] = useState({ name: '', phone: '', email: '', message: '', config: '3 BHK' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', message: '', config: CONFIGURATIONS[0].type });
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [error, setError] = useState('');
 
@@ -22,17 +28,18 @@ export function SiteContact() {
     setError('');
     setStatus('sending');
     try {
-      await axios.post(`${API_URL}/website/public/${PROJECT.subdomain}/inquiry`, {
+      await axios.post(`${resolveApiUrl()}/website/public/${PROJECT.subdomain}/inquiry`, {
         name: form.name,
         phone: form.phone,
         email: form.email || undefined,
+        config: form.config,
         message: `Interested in ${form.config}. ${form.message}`.trim(),
         source: 'project_website',
       });
       setStatus('done');
     } catch {
       setStatus('error');
-      setError('Could not submit right now. Please call us instead.');
+      setError('Could not submit right now. Please call or WhatsApp us instead.');
     }
   };
 

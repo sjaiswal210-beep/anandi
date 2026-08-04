@@ -65,7 +65,7 @@ export class WebsiteController {
   @ApiOperation({ summary: 'Submit an inquiry from public website' })
   async submitInquiry(
     @Param('subdomain') subdomain: string,
-    @Body() dto: { name: string; phone: string; email?: string; message?: string; propertyId?: string; source?: string },
+    @Body() dto: { name: string; phone: string; email?: string; message?: string; propertyId?: string; source?: string; config?: string },
   ) {
     return this.websiteService.submitInquiry(subdomain, dto);
   }
