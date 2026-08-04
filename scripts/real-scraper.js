@@ -122,6 +122,19 @@ async function scrapeGoogleMaps(query, browser) {
       return data.slice(0, 20);
     });
 
+    // When a query matches one business exactly, Maps skips the results feed
+    // and lands directly on that business's page, where no place anchors exist.
+    if (results.length === 0 && page.url().includes('/maps/place/')) {
+      const single = await page.evaluate(() => {
+        const h1 = document.querySelector('h1');
+        return h1 ? h1.textContent.trim() : '';
+      });
+      if (single) {
+        console.log(`  single-result page: "${single}"`);
+        results.push({ name: single, url: page.url() });
+      }
+    }
+
     if (results.length === 0) {
       console.warn(`  no result cards matched for "${query}"`);
       await dumpDebug(page, query);
