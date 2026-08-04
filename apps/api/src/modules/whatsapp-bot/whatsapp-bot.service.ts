@@ -11,17 +11,46 @@ export class WhatsAppBotService {
   private readonly vpsSecret: string;
   private readonly vpsBizId: string;
 
-  private readonly projectContext = `You are the AI sales assistant for Anandi Park by Yuvraj Gade & Rajan Kute Developers.
-Project: Anandi Park - Premium NA Plots at GAT No. 279, Village Bakori, Taluka Haveli, Dist Pune.
-Location: On Wagholi-Bakori Wide Road, just 5 minutes from Wagholi, 10 min from Pune-Nagar Highway.
-Total: 84 plots ranging from 1000 sqft to 4500 sqft.
-Pricing: Starting Rs 15 Lakh (Rs 1500/sqft base). Corner plots and road-facing plots at premium.
-Roads: 30 feet wide road on two sides, 20 feet internal roads.
-Infrastructure: Compound wall, landscaped entry, water supply, electricity, drainage, street lights.
-Title: Clear title, NA approved, RERA registered.
-Possession: Ready for registration.
-Developers: Yuvraj Gade & Rajan Kute - trusted developers in Pune region.
-Reply in customer language. If buying intent detected, mark as HOT. Always end with a question.`;
+  private readonly projectContext = `Tumhara naam Priya hai aur tum Anandi Park ki sales executive ho — ek polite, warm, experienced ladki jo customers ko WhatsApp par plots ke baare mein guide karti hai.
+
+# TUMHARA ROLE
+- Tum ek REAL insaan ho, bot nahi. Kabhi mat bolna ki tum AI ya bot ho.
+- Tumhara kaam hai plot bechna — har detail deke customer ko convince karna aur site visit karwana.
+- Tum sirf HINGLISH mein reply karti ho (Hindi words Roman/English script mein, jaise "Ji haan, aapko kitne size ka plot chahiye?"). English ya pure Hindi (Devanagari) mein mat likhna.
+- Bahut polite, respectful aur helpful tone. "Ji", "aap", "bilkul", "zaroor" jaise words use karo.
+
+# BAAT-CHEET KE RULES
+- Har message mein greeting (Namaste/Hello) MAT karo. Sirf pehli baar greeting theek hai. Uske baad seedha jawab do.
+- Chhote, natural WhatsApp jaise messages likho — 2 se 4 lines. Paragraph mat likho.
+- Purani baat-cheet yaad rakho aur usi ke hisaab se aage baat karo. Jo customer pehle keh chuka hai woh dobara mat poochho.
+- Har cheez khul ke batao — price, size, location, documents — kuch chhupao mat. Tumhara goal hai sell karna.
+- Har reply ke end mein ek chhota sa sawaal ya next step suggest karo (jaise site visit, budget, ya size).
+- Emoji halke se use kar sakti ho (🙂 🏡 📍) par zyada nahi.
+
+# ANANDI PARK — PROJECT DETAILS (yahi se jawab dena)
+- Project: Anandi Park — premium RESIDENTIAL plots (NA approved, clear title, RERA registered).
+- Developer: Yuvraj Gade & Rajan Kute Developers — Pune ke trusted developers.
+- Location: GAT No. 279, Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune (East Pune).
+- Total 84 residential plots, sizes 1000 sq.ft se 4510 sq.ft tak.
+- PRICE: Starting Rs 18 Lakh (all inclusive). 
+  * 1000 sq.ft — Rs 18 Lakh se
+  * 1500 sq.ft — Rs 27 Lakh se
+  * 2000 sq.ft — Rs 36 Lakh se
+  * 3000+ sq.ft (corner/road-facing premium) — Rs 54 Lakh se
+- Roads: 30 aur 40 feet wide internal roads.
+- Amenities: gated layout, compound wall, landscaped entry gate, 24x7 water line, underground electricity, storm water drainage, central garden, children play area, security cabin + CCTV, street lights, tree plantation.
+- Connectivity: Wagheshwar Temple 10 min, schools (Orchid, Wisdom World) 10 min, Pune-Nagar Highway 8 min, Kharadi IT hub 25 min, Pune Airport 30 min, proposed Ring Road 10 min.
+- Payment plan: 10% booking, 40% agreement, 50% registration. EMI/loan available (SBI, HDFC, ICICI, Axis).
+- Possession: Ready for registration. Site visit free hai, weekend bhi, pickup available.
+- Website: anandipark.in
+
+# LOAN/DOCS
+Loan documentation aur registration hum handle karte hain. Sabhi legal docs (title, 7/12, NA order, RERA) available hain — customer ko bharosa dilao.
+
+# CLOSING
+Jab customer interested lage, site visit ka time poochho ya unka phone/naam confirm karke bolo ki humari team call karegi. Booking ke liye push karo but pushy mat lago.
+
+Yaad rakho: sirf Hinglish, polite ladki ki tarah, har baar greeting nahi, sab detail do, aur plot bechna hai.`;
 
   constructor(private prisma: PrismaService, private configService: ConfigService) {
     this.vpsUrl = this.configService.get<string>('VPS_WHATSAPP_URL', 'http://147.93.169.183:8300');
@@ -42,6 +71,17 @@ Reply in customer language. If buying intent detected, mark as HOT. Always end w
   }
 
   async handleIncomingMessage(from: string, message: string, workspaceId?: string) {
+    // Persist the incoming message first so conversation context builds up.
+    if (workspaceId) {
+      await this.prisma.whatsAppMessage.create({
+        data: {
+          workspaceId, from, to: '919999000001', type: 'text',
+          content: { text: { body: message } } as any,
+          direction: 'incoming', status: 'received',
+        },
+      }).catch(() => undefined);
+    }
+
     const history = await this.prisma.whatsAppMessage.findMany({
       where: { OR: [{ from }, { to: from }] }, orderBy: { createdAt: 'asc' }, take: 20,
     });
@@ -49,22 +89,63 @@ Reply in customer language. If buying intent detected, mark as HOT. Always end w
     const lead = await this.prisma.lead.findFirst({
       where: { OR: [{ phone }, { phone: from }, { phone: `+91${phone}` }] },
     });
-    const chatHistory = history.map((m: any) => ({
-      role: m.direction === 'incoming' ? 'user' : 'model',
-      parts: [{ text: (m.content as any)?.text?.body || '' }],
-    }));
-    let reply = 'Thank you for your message. Our team will get back to you shortly.';
+    const chatHistory = history
+      .map((m: any) => ({
+        role: m.direction === 'incoming' ? 'user' : 'model',
+        parts: [{ text: (m.content as any)?.text?.body || '' }],
+      }))
+      .filter((h) => h.parts[0].text);
+
+    // The current message was just persisted, so it's the last history entry.
+    // Drop it — sendMessage(message) sends it separately.
+    if (chatHistory.length && chatHistory[chatHistory.length - 1].role === 'user') {
+      chatHistory.pop();
+    }
+
+    // Gemini requires history to start with a 'user' turn; our priming handles
+    // that, but ensure the replayed history also begins cleanly with a user turn.
+    while (chatHistory.length && chatHistory[0].role === 'model') {
+      chatHistory.shift();
+    }
+    // What we already know about this customer, so Priya doesn't re-ask.
+    const leadNote = lead
+      ? `\n\n# IS CUSTOMER KE BAARE MEIN (pehle se maloom)\nNaam: ${lead.name || 'unknown'}` +
+        (lead.budget ? `\nBudget: Rs ${lead.budget}` : '') +
+        (lead.preferredPropertyType ? `\nInterest: ${lead.preferredPropertyType}` : '') +
+        `\nStatus: ${lead.status}` +
+        ((lead.customFields as any)?.message ? `\nPehle bataya: ${(lead.customFields as any).message}` : '') +
+        `\nInhe naam se address karo aur jo pehle discuss ho chuka hai woh dobara mat poochho.`
+      : '';
+
+    const isFirstMessage = chatHistory.filter((h) => h.role === 'user').length <= 1;
+
+    let reply = 'Ji, thoda rukiye — main abhi aapko details bhejti hoon. 🙂';
     if (this.geminiModel) {
       try {
         const chat = this.geminiModel.startChat({
           history: [
-            { role: 'user', parts: [{ text: `System: ${this.projectContext}${lead ? `\nLead: ${lead.name}, Budget: ${lead.budget}, Status: ${lead.status}` : ''}` }] },
-            { role: 'model', parts: [{ text: 'Understood. I am ready to assist customers.' }] },
+            {
+              role: 'user',
+              parts: [
+                {
+                  text:
+                    this.projectContext +
+                    leadNote +
+                    (isFirstMessage
+                      ? '\n\n(Yeh customer ka pehla message hai — ek short greeting theek hai.)'
+                      : '\n\n(Yeh continuing chat hai — greeting mat karo, seedha jawab do.)'),
+                },
+              ],
+            },
+            { role: 'model', parts: [{ text: 'Ji bilkul, main Priya bol rahi hoon Anandi Park se. Batayiye main kaise help karoon? 🙂' }] },
             ...chatHistory.slice(-16),
           ],
+          // High enough to leave room for the model's thinking tokens plus a
+          // full reply — a low limit truncates the answer mid-sentence.
+          generationConfig: { temperature: 0.9, maxOutputTokens: 2048 },
         });
         const result = await chat.sendMessage(message);
-        reply = result.response.text();
+        reply = result.response.text().trim();
       } catch (err: any) { this.logger.error('Gemini reply failed:', err.message); }
     }
     const intent = this.detectIntent(message);
