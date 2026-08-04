@@ -50,6 +50,15 @@ export class AICallingController {
     return this.service.blastCall(workspaceId, dto);
   }
 
+  @Post('call-numbers')
+  @ApiOperation({ summary: 'Call a custom list of phone numbers' })
+  async callNumbers(
+    @WorkspaceId() workspaceId: string,
+    @Body() dto: { numbers: string[]; script?: string },
+  ) {
+    return this.service.callNumbers(workspaceId, dto);
+  }
+
   @Get('records')
   @ApiOperation({ summary: 'Get call records' })
   async getRecords(@WorkspaceId() workspaceId: string, @Query('page') page?: number) {

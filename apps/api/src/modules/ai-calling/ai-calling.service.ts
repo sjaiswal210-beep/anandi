@@ -66,6 +66,9 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
 
     // If Vobiz is configured, place a real call.
     if (this.vobiz.isConfigured) {
+      // Determine the answer URL — use GitHub-hosted XML files since Vobiz needs HTTPS.
+      const answerUrl = this.resolveAnswerUrl(script);
+
       const call = await this.prisma.callRecord.create({
         data: {
           workspaceId,
@@ -73,14 +76,14 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
           phone: dto.phone,
           direction: 'outbound',
           status: 'initiated',
-          script,
+          script: script || answerUrl,
           provider: 'vobiz',
-          providerCallId: '', // will be updated once placed
+          providerCallId: '',
         },
       });
 
       try {
-        const result = await this.vobiz.makeCall({ to: dto.phone });
+        const result = await this.vobiz.makeCall({ to: dto.phone, answerUrl });
         await this.prisma.callRecord.update({
           where: { id: call.id },
           data: { providerCallId: result.callUuid },
@@ -95,11 +98,26 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
       }
     }
 
-    // Fallback: no telephony configured.
     throw new BadRequestException(
       'No telephony provider configured. Set VOBIZ_AUTH_ID, VOBIZ_AUTH_TOKEN, ' +
         'and VOBIZ_FROM_NUMBER in .env to place real calls.',
     );
+  }
+
+  /** Resolves which HTTPS answer_url to use for Vobiz. */
+  private resolveAnswerUrl(script?: string): string {
+    const base = 'https://raw.githubusercontent.com/sjaiswal210-beep/anandi/main/uploads/tts';
+
+    // If script looks like an XML URL already
+    if (script?.startsWith('https://') && script.endsWith('.xml')) return script;
+
+    // Match known audio keywords to XML files
+    if (script?.includes('marathi')) return `${base}/answer-marathi.xml`;
+    if (script?.includes('english')) return `${base}/answer-english.xml`;
+    if (script?.includes('followup')) return `${base}/answer-hindi.xml`;
+
+    // Default: Hindi pitch
+    return `${base}/answer-hindi.xml`;
   }
 
   /** Call every scraped lead in the workspace, one after another. */
@@ -113,7 +131,6 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
         workspaceId,
         phone: { not: '' },
         ...(dto.tag && { tags: { has: dto.tag } }),
-        // Don't re-call leads we already reached successfully.
         NOT: { status: { in: ['WON', 'LOST'] } },
       },
       select: { id: true, phone: true, name: true },
@@ -124,7 +141,6 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
       return { message: 'No eligible leads to call', called: 0 };
     }
 
-    const script = dto.script || undefined;
     const results: any[] = [];
 
     for (const lead of leads) {
@@ -132,13 +148,12 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
         const r = await this.initiateCall(workspaceId, {
           leadId: lead.id,
           phone: lead.phone,
-          script,
+          script: dto.script,
         });
         results.push({ name: lead.name, phone: lead.phone, ...r });
       } catch (e: any) {
         results.push({ name: lead.name, phone: lead.phone, error: e.message });
       }
-      // Small gap between calls.
       await new Promise((resolve) => setTimeout(resolve, 1500));
     }
 
@@ -146,6 +161,55 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
       called: results.length,
       placed: results.filter((r) => r.callUuid).length,
       failed: results.filter((r) => r.error).length,
+      results,
+    };
+  }
+
+  /** Call a raw list of phone numbers (from the dashboard input). */
+  async callNumbers(workspaceId: string, dto: { numbers: string[]; script?: string }) {
+    if (!this.vobiz.isConfigured) {
+      throw new BadRequestException('Vobiz is not configured.');
+    }
+
+    const answerUrl = this.resolveAnswerUrl(dto.script);
+    const results: any[] = [];
+
+    for (const num of dto.numbers) {
+      const phone = num.replace(/[^\d]/g, '');
+      if (phone.length < 10) {
+        results.push({ phone: num, error: 'invalid number', status: 'skipped' });
+        continue;
+      }
+
+      try {
+        const call = await this.prisma.callRecord.create({
+          data: {
+            workspaceId,
+            phone,
+            direction: 'outbound',
+            status: 'initiated',
+            script: dto.script || answerUrl,
+            provider: 'vobiz',
+            providerCallId: '',
+          },
+        });
+
+        const result = await this.vobiz.makeCall({ to: phone, answerUrl });
+        await this.prisma.callRecord.update({
+          where: { id: call.id },
+          data: { providerCallId: result.callUuid },
+        });
+        results.push({ phone, callUuid: result.callUuid, status: 'placed' });
+      } catch (e: any) {
+        results.push({ phone, error: e.message, status: 'failed' });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+
+    return {
+      total: dto.numbers.length,
+      placed: results.filter((r) => r.status === 'placed').length,
+      failed: results.filter((r) => r.status === 'failed').length,
       results,
     };
   }
