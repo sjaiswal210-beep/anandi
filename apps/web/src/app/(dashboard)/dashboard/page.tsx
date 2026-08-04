@@ -27,7 +27,12 @@ export default function DashboardPage() {
     staleTime: 60000,
   });
 
-  const plots: any[] = (plotsData as any)?.data || [];
+  const rawPlots = (plotsData as any)?.data;
+  const plots: any[] = Array.isArray(rawPlots)
+    ? rawPlots
+    : Array.isArray(rawPlots?.data)
+      ? rawPlots.data
+      : [];
   const plotStats = {
     total: plots.length || 84,
     available: plots.filter((p) => p.status === 'AVAILABLE').length,
