@@ -4,6 +4,7 @@ import { LeadIngestionService } from './lead-ingestion.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma/prisma.service';
 
 /**
  * Meta (Facebook/Instagram) Lead Ads Webhook
@@ -27,6 +28,7 @@ export class MetaWebhookController {
   constructor(
     private readonly ingestionService: LeadIngestionService,
     private configService: ConfigService,
+    private prisma: PrismaService,
   ) {
     this.verifyToken = this.configService.get<string>('META_VERIFY_TOKEN', 'anandi-park-meta-verify');
     this.workspaceId = ''; // Will be fetched dynamically
@@ -99,12 +101,7 @@ export class MetaWebhookController {
   }) {
     this.logger.log(`Direct Meta lead: ${body.name} - ${body.phone}`);
 
-    // Get workspace
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-    const workspace = await prisma.workspace.findFirst();
-    await prisma.$disconnect();
-
+    const workspace = await this.prisma.workspace.findFirst();
     if (!workspace) return { error: 'No workspace configured' };
 
     return this.ingestionService.ingest(workspace.id, {
@@ -142,12 +139,7 @@ export class MetaWebhookController {
       return;
     }
 
-    // Get workspace
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-    const workspace = await prisma.workspace.findFirst();
-    await prisma.$disconnect();
-
+    const workspace = await this.prisma.workspace.findFirst();
     if (!workspace) return;
 
     await this.ingestionService.ingest(workspace.id, {
