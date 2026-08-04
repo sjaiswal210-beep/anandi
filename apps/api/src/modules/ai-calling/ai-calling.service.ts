@@ -1,13 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { VobizService } from './vobiz.service';
 
 @Injectable()
 export class AICallingService {
   private readonly logger = new Logger(AICallingService.name);
   private geminiModel: any = null;
 
-  constructor(private prisma: PrismaService, private configService: ConfigService) {
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+    private vobiz: VobizService,
+  ) {
     this.initGemini();
   }
 
@@ -53,44 +58,96 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
   }
 
   async initiateCall(workspaceId: string, dto: { leadId?: string; phone: string; script?: string; objective?: string }) {
-    // Generate script if not provided
     let script = dto.script;
     if (!script && dto.leadId) {
       const generated = await this.generateScript(dto.leadId, dto.objective || 'introduction');
       script = (generated as any).script;
     }
 
-    // Create call record (stub - in production this calls Twilio/Exotel)
-    const call = await this.prisma.callRecord.create({
-      data: {
-        workspaceId,
-        leadId: dto.leadId,
-        phone: dto.phone,
-        direction: 'outbound',
-        status: 'initiated',
-        script,
-        provider: 'stub',
-        providerCallId: 'stub-' + Date.now().toString(36),
-      },
-    });
-
-    // Simulate call completion (stub)
-    setTimeout(async () => {
-      await this.prisma.callRecord.update({
-        where: { id: call.id },
+    // If Vobiz is configured, place a real call.
+    if (this.vobiz.isConfigured) {
+      const call = await this.prisma.callRecord.create({
         data: {
-          status: 'completed',
-          duration: Math.floor(Math.random() * 120) + 30,
-          transcript: `Call with ${dto.phone}. Customer showed interest in plot booking. Scheduled site visit for weekend.`,
-          intentDetected: 'interested',
-          sentiment: 'positive',
-          nextAction: 'schedule_visit',
-          completedAt: new Date(),
+          workspaceId,
+          leadId: dto.leadId,
+          phone: dto.phone,
+          direction: 'outbound',
+          status: 'initiated',
+          script,
+          provider: 'vobiz',
+          providerCallId: '', // will be updated once placed
         },
       });
-    }, 3000);
 
-    return { callId: call.id, status: 'initiated', provider: 'stub' };
+      try {
+        const result = await this.vobiz.makeCall({ to: dto.phone });
+        await this.prisma.callRecord.update({
+          where: { id: call.id },
+          data: { providerCallId: result.callUuid },
+        });
+        return { callId: call.id, callUuid: result.callUuid, status: 'initiated', provider: 'vobiz' };
+      } catch (e: any) {
+        await this.prisma.callRecord.update({
+          where: { id: call.id },
+          data: { status: 'failed', transcript: e.message },
+        });
+        throw new BadRequestException(`Call failed: ${e.message}`);
+      }
+    }
+
+    // Fallback: no telephony configured.
+    throw new BadRequestException(
+      'No telephony provider configured. Set VOBIZ_AUTH_ID, VOBIZ_AUTH_TOKEN, ' +
+        'and VOBIZ_FROM_NUMBER in .env to place real calls.',
+    );
+  }
+
+  /** Call every scraped lead in the workspace, one after another. */
+  async blastCall(workspaceId: string, dto: { script?: string; tag?: string; limit?: number }) {
+    if (!this.vobiz.isConfigured) {
+      throw new BadRequestException('Vobiz is not configured. Set env vars first.');
+    }
+
+    const leads = await this.prisma.lead.findMany({
+      where: {
+        workspaceId,
+        phone: { not: '' },
+        ...(dto.tag && { tags: { has: dto.tag } }),
+        // Don't re-call leads we already reached successfully.
+        NOT: { status: { in: ['WON', 'LOST'] } },
+      },
+      select: { id: true, phone: true, name: true },
+      take: dto.limit || 50,
+    });
+
+    if (leads.length === 0) {
+      return { message: 'No eligible leads to call', called: 0 };
+    }
+
+    const script = dto.script || undefined;
+    const results: any[] = [];
+
+    for (const lead of leads) {
+      try {
+        const r = await this.initiateCall(workspaceId, {
+          leadId: lead.id,
+          phone: lead.phone,
+          script,
+        });
+        results.push({ name: lead.name, phone: lead.phone, ...r });
+      } catch (e: any) {
+        results.push({ name: lead.name, phone: lead.phone, error: e.message });
+      }
+      // Small gap between calls.
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+
+    return {
+      called: results.length,
+      placed: results.filter((r) => r.callUuid).length,
+      failed: results.filter((r) => r.error).length,
+      results,
+    };
   }
 
   async getCallRecords(workspaceId: string, params: { page?: number; limit?: number }) {
