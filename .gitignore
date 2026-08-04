@@ -48,6 +48,7 @@ prisma/migrations/*.sql
 
 # Uploads
 uploads/
+!uploads/tts/
 tmp/
 
 # Certificates
