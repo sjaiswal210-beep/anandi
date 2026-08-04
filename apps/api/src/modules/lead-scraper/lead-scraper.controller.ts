@@ -38,6 +38,14 @@ export class LeadScraperController {
     return this.service.getScrapedLeads(workspaceId);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @Get('stats')
+  @ApiOperation({ summary: 'Scraped lead totals, including results from cron runs' })
+  async getStats(@WorkspaceId() workspaceId: string) {
+    return this.service.getStats(workspaceId);
+  }
+
   // n8n / external scraper webhook — receives scraped leads
   @Public()
   @Post('webhook/:workspaceId')

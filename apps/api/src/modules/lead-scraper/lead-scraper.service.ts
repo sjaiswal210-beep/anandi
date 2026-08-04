@@ -200,11 +200,89 @@ export class LeadScraperService {
   }
 
   async getScrapedLeads(workspaceId: string) {
-    return this.prisma.lead.findMany({
+    const leads = await this.prisma.lead.findMany({
       where: { workspaceId, tags: { has: 'scraped' } },
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: 200,
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        status: true,
+        tags: true,
+        customFields: true,
+        createdAt: true,
+      },
     });
+
+    // Flatten the nested rawData JSON so the UI doesn't have to parse it.
+    return leads.map((l) => {
+      const cf = (l.customFields || {}) as Record<string, any>;
+      let raw: Record<string, any> = {};
+      try {
+        raw = typeof cf.rawData === 'string' ? JSON.parse(cf.rawData) : cf.rawData || {};
+      } catch {
+        raw = {};
+      }
+
+      return {
+        id: l.id,
+        name: l.name,
+        phone: l.phone,
+        email: l.email,
+        status: l.status,
+        tags: l.tags,
+        createdAt: l.createdAt,
+        platform: cf.scrapedFrom || null,
+        location: cf.targetArea || null,
+        intent: cf.intent || null,
+        website: raw.website || null,
+        rating: raw.rating || null,
+        mapsUrl: raw.mapsUrl || null,
+        query: raw.query || null,
+      };
+    });
+  }
+
+  /**
+   * Aggregates straight from the leads table, so results from the cron runs
+   * show up too — the in-memory job list only knows about dashboard-triggered
+   * scrapes and is lost on restart.
+   */
+  async getStats(workspaceId: string) {
+    const scraped = await this.prisma.lead.findMany({
+      where: { workspaceId, tags: { has: 'scraped' } },
+      select: { createdAt: true, phone: true, customFields: true, status: true },
+    });
+
+    const now = Date.now();
+    const dayAgo = now - 86400000;
+    const weekAgo = now - 7 * 86400000;
+
+    const byPlatform: Record<string, number> = {};
+    let withPhone = 0;
+
+    for (const l of scraped) {
+      const cf = (l.customFields || {}) as Record<string, any>;
+      const platform = cf.scrapedFrom || 'unknown';
+      byPlatform[platform] = (byPlatform[platform] || 0) + 1;
+      if (l.phone && l.phone.length >= 10) withPhone++;
+    }
+
+    const timestamps = scraped.map((l) => l.createdAt.getTime());
+
+    return {
+      total: scraped.length,
+      withPhone,
+      last24h: timestamps.filter((t) => t >= dayAgo).length,
+      last7d: timestamps.filter((t) => t >= weekAgo).length,
+      contacted: scraped.filter((l) => l.status !== 'NEW').length,
+      byPlatform: Object.entries(byPlatform)
+        .map(([platform, count]) => ({ platform, count }))
+        .sort((a, b) => b.count - a.count),
+      lastScrapeAt: timestamps.length ? new Date(Math.max(...timestamps)) : null,
+    };
   }
 
 }

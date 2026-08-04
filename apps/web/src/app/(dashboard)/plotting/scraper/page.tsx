@@ -2,20 +2,34 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Search, Globe, MapPin, Zap, Users, CheckCircle, Clock, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { Search, MapPin, Zap, Users, CheckCircle, Clock, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
+// Only these two have a scraper script behind them. The rest were aspirational
+// and would silently run the listings scraper instead.
 const platforms = [
-  { id: 'google_maps', name: 'Google Maps', desc: 'Reviews & contacts from property businesses', icon: '🗺️' },
-  { id: 'justdial', name: 'JustDial', desc: 'Real estate inquiries in target city', icon: '📞' },
-  { id: 'facebook_groups', name: 'Facebook Groups', desc: 'Posts with buying intent keywords', icon: '👥' },
-  { id: '99acres', name: '99acres', desc: 'Active property seekers in area', icon: '🏠' },
-  { id: 'magicbricks', name: 'MagicBricks', desc: 'Buyer inquiries for similar properties', icon: '🧱' },
-  { id: 'instagram', name: 'Instagram', desc: 'Engaged users on real estate content', icon: '📸' },
-  { id: 'linkedin', name: 'LinkedIn', desc: 'Real estate professionals & investors', icon: '💼' },
-  { id: 'n8n_custom', name: 'n8n Custom Workflow', desc: 'Your own automation workflow', icon: '⚡' },
+  {
+    id: 'google_maps',
+    name: 'Google Maps',
+    desc: 'Property businesses & dealers with phone numbers',
+    icon: '🗺️',
+    ready: true,
+  },
+  {
+    id: 'listing_sites',
+    name: '99acres + MagicBricks',
+    desc: 'Agents listing plots in your area',
+    icon: '🏠',
+    ready: true,
+  },
+  {
+    id: 'n8n_custom',
+    name: 'n8n Custom Workflow',
+    desc: 'Push leads in from your own automation',
+    icon: '⚡',
+    ready: true,
+  },
 ];
 
 export default function LeadScraperPage() {
@@ -31,23 +45,34 @@ export default function LeadScraperPage() {
     refetchInterval: 5000,
   });
 
-  const { data: leadsData } = useQuery({
+  const jobs: any[] = (jobsData as any)?.data || [];
+  const isScraping = jobs.some((j) => j.status === 'running');
+
+  // While a scrape is running, poll results so rows appear as they land.
+  const { data: leadsData, isLoading: leadsLoading } = useQuery({
     queryKey: ['scraped-leads'],
     queryFn: () => api.get('/lead-scraper/leads'),
+    refetchInterval: isScraping ? 5000 : false,
+  });
+
+  const { data: statsData } = useQuery({
+    queryKey: ['scraper-stats'],
+    queryFn: () => api.get('/lead-scraper/stats'),
+    refetchInterval: isScraping ? 5000 : 30000,
   });
 
   const scrapeMutation = useMutation({
     mutationFn: (dto: any) => api.post('/lead-scraper/start', dto),
     onSuccess: (res: any) => {
-      toast.success(res?.data?.message || 'Scrape job started!');
+      toast.success(res?.data?.message || 'Scrape started. Results appear below as they are found.');
       queryClient.invalidateQueries({ queryKey: ['scraper-jobs'] });
-      setTimeout(() => queryClient.invalidateQueries({ queryKey: ['scraped-leads'] }), 5000);
     },
-    onError: () => toast.error('Failed to start scraper'),
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to start scraper'),
   });
 
-  const jobs = jobsData?.data || [];
-  const leads = leadsData?.data || [];
+  const leads: any[] = (leadsData as any)?.data || [];
+  const stats: any = (statsData as any)?.data || {};
 
   const handleStart = () => {
     scrapeMutation.mutate({
@@ -68,6 +93,39 @@ export default function LeadScraperPage() {
           Find people interested in property in your target area — from Google Maps, JustDial, Facebook, 99acres & more
         </p>
       </div>
+
+      {/* Totals straight from the database, so scheduled cron runs count too */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="bg-card border rounded-xl p-4">
+          <p className="text-2xl font-bold">{stats.total ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Total scraped</p>
+        </div>
+        <div className="bg-card border rounded-xl p-4">
+          <p className="text-2xl font-bold text-emerald-600">{stats.withPhone ?? 0}</p>
+          <p className="text-xs text-muted-foreground">With phone</p>
+        </div>
+        <div className="bg-card border rounded-xl p-4">
+          <p className="text-2xl font-bold">{stats.last24h ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Last 24 hours</p>
+        </div>
+        <div className="bg-card border rounded-xl p-4">
+          <p className="text-2xl font-bold">{stats.last7d ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Last 7 days</p>
+        </div>
+        <div className="bg-card border rounded-xl p-4">
+          <p className="text-2xl font-bold">{stats.contacted ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Contacted</p>
+        </div>
+      </div>
+
+      {stats.lastScrapeAt && (
+        <p className="text-xs text-muted-foreground">
+          Newest lead added {new Date(stats.lastScrapeAt).toLocaleString()}
+          {stats.byPlatform?.length > 0 && (
+            <> · by source: {stats.byPlatform.map((p: any) => `${p.platform} (${p.count})`).join(', ')}</>
+          )}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Scraper Config */}
@@ -190,7 +248,9 @@ export default function LeadScraperPage() {
                       ) : job.status === 'running' ? (
                         <span className="flex items-center gap-1 text-xs text-blue-600"><Loader2 className="h-3 w-3 animate-spin" /> Running</span>
                       ) : (
-                        <span className="flex items-center gap-1 text-xs text-red-600"><AlertCircle className="h-3 w-3" /> Failed</span>
+                        <span className="flex items-center gap-1 text-xs text-red-600" title={job.error || 'Failed'}>
+                          <AlertCircle className="h-3 w-3" /> Failed
+                        </span>
                       )}
                     </div>
                   </div>
@@ -199,33 +259,115 @@ export default function LeadScraperPage() {
             )}
           </div>
 
-          {/* Scraped Leads Count */}
-          <div className="bg-card border rounded-xl p-5">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Users className="h-4 w-4" /> Scraped Leads ({leads.length})
-            </h3>
-            {leads.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Run a scrape to find leads</p>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {leads.slice(0, 15).map((lead: any) => (
-                  <div key={lead.id} className="flex items-center justify-between p-2.5 border rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium">{lead.name}</p>
-                      <p className="text-xs text-muted-foreground">{lead.phone}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded">{lead.tags?.[1] || 'scraped'}</span>
-                    </div>
-                  </div>
-                ))}
-                {leads.length > 15 && (
-                  <p className="text-xs text-center text-muted-foreground">+{leads.length - 15} more in CRM</p>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Failure detail, since the badge alone doesn't explain anything */}
+          {jobs.filter((j) => j.status === 'failed' && j.error).length > 0 && (
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl p-4">
+              <h4 className="text-sm font-semibold text-red-700 dark:text-red-400 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" /> Last failure
+              </h4>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1.5 break-words">
+                {jobs.find((j) => j.status === 'failed' && j.error)?.error}
+              </p>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Results */}
+      <div className="bg-card border rounded-xl overflow-hidden">
+        <div className="p-5 border-b flex items-center justify-between gap-3 flex-wrap">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Users className="h-4 w-4" /> Scraped Leads ({leads.length})
+          </h3>
+          {isScraping && (
+            <span className="text-xs text-blue-600 flex items-center gap-1.5">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Scraping — this list refreshes automatically
+            </span>
+          )}
+        </div>
+
+        {leadsLoading ? (
+          <p className="text-sm text-muted-foreground p-8 text-center">Loading…</p>
+        ) : leads.length === 0 ? (
+          <div className="p-8 text-center space-y-1">
+            <p className="text-sm text-muted-foreground">No scraped leads yet.</p>
+            <p className="text-xs text-muted-foreground">
+              Start a scrape above, or wait for the scheduled run. Results are also filed into the CRM under Leads.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs text-muted-foreground">
+                <tr>
+                  <th className="text-left font-medium px-5 py-2.5">Business / Name</th>
+                  <th className="text-left font-medium px-4 py-2.5">Phone</th>
+                  <th className="text-left font-medium px-4 py-2.5">Location</th>
+                  <th className="text-left font-medium px-4 py-2.5">Source</th>
+                  <th className="text-left font-medium px-4 py-2.5">Status</th>
+                  <th className="text-left font-medium px-4 py-2.5">Found</th>
+                  <th className="text-left font-medium px-4 py-2.5">Links</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((lead) => (
+                  <tr key={lead.id} className="border-t hover:bg-muted/30">
+                    <td className="px-5 py-2.5 font-medium max-w-[240px] truncate" title={lead.name}>
+                      {lead.name}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {lead.phone ? (
+                        <a href={`tel:${lead.phone}`} className="text-primary hover:underline">
+                          {lead.phone}
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground max-w-[220px] truncate" title={lead.location || ''}>
+                      {lead.location || '—'}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded">
+                        {lead.platform || 'scraped'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{lead.status}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                      {new Date(lead.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        {lead.mapsUrl && (
+                          <a
+                            href={lead.mapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-muted-foreground hover:text-primary"
+                            aria-label={`Open ${lead.name} on Google Maps`}
+                          >
+                            <MapPin className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                        {lead.website && (
+                          <a
+                            href={lead.website}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-muted-foreground hover:text-primary"
+                            aria-label={`Open website for ${lead.name}`}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
