@@ -170,23 +170,40 @@ export class LeadScraperService {
     }
 
     this.logger.log(`Running real scraper: ${scriptPath}`);
-    exec(`node ${scriptPath}`, { cwd: appRoot, timeout: 180000 }, async (err, stdout) => {
-      job.completedAt = new Date();
+    // maxBuffer raised so a chatty scraper doesn't get killed for "stdout maxBuffer exceeded".
+    // The Google Maps scrape visits ~100 pages and takes 10-15 min, so the
+    // timeout must be generous — a short one kills it mid-run (SIGTERM), which
+    // surfaces as an unhelpful "Command failed".
+    exec(
+      `node ${scriptPath}`,
+      { cwd: appRoot, timeout: 20 * 60 * 1000, maxBuffer: 10 * 1024 * 1024 },
+      async (err, stdout, stderr) => {
+        job.completedAt = new Date();
 
-      if (err) {
-        job.status = 'failed';
-        job.error = err.message;
-        this.logger.error(`Scraper failed: ${err.message}`);
-        return;
-      }
+        // The scraper posts leads to the ingest webhook as it runs, so it may
+        // have saved leads even if it exited non-zero. Trust the reported count.
+        const found = (stdout || '').match(/Total leads scraped:\s*(\d+)/);
+        const ingested = (stdout || '').match(/Ingest result:\s*(\d+)\s*new/);
+        job.leadsFound = ingested ? Number(ingested[1]) : found ? Number(found[1]) : 0;
 
-      job.status = 'completed';
-      // The script posts its findings to the ingest webhook, so count what
-      // actually landed rather than trusting stdout.
-      const found = stdout.match(/Total leads scraped:\s*(\d+)/);
-      job.leadsFound = found ? Number(found[1]) : 0;
-      this.logger.log(`Scraper finished, ${job.leadsFound} leads reported`);
-    });
+        if (err && job.leadsFound === 0) {
+          job.status = 'failed';
+          // Surface the actual reason, not just "Command failed".
+          const lastLines = (stderr || stdout || '')
+            .trim()
+            .split('\n')
+            .slice(-6)
+            .join(' | ')
+            .slice(0, 500);
+          job.error = lastLines || err.message;
+          this.logger.error(`Scraper failed: ${job.error}`);
+          return;
+        }
+
+        job.status = 'completed';
+        this.logger.log(`Scraper finished, ${job.leadsFound} leads ingested`);
+      },
+    );
 
     return {
       jobId: job.id,
