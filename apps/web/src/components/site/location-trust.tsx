@@ -3,11 +3,30 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Clock, Quote, ChevronDown, Star } from 'lucide-react';
-import { NEARBY, TESTIMONIALS, FAQS, PROJECT, img } from './site-data';
+import { NEARBY, CONNECTIVITY, TESTIMONIALS, FAQS, PROJECT, img } from './site-data';
 
 export function SiteLocation() {
   return (
-    <section id="location" className="bg-slate-50 py-24 dark:bg-slate-900">
+    <section id="location" className="bg-slate-50 py-20 dark:bg-slate-900 sm:py-24">
+      {/* Connectivity highlight band */}
+      <div className="mx-auto mb-16 max-w-7xl px-5">
+        <div className="grid grid-cols-2 gap-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-emerald-50 p-6 dark:border-amber-900/40 dark:from-amber-950/20 dark:to-emerald-950/20 sm:grid-cols-4">
+          {CONNECTIVITY.map((c) => (
+            <motion.div
+              key={c.place}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.4 }}
+              className="text-center"
+            >
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 sm:text-3xl">{c.time}</p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">{c.place}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       <div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-2 lg:items-center">
         <div>
           <p className="text-sm font-medium uppercase tracking-widest text-amber-600 dark:text-amber-400">

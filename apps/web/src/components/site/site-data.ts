@@ -114,15 +114,26 @@ export const GALLERY = [
 ];
 
 // Real, useful connectivity for Bakori / Wagholi, Pune East.
+// Drive times are approximate off-peak estimates by road.
 export const NEARBY = [
-  { place: 'Wagholi Chowk', time: '5 min', note: 'Daily needs, market' },
-  { place: 'Kharadi IT Hub (EON, WTC)', time: '20 min', note: 'Major employment' },
-  { place: 'Pune-Nagar Highway', time: '8 min', note: 'City connectivity' },
-  { place: 'Proposed Pune Ring Road', time: '10 min', note: 'Future growth' },
-  { place: 'Lohegaon Airport', time: '25 min', note: 'Air travel' },
-  { place: 'Reputed Schools', time: '10 min', note: 'Orchid, Wisdom World' },
-  { place: 'Hospitals (Kharadi)', time: '20 min', note: 'Columbia Asia' },
-  { place: 'Phoenix / Amanora Malls', time: '25 min', note: 'Shopping & leisure' },
+  { place: 'Wagheshwar Temple, Wagholi', time: '10 min', note: 'Landmark temple' },
+  { place: 'Reputed Schools', time: '10 min', note: 'Orchid, Wisdom World, Podar' },
+  { place: 'Pune-Nagar Highway (NH-753)', time: '8 min', note: 'City connectivity' },
+  { place: 'Kharadi IT Hub — EON, WTC', time: '25 min', note: 'Major employment' },
+  { place: 'Proposed Pune Ring Road', time: '10 min', note: 'Future appreciation' },
+  { place: 'Lohegaon Airport', time: '30 min', note: 'Air travel' },
+  { place: 'Columbia Asia Hospital, Kharadi', time: '25 min', note: 'Healthcare' },
+  { place: 'Phoenix Marketcity, Viman Nagar', time: '30 min', note: 'Shopping & leisure' },
+  { place: 'Ranjangaon MIDC', time: '30 min', note: 'Industrial belt' },
+  { place: 'Pune Railway Station', time: '40 min', note: 'Rail connectivity' },
+];
+
+// Punchy connectivity highlights used across the site and in ad content.
+export const CONNECTIVITY = [
+  { time: '10 min', place: 'Wagheshwar Temple' },
+  { time: '10 min', place: 'Schools & Colleges' },
+  { time: '25 min', place: 'Kharadi IT Park' },
+  { time: '30 min', place: 'Pune Airport' },
 ];
 
 export const BLOG_POSTS = [
@@ -215,5 +226,45 @@ export const FAQS = [
   },
 ];
 
+// Locally hosted AI-generated images (served from /public/site by Next.js).
+// Any seed not mapped here falls back to a picsum placeholder.
+const LOCAL_IMAGES: Record<string, string> = {
+  'ap-hero-land-aerial': '/site/hero-aerial.jpg',
+  'ap-about-land': '/site/about-land.jpg',
+  'ap-about-green': '/site/about-green.jpg',
+  'ap-about-gate': '/site/about-gate.jpg',
+  'ap-amenity-bg-green': '/site/green-belt.jpg',
+  'ap-aerial-view': '/site/aerial-view.jpg',
+  'ap-internal-road': '/site/internal-road.jpg',
+  'ap-entry-gate': '/site/entry-gate.jpg',
+  'ap-green-belt': '/site/green-belt.jpg',
+  'ap-plot-demarcation': '/site/about-land.jpg',
+  'ap-sample-villa': '/site/sample-villa.jpg',
+  'ap-map-context': '/site/aerial-view.jpg',
+  // plot config cards
+  'ap-plot-1k': '/site/about-land.jpg',
+  'ap-plot-15k': '/site/sample-villa.jpg',
+  'ap-plot-2k': '/site/entry-gate.jpg',
+  'ap-plot-3k': '/site/aerial-view.jpg',
+  // gallery
+  'ap-site-view': '/site/aerial-view.jpg',
+  'ap-road': '/site/internal-road.jpg',
+  'ap-entry': '/site/entry-gate.jpg',
+  'ap-green': '/site/green-belt.jpg',
+  'ap-plots': '/site/about-land.jpg',
+  'ap-aerial': '/site/hero-aerial.jpg',
+  // blog
+  'ap-blog-wagholi': '/site/blog-wagholi.jpg',
+  'ap-blog-plotvsflat': '/site/blog-plotvsflat.jpg',
+  'ap-blog-checklist': '/site/blog-checklist.jpg',
+  // social feed
+  'ap-insta-1': '/site/internal-road.jpg',
+  'ap-insta-2': '/site/hero-aerial.jpg',
+  'ap-insta-3': '/site/aerial-view.jpg',
+  'ap-insta-4': '/site/sample-villa.jpg',
+  'ap-insta-5': '/site/green-belt.jpg',
+  'ap-insta-6': '/site/entry-gate.jpg',
+};
+
 export const img = (seed: string, w: number, h: number) =>
-  `https://picsum.photos/seed/${seed}/${w}/${h}`;
+  LOCAL_IMAGES[seed] || `https://picsum.photos/seed/${seed}/${w}/${h}`;
