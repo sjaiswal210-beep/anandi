@@ -103,18 +103,18 @@ export class SocialImageService {
     headline?: string;
     prompt?: string;
   }): Promise<{ url: string; filePath: string; model: string; prompt: string }> {
-    if (!this.apiKey) {
-      throw new BadRequestException(
-        'GEMINI_API_KEY is not set, so ad images cannot be generated.',
-      );
-    }
-
     const prompt = input.prompt?.trim() || this.buildAdPrompt(input);
     const axios = (await import('axios')).default;
 
     const failures: string[] = [];
 
+    // No Gemini key at all → go straight to the free generator.
+    if (!this.apiKey) {
+      return this.generateViaPollinations(prompt, input.platform);
+    }
+
     // Image models are known to 404 when the key is sent as x-goog-api-key
+    // (Gemini image generation requires billing; free tier limit is 0.)
     // while accepting the same key as a ?key= query parameter, so both are
     // attempted. The winning combination is cached.
     const transports: ('header' | 'query')[] = this.workingTransport
@@ -178,23 +178,54 @@ export class SocialImageService {
           e?.response?.data?.error?.message || e?.message || 'unknown error';
         failures.push(`${model} (${transport}): ${status ?? ''} ${detail}`.trim());
 
-        // These repeat on every model, so stop rather than burn attempts.
-        if (status === 429) {
-          throw new BadRequestException(
-            `Gemini image quota exceeded. Image models are a paid tier. Detail: ${detail}`,
-          );
-        }
-        if (status === 403) {
-          throw new BadRequestException(`Gemini rejected the API key: ${detail}`);
+        // Quota (429) or billing (403) repeat on every model — stop trying
+        // Gemini and fall back to the free generator instead of failing.
+        if (status === 429 || status === 403) {
+          this.logger.warn(`Gemini image unavailable (${status}), falling back to Pollinations`);
+          break;
         }
       }
     }
 
+    // Free fallback: Pollinations.ai (no key, no billing).
+    try {
+      return await this.generateViaPollinations(prompt, input.platform);
+    } catch (e: any) {
+      failures.push(`pollinations: ${e.message}`);
+    }
+
     this.logger.warn(`All image attempts failed:\n${failures.join('\n')}`);
     throw new BadRequestException(
-      `Could not generate an image after ${attempts.length} attempt(s). ` +
-        `Details: ${failures.join(' | ')}`,
+      `Could not generate an image. Details: ${failures.join(' | ')}`,
     );
+  }
+
+  /** Free text-to-image via Pollinations.ai — no API key or billing needed. */
+  private async generateViaPollinations(
+    prompt: string,
+    platform?: string,
+  ): Promise<{ url: string; filePath: string; model: string; prompt: string }> {
+    const axios = (await import('axios')).default;
+    const square = (platform || '').toUpperCase() === 'INSTAGRAM';
+    const w = square ? 1080 : 1200;
+    const h = square ? 1080 : 675;
+    const seed = Math.floor(Math.random() * 1_000_000);
+
+    const url =
+      `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+      `?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
+
+    const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 120000 });
+    const buf = Buffer.from(res.data);
+    if (buf.length < 3000) throw new Error(`image too small (${buf.length} bytes)`);
+
+    const fileName = `ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+    await fs.mkdir(this.uploadDir, { recursive: true });
+    const filePath = path.join(this.uploadDir, fileName);
+    await fs.writeFile(filePath, buf);
+
+    this.logger.log(`Generated ad image via Pollinations: ${fileName}`);
+    return { url: `/uploads/social/${fileName}`, filePath, model: 'pollinations/flux', prompt };
   }
 
   /**

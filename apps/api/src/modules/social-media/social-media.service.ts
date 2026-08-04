@@ -26,7 +26,7 @@ export class SocialMediaService {
       const apiKey = this.configService.get<string>('GEMINI_API_KEY');
       if (apiKey) {
         const genAI = new GoogleGenerativeAI(apiKey);
-        this.geminiModel = genAI.getGenerativeModel({ model: this.configService.get<string>('GEMINI_MODEL', 'gemini-2.5-flash') });
+        this.geminiModel = genAI.getGenerativeModel({ model: this.configService.get<string>('GEMINI_MODEL', 'gemini-flash-latest') });
       }
     } catch (e) { this.logger.error('Gemini init failed'); }
   }

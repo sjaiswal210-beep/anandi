@@ -22,7 +22,7 @@ export class AIAgentsService {
       if (apiKey) {
         const genAI = new GoogleGenerativeAI(apiKey);
         this.geminiModel = genAI.getGenerativeModel({
-          model: this.configService.get<string>('GEMINI_MODEL', 'gemini-1.5-flash'),
+          model: this.configService.get<string>('GEMINI_MODEL', 'gemini-flash-latest'),
         });
       }
     } catch (e) {
