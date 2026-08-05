@@ -33,6 +33,7 @@ const navigation = [
   { name: 'Voice Calls', href: '/plotting/calling', icon: Phone },
   { name: 'WhatsApp Bot', href: '/plotting/whatsapp-bot', icon: MessageSquare },
   { name: 'Social Media', href: '/plotting/social', icon: Share2 },
+  { name: 'Ads & Costs', href: '/plotting/ads', icon: BarChart3 },
   { name: 'Lead Scraper', href: '/plotting/scraper', icon: Search },
   { name: 'Customers', href: '/plotting/customers', icon: Users },
   { name: 'Documents', href: '/documents', icon: FileText },

@@ -29,6 +29,7 @@ import { SocialMediaModule } from './modules/social-media/social-media.module';
 import { CustomerDataModule } from './modules/customer-data/customer-data.module';
 import { AICallingModule } from './modules/ai-calling/ai-calling.module';
 import { LeadScraperModule } from './modules/lead-scraper/lead-scraper.module';
+import { AdsModule } from './modules/ads/ads.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -97,6 +98,7 @@ import { HealthModule } from './modules/health/health.module';
     CustomerDataModule,
     AICallingModule,
     LeadScraperModule,
+    AdsModule,
   ],
 })
 export class AppModule {}
