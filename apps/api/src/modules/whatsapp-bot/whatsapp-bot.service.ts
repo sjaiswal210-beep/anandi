@@ -225,12 +225,24 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
   }
 
   async getBotMetrics(workspaceId: string) {
-    const [totalMessages, uniqueContacts, todayMessages] = await Promise.all([
+    const [totalMessages, uniqueContacts, todayMessages, incoming, outgoing] = await Promise.all([
       this.prisma.whatsAppMessage.count({ where: { workspaceId } }),
       this.prisma.whatsAppMessage.groupBy({ by: ['from'], where: { workspaceId, direction: 'incoming' } }),
       this.prisma.whatsAppMessage.count({ where: { workspaceId, createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } } }),
+      this.prisma.whatsAppMessage.count({ where: { workspaceId, direction: 'incoming' } }),
+      this.prisma.whatsAppMessage.count({ where: { workspaceId, direction: 'outgoing' } }),
     ]);
-    return { totalMessages, uniqueContacts: uniqueContacts.length, todayMessages, avgResponseTime: '< 3 sec', autoReplyRate: '98%' };
+    // Auto-reply rate = how many incoming messages got a reply (real, computed).
+    const autoReplyRate = incoming > 0 ? `${Math.min(100, Math.round((outgoing / incoming) * 100))}%` : '—';
+    return {
+      totalMessages,
+      uniqueContacts: uniqueContacts.length,
+      todayMessages,
+      incoming,
+      outgoing,
+      avgResponseTime: '< 3 sec',
+      autoReplyRate,
+    };
   }
 
   // VPS Integration

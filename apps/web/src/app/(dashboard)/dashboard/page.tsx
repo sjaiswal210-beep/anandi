@@ -4,44 +4,40 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
   Map, Target, Phone, MessageSquare, Share2, Search,
-  TrendingUp, Users, IndianRupee, ArrowUpRight,
+  TrendingUp, ArrowUpRight,
 } from 'lucide-react';
 import api from '@/lib/api';
 
 export default function DashboardPage() {
-  const { data: plotsData } = useQuery({
-    queryKey: ['plots-dash'],
-    queryFn: () => api.get('/plots/project/first'),
-    staleTime: 60000,
-  });
-
-  const { data: leadsData } = useQuery({
-    queryKey: ['leads-dash'],
-    queryFn: () => api.get('/lead-scraper/stats'),
-    staleTime: 60000,
+  // Single live-stats call: leads by source, plots, channels — all real, auto-refreshing.
+  const { data: liveData } = useQuery({
+    queryKey: ['dashboard-live'],
+    queryFn: () => api.get('/dashboard/live-stats'),
+    refetchInterval: 15000,
   });
 
   const { data: callData } = useQuery({
     queryKey: ['calls-dash'],
     queryFn: () => api.get('/ai-calling/metrics'),
-    staleTime: 60000,
+    refetchInterval: 15000,
   });
 
-  const rawPlots = (plotsData as any)?.data;
-  const plots: any[] = Array.isArray(rawPlots)
-    ? rawPlots
-    : Array.isArray(rawPlots?.data)
-      ? rawPlots.data
-      : [];
+  const live: any = (liveData as any)?.data || {};
+  const leadStats: any = live.leads || {};
   const plotStats = {
-    total: plots.length || 84,
-    available: plots.filter((p) => p.status === 'AVAILABLE').length,
-    reserved: plots.filter((p) => p.status === 'RESERVED').length,
-    sold: plots.filter((p) => p.status === 'SOLD').length,
+    total: live.plots?.total || 0,
+    available: live.plots?.available || 0,
+    reserved: live.plots?.reserved || 0,
+    sold: live.plots?.sold || 0,
   };
-
-  const scraper: any = (leadsData as any)?.data || {};
+  const channels: any = live.channels || {};
   const calls: any = (callData as any)?.data || {};
+
+  const sourceLabels: Record<string, string> = {
+    WEBSITE: 'Website', WHATSAPP: 'WhatsApp', FACEBOOK: 'Facebook',
+    INSTAGRAM: 'Instagram', GOOGLE_ADS: 'Google Ads', REFERRAL: 'Referral',
+    WALK_IN: 'Walk-in', COLD_CALL: 'Cold Call', OTHER: 'Scraped / Other',
+  };
 
   return (
     <div className="space-y-6">
@@ -69,8 +65,11 @@ export default function DashboardPage() {
         <div className="bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between">
             <Target className="h-5 w-5 text-blue-600" />
+            {leadStats.newToday > 0 && (
+              <span className="text-xs text-emerald-600 font-medium">+{leadStats.newToday} today</span>
+            )}
           </div>
-          <p className="text-3xl font-bold mt-2">{scraper.total || 0}</p>
+          <p className="text-3xl font-bold mt-2">{leadStats.total || 0}</p>
           <p className="text-sm text-muted-foreground">Total Leads</p>
         </div>
 
@@ -84,10 +83,10 @@ export default function DashboardPage() {
 
         <div className="bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between">
-            <IndianRupee className="h-5 w-5 text-green-600" />
+            <MessageSquare className="h-5 w-5 text-green-600" />
           </div>
-          <p className="text-3xl font-bold mt-2">₹15L+</p>
-          <p className="text-sm text-muted-foreground">Starting Price</p>
+          <p className="text-3xl font-bold mt-2">{channels.whatsappMessages || 0}</p>
+          <p className="text-sm text-muted-foreground">WhatsApp Messages</p>
         </div>
       </div>
 
@@ -156,11 +155,11 @@ export default function DashboardPage() {
           <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
             <Target className="h-5 w-5 text-blue-600" /> Lead Sources
           </h2>
-          {scraper.byPlatform?.length > 0 ? (
+          {leadStats.bySource?.length > 0 ? (
             <div className="space-y-3">
-              {scraper.byPlatform.map((s: any) => (
-                <div key={s.platform} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <span className="text-sm capitalize">{s.platform.replace('_', ' ')}</span>
+              {leadStats.bySource.map((s: any) => (
+                <div key={s.source} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <span className="text-sm">{sourceLabels[s.source] || s.source}</span>
                   <span className="text-sm font-semibold">{s.count}</span>
                 </div>
               ))}
@@ -173,11 +172,20 @@ export default function DashboardPage() {
               </Link>
             </div>
           )}
-          {scraper.lastScrapeAt && (
-            <p className="text-xs text-muted-foreground mt-3">
-              Last scraped: {new Date(scraper.lastScrapeAt).toLocaleString()}
-            </p>
-          )}
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t pt-4 text-center">
+            <div>
+              <p className="text-lg font-bold">{leadStats.qualified || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Qualified</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold">{leadStats.won || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Won</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold">{leadStats.newThisWeek || 0}</p>
+              <p className="text-[10px] text-muted-foreground">This week</p>
+            </div>
+          </div>
         </div>
 
         {/* Project Details */}

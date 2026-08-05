@@ -18,6 +18,12 @@ export class DashboardController {
     return this.dashboardService.getMetrics(workspaceId);
   }
 
+  @Get('live-stats')
+  @ApiOperation({ summary: 'Real-time counts: leads by source, plots, channels' })
+  async getLiveStats(@WorkspaceId() workspaceId: string) {
+    return this.dashboardService.getLiveStats(workspaceId);
+  }
+
   @Get('revenue-chart')
   @ApiOperation({ summary: 'Get revenue chart data' })
   async getRevenueChart(

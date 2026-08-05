@@ -281,14 +281,17 @@ export default function WhatsAppBotPage() {
               <div>
                 <label className="text-sm font-medium mb-2 block">Project Knowledge (Pre-loaded)</label>
                 <div className="p-4 bg-muted/50 rounded-lg text-sm space-y-2">
-                  <p>✅ Project name: Anandi Park</p>
-                  <p>✅ Location: GAT No. 279, Village Bakori, Taluka Haveli, Pune</p>
-                  <p>✅ 84 NA Plots (1000-4500 sqft)</p>
-                  <p>✅ Price: ₹1500/sqft base + corner/road premium</p>
-                  <p>✅ 30ft wide roads, 20ft internal roads</p>
+                  <p>✅ Bot persona: &quot;Priya&quot; — polite female sales agent</p>
+                  <p>✅ Replies in Hinglish / Marathi / English (matches customer)</p>
+                  <p>✅ 84 residential plots (1000–4510 sqft), from ₹18 Lakh</p>
+                  <p>✅ Location, connectivity (airport 30 min, temple 10 min)</p>
+                  <p>✅ Loan/EMI, tax and resale advisory — proactive selling</p>
                   <p>✅ RERA registered, clear title, ready for registration</p>
-                  <p>✅ Developer: Yuvraj Gade & Rajan Kute</p>
-                  <p>✅ Near Wagholi, 10 min from Pune-Nagar Highway</p>
+                  <p>✅ Remembers past conversation, pushes site visit</p>
+                  <p className="text-xs text-muted-foreground pt-1">
+                    This knowledge is built into the bot. The custom fields below are notes only and are not yet
+                    saved to the live bot.
+                  </p>
                 </div>
               </div>
 

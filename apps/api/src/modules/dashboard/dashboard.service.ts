@@ -112,6 +112,64 @@ export class DashboardService {
     return metrics;
   }
 
+  /** Real breakdown of ALL leads by source, plus plot inventory + channel counts. */
+  async getLiveStats(workspaceId: string) {
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+    const weekAgo = new Date(Date.now() - 7 * 86400000);
+
+    const [
+      totalLeads,
+      newToday,
+      newThisWeek,
+      qualified,
+      won,
+      bySource,
+      plots,
+      whatsappMsgs,
+      calls,
+      socialPosts,
+    ] = await Promise.all([
+      this.prisma.lead.count({ where: { workspaceId } }),
+      this.prisma.lead.count({ where: { workspaceId, createdAt: { gte: startOfDay } } }),
+      this.prisma.lead.count({ where: { workspaceId, createdAt: { gte: weekAgo } } }),
+      this.prisma.lead.count({ where: { workspaceId, status: 'QUALIFIED' } }),
+      this.prisma.lead.count({ where: { workspaceId, status: 'WON' } }),
+      this.prisma.lead.groupBy({ by: ['source'], where: { workspaceId }, _count: true }),
+      this.prisma.plotInventory.groupBy({ by: ['status'], _count: true }),
+      this.prisma.whatsAppMessage.count({ where: { workspaceId } }),
+      this.prisma.callRecord.count({ where: { workspaceId } }),
+      this.prisma.socialPost.count({ where: { workspaceId } }),
+    ]);
+
+    const plotCounts = { total: 0, available: 0, reserved: 0, sold: 0 };
+    for (const p of plots) {
+      plotCounts.total += p._count;
+      const s = (p.status || '').toUpperCase();
+      if (s === 'AVAILABLE') plotCounts.available += p._count;
+      else if (s === 'RESERVED') plotCounts.reserved += p._count;
+      else if (s === 'SOLD') plotCounts.sold += p._count;
+    }
+
+    return {
+      leads: {
+        total: totalLeads,
+        newToday,
+        newThisWeek,
+        qualified,
+        won,
+        bySource: bySource
+          .map((s) => ({ source: s.source, count: s._count }))
+          .sort((a, b) => b.count - a.count),
+      },
+      plots: plotCounts,
+      channels: {
+        whatsappMessages: whatsappMsgs,
+        calls,
+        socialPosts,
+      },
+    };
+  }
+
   async getRevenueChart(workspaceId: string, period: string = '30d') {
     const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
