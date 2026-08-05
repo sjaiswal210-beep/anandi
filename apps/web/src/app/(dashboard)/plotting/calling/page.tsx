@@ -21,6 +21,11 @@ export default function CallingPage() {
   const [blastTag, setBlastTag] = useState('scraped');
   const [blastLimit, setBlastLimit] = useState(10);
 
+  // Custom text-to-speech script
+  const [useCustom, setUseCustom] = useState(false);
+  const [customText, setCustomText] = useState('');
+  const [customLang, setCustomLang] = useState('hi-IN');
+
   const { data: metricsData } = useQuery({
     queryKey: ['call-metrics'],
     queryFn: () => api.get('/ai-calling/metrics'),
@@ -32,8 +37,13 @@ export default function CallingPage() {
     refetchInterval: 10000,
   });
 
+  const scriptPayload = () =>
+    useCustom && customText.trim()
+      ? { text: customText.trim(), language: customLang }
+      : { script: selectedScript };
+
   const callSingle = useMutation({
-    mutationFn: () => api.post('/ai-calling/call', { phone: singlePhone, script: selectedScript }),
+    mutationFn: () => api.post('/ai-calling/call', { phone: singlePhone, ...scriptPayload() }),
     onSuccess: () => { toast.success('Call placed!'); queryClient.invalidateQueries({ queryKey: ['call-records', 'call-metrics'] }); },
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Call failed'),
   });
@@ -41,7 +51,7 @@ export default function CallingPage() {
   const callBulk = useMutation({
     mutationFn: () => {
       const numbers = bulkNumbers.split(/[\n,;]+/).map((n) => n.trim()).filter((n) => n.length >= 10);
-      return api.post('/ai-calling/call-numbers', { numbers, script: selectedScript });
+      return api.post('/ai-calling/call-numbers', { numbers, ...scriptPayload() });
     },
     onSuccess: (res: any) => {
       const d = res?.data || res;
@@ -52,7 +62,7 @@ export default function CallingPage() {
   });
 
   const callBlast = useMutation({
-    mutationFn: () => api.post('/ai-calling/blast', { script: selectedScript, tag: blastTag, limit: blastLimit }),
+    mutationFn: () => api.post('/ai-calling/blast', { ...scriptPayload(), tag: blastTag, limit: blastLimit }),
     onSuccess: (res: any) => {
       const d = res?.data || res;
       toast.success(`Blast: ${d.placed || 0} calls placed to ${d.called || 0} leads`);
@@ -99,27 +109,74 @@ export default function CallingPage() {
         <div className="lg:col-span-2 space-y-5">
           {/* Script Selection */}
           <div className="bg-card border rounded-xl p-6">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Play className="h-4 w-4 text-orange-600" /> Select Voice Script
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              {SCRIPTS.map((s) => (
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Play className="h-4 w-4 text-orange-600" /> Voice Script
+              </h3>
+              <div className="flex rounded-lg border p-0.5 text-xs">
                 <button
-                  key={s.id}
-                  onClick={() => setSelectedScript(s.url)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    selectedScript === s.url
-                      ? 'bg-orange-600 text-white border-orange-600'
-                      : 'hover:bg-muted'
-                  }`}
+                  onClick={() => setUseCustom(false)}
+                  className={`px-3 py-1.5 rounded-md font-medium ${!useCustom ? 'bg-orange-600 text-white' : ''}`}
                 >
-                  {s.label}
+                  Ready scripts
                 </button>
-              ))}
+                <button
+                  onClick={() => setUseCustom(true)}
+                  className={`px-3 py-1.5 rounded-md font-medium ${useCustom ? 'bg-orange-600 text-white' : ''}`}
+                >
+                  Custom text
+                </button>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              This audio plays when the lead picks up. Generate new scripts in Colab and push to the repo.
-            </p>
+
+            {!useCustom ? (
+              <>
+                <div className="flex flex-wrap gap-3">
+                  {SCRIPTS.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedScript(s.url)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                        selectedScript === s.url
+                          ? 'bg-orange-600 text-white border-orange-600'
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Pre-recorded audio plays when the lead picks up.
+                </p>
+              </>
+            ) : (
+              <>
+                <textarea
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  rows={4}
+                  maxLength={900}
+                  placeholder="Type the message to be spoken on the call, e.g. Namaste, Anandi Park mein residential plots uplabdha hain, sirf 18 lakh se shuru. Site visit ke liye 1 dabaiye."
+                  className="w-full px-4 py-3 border rounded-lg text-sm bg-background"
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <select
+                    value={customLang}
+                    onChange={(e) => setCustomLang(e.target.value)}
+                    className="px-3 py-2 border rounded-lg text-sm bg-background"
+                  >
+                    <option value="hi-IN">Hindi voice</option>
+                    <option value="mr-IN">Marathi voice</option>
+                    <option value="en-IN">English voice</option>
+                  </select>
+                  <span className="text-xs text-muted-foreground">{customText.length}/900</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Your text is read aloud by a voice on the call. No recording needed.
+                </p>
+              </>
+            )}
           </div>
 
           {/* Tab selection */}

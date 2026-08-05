@@ -57,7 +57,7 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
     return { script, lead: { name: lead.name, phone: lead.phone } };
   }
 
-  async initiateCall(workspaceId: string, dto: { leadId?: string; phone: string; script?: string; objective?: string }) {
+  async initiateCall(workspaceId: string, dto: { leadId?: string; phone: string; script?: string; text?: string; language?: string; objective?: string }) {
     let script = dto.script;
     if (!script && dto.leadId) {
       const generated = await this.generateScript(dto.leadId, dto.objective || 'introduction');
@@ -66,8 +66,11 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
 
     // If Vobiz is configured, place a real call.
     if (this.vobiz.isConfigured) {
-      // Determine the answer URL — use GitHub-hosted XML files since Vobiz needs HTTPS.
-      const answerUrl = this.resolveAnswerUrl(script);
+      // Custom text → speak it via our HTTPS "say" endpoint. Otherwise use the
+      // preset GitHub-hosted XML audio.
+      const answerUrl = dto.text?.trim()
+        ? this.buildSayUrl(dto.text.trim(), dto.language)
+        : this.resolveAnswerUrl(script);
 
       const call = await this.prisma.callRecord.create({
         data: {
@@ -104,6 +107,16 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
     );
   }
 
+  /** Builds the HTTPS "say" URL that speaks custom text over the call. */
+  private buildSayUrl(text: string, language?: string): string {
+    const base =
+      this.configService.get<string>('VOBIZ_CALLBACK_URL') ||
+      this.configService.get<string>('API_URL') ||
+      'http://147.93.169.183:4000';
+    const lang = language || 'hi-IN';
+    return `${base}/api/v1/ai-calling/vobiz/say?text=${encodeURIComponent(text)}&lang=${lang}`;
+  }
+
   /** Resolves which HTTPS answer_url to use for Vobiz. */
   private resolveAnswerUrl(script?: string): string {
     const base = 'https://raw.githubusercontent.com/sjaiswal210-beep/anandi/main/uploads/tts';
@@ -121,7 +134,7 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
   }
 
   /** Call every scraped lead in the workspace, one after another. */
-  async blastCall(workspaceId: string, dto: { script?: string; tag?: string; limit?: number }) {
+  async blastCall(workspaceId: string, dto: { script?: string; text?: string; language?: string; tag?: string; limit?: number }) {
     if (!this.vobiz.isConfigured) {
       throw new BadRequestException('Vobiz is not configured. Set env vars first.');
     }
@@ -149,6 +162,8 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
           leadId: lead.id,
           phone: lead.phone,
           script: dto.script,
+          text: dto.text,
+          language: dto.language,
         });
         results.push({ name: lead.name, phone: lead.phone, ...r });
       } catch (e: any) {
@@ -166,12 +181,14 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
   }
 
   /** Call a raw list of phone numbers (from the dashboard input). */
-  async callNumbers(workspaceId: string, dto: { numbers: string[]; script?: string }) {
+  async callNumbers(workspaceId: string, dto: { numbers: string[]; script?: string; text?: string; language?: string }) {
     if (!this.vobiz.isConfigured) {
       throw new BadRequestException('Vobiz is not configured.');
     }
 
-    const answerUrl = this.resolveAnswerUrl(dto.script);
+    const answerUrl = dto.text?.trim()
+      ? this.buildSayUrl(dto.text.trim(), dto.language)
+      : this.resolveAnswerUrl(dto.script);
     const results: any[] = [];
 
     for (const num of dto.numbers) {

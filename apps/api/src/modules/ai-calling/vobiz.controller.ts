@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Res, Req, Logger } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Res, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiExcludeEndpoint } from '@nestjs/swagger';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { VobizService } from './vobiz.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { Public } from '../../common/decorators/public.decorator';
@@ -71,6 +71,32 @@ export class VobizController {
         data: { status: 'connected' },
       });
     }
+
+    res.set('Content-Type', 'application/xml');
+    res.send(xml);
+  }
+
+  /**
+   * Stateless "speak custom text" endpoint. Vobiz fetches this over GET and
+   * we return VobizXML that speaks the text passed in the query string.
+   * Text and language travel in the URL so no DB lookup or state is needed.
+   */
+  @Public()
+  @Get('say')
+  @ApiOperation({ summary: 'Vobiz answer_url that speaks custom text (TTS)' })
+  say(@Res() res: Response, @Query('text') text: string, @Query('lang') lang?: string) {
+    const language = lang || 'hi-IN';
+    const safe = (text || 'Namaste, Anandi Park se sampark karne ke liye dhanyavaad.')
+      .replace(/&/g, 'and')
+      .replace(/[<>"]/g, ' ')
+      .slice(0, 900);
+
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<Response>\n' +
+      `  <Speak voice="WOMAN" language="${language}" loop="1">${safe}</Speak>\n` +
+      '  <Hangup/>\n' +
+      '</Response>';
 
     res.set('Content-Type', 'application/xml');
     res.send(xml);

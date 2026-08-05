@@ -37,7 +37,7 @@ export class AICallingController {
 
   @Post('call')
   @ApiOperation({ summary: 'Place one outbound call via Vobiz' })
-  async initiateCall(@WorkspaceId() workspaceId: string, @Body() dto: { leadId?: string; phone: string; script?: string; objective?: string }) {
+  async initiateCall(@WorkspaceId() workspaceId: string, @Body() dto: { leadId?: string; phone: string; script?: string; text?: string; language?: string; objective?: string }) {
     return this.service.initiateCall(workspaceId, dto);
   }
 
@@ -45,7 +45,7 @@ export class AICallingController {
   @ApiOperation({ summary: 'Call all eligible leads (blast TTS campaign)' })
   async blastCall(
     @WorkspaceId() workspaceId: string,
-    @Body() dto: { script?: string; tag?: string; limit?: number },
+    @Body() dto: { script?: string; text?: string; language?: string; tag?: string; limit?: number },
   ) {
     return this.service.blastCall(workspaceId, dto);
   }
@@ -54,7 +54,7 @@ export class AICallingController {
   @ApiOperation({ summary: 'Call a custom list of phone numbers' })
   async callNumbers(
     @WorkspaceId() workspaceId: string,
-    @Body() dto: { numbers: string[]; script?: string },
+    @Body() dto: { numbers: string[]; script?: string; text?: string; language?: string },
   ) {
     return this.service.callNumbers(workspaceId, dto);
   }

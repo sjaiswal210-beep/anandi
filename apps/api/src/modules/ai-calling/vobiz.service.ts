@@ -80,15 +80,16 @@ export class VobizService {
     const url = `${this.baseUrl}/Account/${this.authId}/Call/`;
 
     try {
+      // answer_method MUST be GET — the answer_url points at a static XML file
+      // (GitHub raw, or our own GET endpoint), which only serves over GET.
+      // POST here makes Vobiz's fetch fail and the call plays nothing.
       const res = await axios.post(
         url,
         {
           from,
           to,
           answer_url: answerUrl,
-          answer_method: 'POST',
-          hangup_url: `${this.callbackBase}/api/v1/ai-calling/vobiz/hangup`,
-          hangup_method: 'POST',
+          answer_method: 'GET',
           ring_timeout: 30,
           ...(dto.machineDetection && { machine_detection: 'true' }),
         },
