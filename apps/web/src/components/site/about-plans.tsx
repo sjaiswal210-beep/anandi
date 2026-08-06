@@ -37,9 +37,9 @@ export function SiteAbout() {
           <ul className="mt-8 space-y-3.5">
             {[
               'Residential plots, ready for construction',
-              'Clear title with NA order in place — no legal disputes',
+              'Clear, marketable titles — no legal disputes',
               'Ready infrastructure: roads, water, electricity, drainage',
-              'RERA registered with transparent, all-inclusive pricing',
+              'Transparent, all-inclusive pricing',
               'Corner and road-facing premium plots available',
             ].map((point) => (
               <li key={point} className="flex items-start gap-3">

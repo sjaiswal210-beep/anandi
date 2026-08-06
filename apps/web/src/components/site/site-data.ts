@@ -1,11 +1,10 @@
 // Public website content for Anandi Park.
-// Residential NA plots at Bakori, Wagholi, Pune.
+// Residential plots at Bakori, Wagholi, Pune.
 
 export const PROJECT = {
   name: 'Anandi Park',
   tagline: 'Premium Residential Plots at Bakori, Wagholi — Pune East',
   builder: 'Yuvraj Gade & Rajan Kute Developers',
-  rera: 'P52100030523',
   priceFrom: '₹18 Lakh',
   priceNote: 'all inclusive',
   possession: 'Ready for Registration',
@@ -26,7 +25,7 @@ export const HIGHLIGHTS = [
   { value: '84', unit: 'Plots', label: 'Residential' },
   { value: '1000–4510', unit: 'Sq.ft', label: 'Plot sizes' },
   { value: '30 & 40', unit: 'ft roads', label: 'Wide internal' },
-  { value: '100%', unit: 'Clear', label: 'Titles & NA' },
+  { value: '100%', unit: 'Clear', label: 'Titles' },
 ];
 
 // Plot configurations, priced from ₹18 Lakh upwards.
@@ -68,8 +67,8 @@ export const CONFIGURATIONS = [
 
 export const WHY = [
   {
-    title: 'Clear Titles, NA Approved',
-    body: 'Every plot is Non-Agricultural approved with a clean, marketable title. Ready for immediate registration and construction.',
+    title: 'Clear, Marketable Titles',
+    body: 'Every residential plot comes with a clean, clear title — ready for immediate registration and construction.',
     icon: 'shield',
   },
   {
@@ -158,10 +157,10 @@ export const BLOG_POSTS = [
     tag: 'Guide',
   },
   {
-    slug: 'na-plot-checklist',
-    title: 'Buying an NA plot in Pune? Your 7-point legal checklist',
+    slug: 'plot-legal-checklist',
+    title: 'Buying a plot in Pune? Your 7-point legal checklist',
     excerpt:
-      'Title, 7/12, NA order, RERA, zone certificate and more — everything to verify before you book a residential plot.',
+      'Title, 7/12 extract, zone, boundaries and more — everything to verify before you book a residential plot.',
     date: 'Jul 2026',
     readMins: 6,
     seed: 'ap-blog-checklist',
@@ -201,12 +200,12 @@ export const TESTIMONIALS = [
 
 export const FAQS = [
   {
-    q: 'Is Anandi Park RERA registered?',
-    a: `Yes. Anandi Park is registered under MahaRERA (${PROJECT.rera}). You can verify it on the official MahaRERA portal before booking.`,
+    q: 'Are these residential plots?',
+    a: 'Yes. All 84 plots are residential plots with clear, marketable titles — ready for construction or investment.',
   },
   {
-    q: 'Are these NA residential plots?',
-    a: 'Yes. All 84 plots are Non-Agricultural, residential-zone approved with clear, marketable titles — ready for construction or investment.',
+    q: 'Are the titles clear?',
+    a: 'Yes. Every plot comes with a clean, clear title and complete documentation. Our team walks you through all papers before booking.',
   },
   {
     q: 'What is the starting price?',

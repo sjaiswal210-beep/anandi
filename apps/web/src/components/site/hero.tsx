@@ -26,7 +26,7 @@ export function SiteHero() {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-xs font-medium tracking-wide text-amber-300">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            MahaRERA {PROJECT.rera}
+            Clear Titles · Ready for Registration
           </span>
 
           <h1 className="mt-6 text-[2.5rem] font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -38,7 +38,7 @@ export function SiteHero() {
 
           <p className="mt-5 max-w-2xl text-base text-slate-300 sm:text-lg">
             Premium residential plots from 1000 to 4510 sq.ft. at Bakori, Wagholi.
-            Clear NA titles, gated layout, ready for registration.
+            Clear titles, gated layout, ready for registration.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 text-sm text-slate-300 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">

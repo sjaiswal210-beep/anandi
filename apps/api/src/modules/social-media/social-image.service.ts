@@ -67,7 +67,7 @@ export class SocialImageService {
       'PROJECT: Anandi Park — premium NA residential plots (land plotting project)',
       'DEVELOPER: Yuvraj Gade & Rajan Kute Developers',
       'LOCATION: Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune, Maharashtra, India',
-      'SELLING POINTS: RERA registered, clear titles, gated layout, wide internal roads,',
+      'SELLING POINTS: clear titles, gated layout, wide internal roads,',
       'ready for construction, prices from Rs 15 Lakh',
       '',
       `AD FOCUS: ${input.topic}`,
@@ -85,7 +85,7 @@ export class SocialImageService {
       'RULES:',
       '- Photorealistic, not illustration or cartoon',
       '- Any text must be spelled correctly in English and kept minimal',
-      '- Do not invent a logo or a fake RERA number',
+      '- Do not invent a logo, and do not add any RERA number or NA text',
       '- No watermarks, no stock-photo branding, no distorted text',
     ]
       .filter(Boolean)

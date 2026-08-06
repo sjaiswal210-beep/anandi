@@ -4,8 +4,9 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { SocialImageService } from './social-image.service';
 
 const PROJECT_BLURB =
-  'Anandi Park - Premium NA plots by Yuvraj Gade & Rajan Kute Developers, ' +
-  'starting ₹15 Lakh, Bakori, Wagholi, Pune. RERA registered, clear titles.';
+  'Anandi Park - Premium residential plots by Yuvraj Gade & Rajan Kute Developers, ' +
+  'starting ₹18 Lakh, Bakori, Wagholi, Pune. Clear titles, ready for registration. ' +
+  'Do not mention RERA or NA.';
 
 @Injectable()
 export class SocialMediaService {
@@ -58,8 +59,8 @@ Return a JSON object with:
         if (jsonMatch) content = JSON.parse(jsonMatch[0]);
         else content.caption = text;
       } catch (e: any) {
-        content.caption = `🏡 ${dto.topic}\n\nAnandi Park - Premium NA plots by Yuvraj Gade & Rajan Kute Developers\n💰 Starting ₹15 Lakh\n📍 Bakori, Wagholi, Pune\n✅ RERA registered | Clear titles\n\nBook your site visit today!\n📞 Call now`;
-        content.hashtags = ['#AnandiPark', '#NAPlots', '#PuneRealEstate', '#PlotForSale', '#Investment', '#WagholiPlots', '#LandForSale', '#DreamPlot', '#PunePlots', '#RERARegistered'];
+        content.caption = `🏡 ${dto.topic}\n\nAnandi Park - Premium residential plots by Yuvraj Gade & Rajan Kute Developers\n💰 Starting ₹18 Lakh\n📍 Bakori, Wagholi, Pune\n✅ Clear titles | Ready for registration\n\nBook your site visit today!\n📞 Call now`;
+        content.hashtags = ['#AnandiPark', '#ResidentialPlots', '#PuneRealEstate', '#PlotForSale', '#Investment', '#WagholiPlots', '#LandForSale', '#DreamPlot', '#PunePlots', '#PuneEast'];
       }
     }
 
@@ -118,7 +119,7 @@ Return a JSON object with:
     const meta = (post.adapterResponse || {}) as Record<string, any>;
 
     const img = await this.imageService.generateAdImage({
-      topic: post.content?.slice(0, 200) || 'Anandi Park NA plots',
+      topic: post.content?.slice(0, 200) || 'Anandi Park residential plots',
       platform: post.platform,
       style: opts?.style,
       headline: meta.headline || undefined,

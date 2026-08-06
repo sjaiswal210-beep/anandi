@@ -16,7 +16,7 @@ export function SiteFooter() {
             <p className="mt-4 max-w-xs text-sm text-slate-400">
               {PROJECT.tagline}. Developed by {PROJECT.builder}.
             </p>
-            <p className="mt-4 text-xs text-slate-500">MahaRERA {PROJECT.rera}</p>
+            <p className="mt-4 text-xs text-slate-500">Clear titles · Ready for registration</p>
           </div>
 
           <nav aria-label="Footer">

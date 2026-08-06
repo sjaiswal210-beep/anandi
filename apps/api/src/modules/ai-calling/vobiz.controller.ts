@@ -53,8 +53,8 @@ export class VobizController {
       // Default Anandi Park pitch in Hindi.
       const script =
         callRecord?.script ||
-        'Namaste! Main Anandi Park se bol raha hoon. Bakori, Wagholi Pune mein premium NA plots ' +
-          'available hain, starting 15 lakh se. RERA registered, clear titles. ' +
+        'Namaste! Main Anandi Park se bol raha hoon. Bakori, Wagholi Pune mein premium residential plots ' +
+          'available hain, starting atharah lakh se. Clear titles, ready for registration. ' +
           'Agar aapko site visit karna hai toh please 1 dabaiye. Dhanyavaad.';
 
       xml = this.vobiz.buildSpeakAndGatherXml({

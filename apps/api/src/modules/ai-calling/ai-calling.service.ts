@@ -34,7 +34,7 @@ export class AICallingService {
     const prompt = `Generate a natural, humanized phone call script for a real estate sales call.
 Lead: ${lead.name}, Budget: ₹${lead.budget || 'not specified'}, Interested in: ${lead.preferredPropertyType || 'plots'}
 Objective: ${objective}
-Project: Anandi Park - Premium NA Plots by Yuraj & Rajan Developers, starting ₹15 Lakh, Pune area, RERA registered.
+Project: Anandi Park - Premium residential plots by Yuvraj Gade & Rajan Kute Developers, starting ₹18 Lakh, Bakori Wagholi Pune. Clear titles, ready for registration. (Do not claim RERA or NA.)
 
 Write a conversational script in Indian English (Hindi words are OK). Include:
 - Greeting
