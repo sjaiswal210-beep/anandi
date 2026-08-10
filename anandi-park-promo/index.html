@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0f172a; }
+      body { font-family: "Inter", sans-serif; color: #fff; }
+      .clip { position: absolute; width: 1920px; height: 1080px; display: flex; align-items: center; justify-content: center; opacity: 0; }
+      .bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .overlay { position: absolute; inset: 0; }
+      .content { position: relative; z-index: 2; text-align: center; padding: 60px; }
+      .badge { display: inline-block; background: rgba(245,158,11,0.9); color: #1e293b; font-size: 20px; font-weight: 700; padding: 10px 28px; border-radius: 100px; letter-spacing: 1px; margin-bottom: 24px; }
+      h1 { font-size: 88px; font-weight: 900; line-height: 1.05; margin-bottom: 20px; text-shadow: 0 4px 30px rgba(0,0,0,0.6); }
+      h2 { font-size: 56px; font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+      .subtitle { font-size: 32px; color: #cbd5e1; line-height: 1.5; max-width: 1200px; margin: 0 auto; }
+      .price { font-size: 96px; font-weight: 900; color: #fbbf24; }
+      .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; max-width: 1400px; }
+      .stat { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 40px 20px; text-align: center; }
+      .stat-value { font-size: 52px; font-weight: 900; color: #fbbf24; }
+      .stat-label { font-size: 22px; color: #94a3b8; margin-top: 8px; }
+      .cta-box { background: linear-gradient(135deg, #059669, #047857); border-radius: 24px; padding: 60px 80px; text-align: center; }
+      .cta-box h2 { color: #fff; margin-bottom: 12px; }
+      .cta-phone { font-size: 48px; font-weight: 900; color: #fbbf24; margin-top: 20px; }
+      .connectivity { display: flex; gap: 48px; justify-content: center; flex-wrap: wrap; }
+      .conn-item { text-align: center; }
+      .conn-time { font-size: 48px; font-weight: 900; color: #fbbf24; }
+      .conn-place { font-size: 22px; color: #e2e8f0; margin-top: 4px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="45" data-width="1920" data-height="1080">
+
+      <!-- Scene 1: Hero (0-8s) -->
+      <div id="scene1" class="clip" data-start="0" data-duration="8" data-track-index="1">
+        <img class="bg-img" src="assets/hero-aerial.jpg" alt="" />
+        <div class="overlay" style="background: linear-gradient(to top, rgba(15,23,42,0.95) 20%, rgba(15,23,42,0.4) 60%, rgba(15,23,42,0.6))"></div>
+        <div class="content">
+          <div class="badge">RESIDENTIAL PLOTS · PUNE EAST</div>
+          <h1>Anandi Park</h1>
+          <p class="subtitle">Premium residential plots at Bakori, Wagholi-Bakori Road<br/>by Yuvraj Gade & Rajan Kute Developers</p>
+        </div>
+      </div>
+
+      <!-- Scene 2: Price (8-15s) -->
+      <div id="scene2" class="clip" data-start="8" data-duration="7" data-track-index="1">
+        <img class="bg-img" src="assets/about-land.jpg" alt="" />
+        <div class="overlay" style="background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(5,150,105,0.3))"></div>
+        <div class="content">
+          <p class="subtitle" style="margin-bottom: 20px;">Starting from just</p>
+          <div class="price">₹18 Lakh</div>
+          <p class="subtitle" style="margin-top: 20px;">All inclusive · 1000 to 4510 sqft · Clear titles</p>
+        </div>
+      </div>
+
+      <!-- Scene 3: Stats (15-23s) -->
+      <div id="scene3" class="clip" data-start="15" data-duration="8" data-track-index="1">
+        <img class="bg-img" src="assets/aerial-view.jpg" alt="" />
+        <div class="overlay" style="background: rgba(15,23,42,0.88)"></div>
+        <div class="content">
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-value">84</div><div class="stat-label">Total Plots</div></div>
+            <div class="stat"><div class="stat-value">30' & 40'</div><div class="stat-label">Wide Roads</div></div>
+            <div class="stat"><div class="stat-value">Gated</div><div class="stat-label">Layout</div></div>
+            <div class="stat"><div class="stat-value">Ready</div><div class="stat-label">For Registration</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 4: Connectivity (23-31s) -->
+      <div id="scene4" class="clip" data-start="23" data-duration="8" data-track-index="1">
+        <img class="bg-img" src="assets/internal-road.jpg" alt="" />
+        <div class="overlay" style="background: rgba(15,23,42,0.85)"></div>
+        <div class="content">
+          <h2 style="margin-bottom: 48px;">Prime Location</h2>
+          <div class="connectivity">
+            <div class="conn-item"><div class="conn-time">10 min</div><div class="conn-place">Wagheshwar Temple</div></div>
+            <div class="conn-item"><div class="conn-time">10 min</div><div class="conn-place">Schools</div></div>
+            <div class="conn-item"><div class="conn-time">25 min</div><div class="conn-place">Kharadi IT Hub</div></div>
+            <div class="conn-item"><div class="conn-time">30 min</div><div class="conn-place">Pune Airport</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 5: Amenities (31-38s) -->
+      <div id="scene5" class="clip" data-start="31" data-duration="7" data-track-index="1">
+        <img class="bg-img" src="assets/green-belt.jpg" alt="" />
+        <div class="overlay" style="background: linear-gradient(to right, rgba(15,23,42,0.9) 40%, rgba(15,23,42,0.5))"></div>
+        <div class="content" style="text-align: left; padding-left: 120px;">
+          <h2 style="margin-bottom: 36px;">Everything Ready</h2>
+          <div style="font-size: 28px; line-height: 2.2; color: #e2e8f0;">
+            ✓ Landscaped Entry Gate<br/>
+            ✓ 24×7 Water & Electricity<br/>
+            ✓ Central Garden & Play Area<br/>
+            ✓ Security Cabin & CCTV<br/>
+            ✓ Compound Wall & Street Lights<br/>
+            ✓ Loan Assistance Available
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 6: CTA (38-45s) -->
+      <div id="scene6" class="clip" data-start="38" data-duration="7" data-track-index="1">
+        <img class="bg-img" src="assets/entry-gate.jpg" alt="" />
+        <div class="overlay" style="background: rgba(15,23,42,0.85)"></div>
+        <div class="content">
+          <div class="cta-box">
+            <h2>Book Your Free Site Visit</h2>
+            <p class="subtitle" style="color: rgba(255,255,255,0.8); font-size: 28px;">
+              GAT No. 279, Village Bakori, Wagholi-Bakori Road, Pune
+            </p>
+            <div class="cta-phone">📞 Call Now</div>
+            <p style="margin-top: 16px; font-size: 24px; color: rgba(255,255,255,0.6);">
+              Yuvraj Gade & Rajan Kute Developers
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1: Hero
+      tl.to("#scene1", { opacity: 1, duration: 0.8 }, 0);
+      tl.from("#scene1 .badge", { y: -40, opacity: 0, duration: 0.6 }, 0.5);
+      tl.from("#scene1 h1", { y: 60, opacity: 0, duration: 0.8 }, 0.8);
+      tl.from("#scene1 .subtitle", { y: 30, opacity: 0, duration: 0.6 }, 1.4);
+      tl.to("#scene1", { opacity: 0, duration: 0.5 }, 7.5);
+
+      // Scene 2: Price
+      tl.to("#scene2", { opacity: 1, duration: 0.6 }, 8);
+      tl.from("#scene2 .price", { scale: 0.5, opacity: 0, duration: 0.8, ease: "back.out(1.5)" }, 8.5);
+      tl.to("#scene2", { opacity: 0, duration: 0.5 }, 14.5);
+
+      // Scene 3: Stats
+      tl.to("#scene3", { opacity: 1, duration: 0.6 }, 15);
+      tl.from("#scene3 .stat", { y: 40, opacity: 0, stagger: 0.2, duration: 0.6 }, 15.5);
+      tl.to("#scene3", { opacity: 0, duration: 0.5 }, 22.5);
+
+      // Scene 4: Connectivity
+      tl.to("#scene4", { opacity: 1, duration: 0.6 }, 23);
+      tl.from("#scene4 h2", { y: -30, opacity: 0, duration: 0.5 }, 23.4);
+      tl.from("#scene4 .conn-item", { y: 30, opacity: 0, stagger: 0.25, duration: 0.5 }, 24);
+      tl.to("#scene4", { opacity: 0, duration: 0.5 }, 30.5);
+
+      // Scene 5: Amenities
+      tl.to("#scene5", { opacity: 1, duration: 0.6 }, 31);
+      tl.from("#scene5 h2", { x: -40, opacity: 0, duration: 0.5 }, 31.4);
+      tl.to("#scene5", { opacity: 0, duration: 0.5 }, 37.5);
+
+      // Scene 6: CTA
+      tl.to("#scene6", { opacity: 1, duration: 0.6 }, 38);
+      tl.from("#scene6 .cta-box", { scale: 0.9, opacity: 0, duration: 0.7, ease: "back.out(1.3)" }, 38.3);
+      tl.from("#scene6 .cta-phone", { y: 20, opacity: 0, duration: 0.5 }, 39.2);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
