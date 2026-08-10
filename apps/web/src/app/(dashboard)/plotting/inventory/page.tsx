@@ -2,15 +2,15 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
-import { Map, Info, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Map, Info, ZoomIn, ZoomOut, RotateCcw, Maximize } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 
-const STATUS_FILL: Record<string, string> = {
-  AVAILABLE: '#10b981',
-  RESERVED: '#f59e0b',
-  SOLD: '#ef4444',
-  HOLD: '#9ca3af',
+const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  AVAILABLE: { bg: 'rgba(16,185,129,0.25)', border: '#10b981', text: '#065f46' },
+  RESERVED: { bg: 'rgba(245,158,11,0.35)', border: '#f59e0b', text: '#78350f' },
+  SOLD: { bg: 'rgba(239,68,68,0.35)', border: '#ef4444', text: '#7f1d1d' },
+  HOLD: { bg: 'rgba(156,163,175,0.3)', border: '#9ca3af', text: '#374151' },
 };
 
 export default function PlotInventoryPage() {
@@ -19,7 +19,8 @@ export default function PlotInventoryPage() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const svgRef = useRef<SVGSVGElement>(null);
+  const [showOverlay, setShowOverlay] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: plots = [], isLoading } = useQuery<any[]>({
     queryKey: ['plot-inventory'],
@@ -40,11 +41,10 @@ export default function PlotInventoryPage() {
   };
 
   // Zoom/pan
-  const zoomIn = () => setZoom((z) => Math.min(z + 0.3, 4));
-  const zoomOut = () => setZoom((z) => Math.max(z - 0.3, 0.4));
+  const zoomIn = () => setZoom((z) => Math.min(z + 0.4, 5));
+  const zoomOut = () => setZoom((z) => Math.max(z - 0.4, 0.5));
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
   const onPointerDown = useCallback((e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('.plot-g')) return;
     setDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   }, [pan]);
@@ -55,190 +55,99 @@ export default function PlotInventoryPage() {
   const onPointerUp = useCallback(() => setDragging(false), []);
   const onWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
-    setZoom((z) => Math.min(4, Math.max(0.4, z - e.deltaY * 0.001)));
+    setZoom((z) => Math.min(5, Math.max(0.5, z - e.deltaY * 0.002)));
   }, []);
 
-  // Build layout matching the physical plan (IMG_3389).
-  // Each plot gets width proportional to its area relative to its row's total.
-  // This makes the proportions match the actual drawing exactly.
-  const ROW_W = 800; // total usable width for plots per row
-  const PLOT_H = 56; // height per plot row
-  const GAP = 2;
-  const ROAD_H = 28;
-  const PAD_X = 40;
-  const PAD_Y = 30;
+  // The image is the actual source. We overlay an SVG with transparent
+  // plot regions on top so each one is clickable. The SVG viewBox matches
+  // the image's native aspect ratio (measured from the file: ~3024 x 4032).
+  const IMG_W = 3024;
+  const IMG_H = 4032;
 
-  // Group by row, sorted by col within each row.
-  const rowMap: Record<number, any[]> = {};
-  plots.forEach((p) => { if (!rowMap[p.row]) rowMap[p.row] = []; rowMap[p.row].push(p); });
-  Object.values(rowMap).forEach((r) => r.sort((a: any, b: any) => a.col - b.col));
-  const sortedRows = Object.keys(rowMap).map(Number).sort((a, b) => a - b);
+  // Plot hotspot positions — manually mapped to match the physical image.
+  // Each entry: [row, col, x%, y%, w%, h%] as percentages of the image.
+  // These are approximate bounding boxes over the plot labels in the image.
+  // The approach: divide the image into the known 8 rows and variable columns.
+  // Row positions (y% ranges) based on the image structure:
+  const ROW_Y: Record<number, { top: number; h: number }> = {
+    1: { top: 14, h: 8.5 },
+    2: { top: 23, h: 7.5 },
+    3: { top: 31, h: 7.5 },
+    4: { top: 39, h: 7.5 },
+    5: { top: 47, h: 7.5 },
+    6: { top: 55, h: 7.5 },
+    7: { top: 67, h: 7.5 },
+    8: { top: 75, h: 7.5 },
+  };
 
-  // SVG dimensions
-  const svgW = ROW_W + PAD_X * 2;
-  const numRows = sortedRows.length;
-  // 3 roads: top, internal (between 6 & 7), bottom
-  const svgH = PAD_Y * 2 + numRows * (PLOT_H + GAP) + ROAD_H * 3 + GAP * 6;
+  // For each row, plots span from ~8% to ~92% horizontally, distributed by area.
+  const ROW_X_START = 8;
+  const ROW_X_END = 92;
 
-  // Build the SVG elements
-  const buildLayout = () => {
-    const els: JSX.Element[] = [];
-    let y = PAD_Y;
+  const getPlotRect = (plot: any) => {
+    const rowInfo = ROW_Y[plot.row];
+    if (!rowInfo) return null;
 
-    // --- TOP ROAD (30 ft boundary) ---
-    els.push(
-      <g key="road-top">
-        <rect x={PAD_X - 10} y={y} width={ROW_W + 20} height={ROAD_H} fill="#94a3b8" rx={3} />
-        <text x={PAD_X + ROW_W / 2} y={y + 18} textAnchor="middle" fontSize="9" fill="white" fontWeight="600">
-          30 FT ROAD (NORTH BOUNDARY)
-        </text>
-      </g>,
-    );
-    y += ROAD_H + GAP * 2;
+    const rowPlots = plots
+      .filter((p) => p.row === plot.row)
+      .sort((a, b) => a.col - b.col);
+    const totalArea = rowPlots.reduce((s, p) => s + Number(p.area), 0);
+    const totalW = ROW_X_END - ROW_X_START;
 
-    for (const rowIdx of sortedRows) {
-      // Insert 40ft internal road between rows 6 and 7
-      if (rowIdx === 7) {
-        els.push(
-          <g key="road-mid">
-            <rect x={PAD_X - 10} y={y} width={ROW_W + 20} height={ROAD_H} fill="#64748b" rx={3} />
-            <text x={PAD_X + ROW_W / 2} y={y + 18} textAnchor="middle" fontSize="9" fill="white" fontWeight="600">
-              40 FT INTERNAL ROAD
-            </text>
-          </g>,
-        );
-        y += ROAD_H + GAP * 2;
+    let xStart = ROW_X_START;
+    for (const p of rowPlots) {
+      const w = (Number(p.area) / totalArea) * totalW;
+      if (p.id === plot.id) {
+        return { x: xStart, y: rowInfo.top, w, h: rowInfo.h };
       }
-
-      const rowPlots = rowMap[rowIdx];
-      const totalArea = rowPlots.reduce((s: number, p: any) => s + Number(p.area), 0);
-      const totalGaps = (rowPlots.length - 1) * GAP;
-      const availW = ROW_W - totalGaps;
-
-      let x = PAD_X;
-
-      for (const plot of rowPlots) {
-        const area = Number(plot.area);
-        const w = Math.round((area / totalArea) * availW);
-        const fill = STATUS_FILL[plot.status] || '#9ca3af';
-        const isSelected = selectedPlot?.id === plot.id;
-
-        els.push(
-          <g
-            key={plot.id}
-            className="plot-g"
-            onClick={(e) => { e.stopPropagation(); setSelectedPlot(plot); }}
-            style={{ cursor: 'pointer' }}
-          >
-            <rect
-              x={x} y={y} width={w} height={PLOT_H} rx={3}
-              fill={fill}
-              stroke={isSelected ? '#1d4ed8' : plot.corner ? '#eab308' : '#f8fafc'}
-              strokeWidth={isSelected ? 2.5 : plot.corner ? 2 : 0.5}
-              opacity={isSelected ? 1 : 0.92}
-            />
-            {/* Plot number */}
-            <text x={x + w / 2} y={y + 16} textAnchor="middle" fontSize={w < 45 ? '7' : '9'} fontWeight="700" fill="white">
-              {plot.plotNumber}
-            </text>
-            {/* Area */}
-            <text x={x + w / 2} y={y + 30} textAnchor="middle" fontSize={w < 45 ? '6' : '7.5'} fill="rgba(255,255,255,0.9)">
-              {Number(plot.area).toLocaleString()}
-            </text>
-            {/* Dimensions or price depending on space */}
-            {w >= 55 && (
-              <text x={x + w / 2} y={y + 42} textAnchor="middle" fontSize="6.5" fill="rgba(255,255,255,0.75)">
-                {plot.dimensions ? plot.dimensions.split(' x ')[0] : ''}
-              </text>
-            )}
-            {/* Corner triangle */}
-            {plot.corner && (
-              <polygon
-                points={`${x + w - 10},${y} ${x + w},${y} ${x + w},${y + 10}`}
-                fill="#eab308"
-              />
-            )}
-            {/* Road-facing indicator: thin line at edge */}
-            {plot.roadFacing && rowIdx <= 2 && (
-              <rect x={x} y={y} width={w} height={2} fill="rgba(255,255,255,0.5)" rx={1} />
-            )}
-            {plot.roadFacing && rowIdx >= 7 && (
-              <rect x={x} y={y + PLOT_H - 2} width={w} height={2} fill="rgba(255,255,255,0.5)" rx={1} />
-            )}
-          </g>,
-        );
-        x += w + GAP;
-      }
-      y += PLOT_H + GAP;
+      xStart += w;
     }
-
-    // --- BOTTOM ROAD (Wagholi-Bakori) ---
-    els.push(
-      <g key="road-bot">
-        <rect x={PAD_X - 10} y={y + GAP} width={ROW_W + 20} height={ROAD_H} fill="#334155" rx={3} />
-        <text x={PAD_X + ROW_W / 2} y={y + GAP + 18} textAnchor="middle" fontSize="9" fill="white" fontWeight="600">
-          WAGHOLI — BAKORI ROAD (30 FT)
-        </text>
-      </g>,
-    );
-
-    return els;
+    return null;
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Map className="h-8 w-8 text-emerald-600" /> Plot Layout
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Map className="h-7 w-7 text-emerald-600" /> Plot Layout
           </h1>
-          <p className="text-muted-foreground mt-1">Interactive map — tap a plot, pinch to zoom, drag to pan</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Tap any plot · pinch/scroll to zoom · drag to pan</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button onClick={zoomIn} className="p-2 border rounded-lg hover:bg-muted" aria-label="Zoom in"><ZoomIn className="h-4 w-4" /></button>
           <button onClick={zoomOut} className="p-2 border rounded-lg hover:bg-muted" aria-label="Zoom out"><ZoomOut className="h-4 w-4" /></button>
           <button onClick={resetView} className="p-2 border rounded-lg hover:bg-muted" aria-label="Reset"><RotateCcw className="h-4 w-4" /></button>
-          <span className="text-xs text-muted-foreground">{Math.round(zoom * 100)}%</span>
+          <button onClick={() => setShowOverlay((s) => !s)} className={`p-2 border rounded-lg ${showOverlay ? 'bg-emerald-100 dark:bg-emerald-950' : 'hover:bg-muted'}`} aria-label="Toggle overlay">
+            <Maximize className="h-4 w-4" />
+          </button>
+          <span className="text-xs text-muted-foreground ml-1">{Math.round(zoom * 100)}%</span>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
-        <div className="bg-card border rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold">{stats.total}</p>
-          <p className="text-[10px] text-muted-foreground">Total</p>
+      {/* Stats row */}
+      <div className="grid grid-cols-4 gap-2">
+        <div className="bg-card border rounded-lg p-2 text-center">
+          <p className="text-lg font-bold">{stats.total}</p><p className="text-[9px] text-muted-foreground">Total</p>
         </div>
-        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{stats.available}</p>
-          <p className="text-[10px] text-muted-foreground">Available</p>
+        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-lg p-2 text-center">
+          <p className="text-lg font-bold text-emerald-600">{stats.available}</p><p className="text-[9px] text-muted-foreground">Available</p>
         </div>
-        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-amber-600">{stats.reserved}</p>
-          <p className="text-[10px] text-muted-foreground">Reserved</p>
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-lg p-2 text-center">
+          <p className="text-lg font-bold text-amber-600">{stats.reserved}</p><p className="text-[9px] text-muted-foreground">Reserved</p>
         </div>
-        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-red-600">{stats.sold}</p>
-          <p className="text-[10px] text-muted-foreground">Sold</p>
+        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-2 text-center">
+          <p className="text-lg font-bold text-red-600">{stats.sold}</p><p className="text-[9px] text-muted-foreground">Sold</p>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-5 text-xs flex-wrap">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-500" /> Available</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-amber-500" /> Reserved</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500" /> Sold</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm border-2 border-yellow-400" /> Corner</span>
-        <span className="text-muted-foreground">N ↑</span>
-      </div>
-
-      {/* Map */}
+      {/* Map with image background + SVG overlay */}
       {isLoading ? (
         <div className="bg-card border rounded-xl p-16 text-center text-sm text-muted-foreground">Loading…</div>
-      ) : plots.length === 0 ? (
-        <div className="bg-card border rounded-xl p-16 text-center text-sm text-muted-foreground">No plots. Run seed-real-plots.ts.</div>
       ) : (
         <div
-          className="bg-white dark:bg-slate-900 border rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing select-none"
+          ref={containerRef}
+          className="relative border rounded-xl overflow-hidden bg-white cursor-grab active:cursor-grabbing select-none"
           style={{ touchAction: 'none' }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -246,29 +155,66 @@ export default function PlotInventoryPage() {
           onPointerLeave={onPointerUp}
           onWheel={onWheel}
         >
-          <svg
-            ref={svgRef}
-            viewBox={`0 0 ${svgW} ${svgH}`}
-            className="w-full"
-            preserveAspectRatio="xMidYMid meet"
+          <div
             style={{
-              minHeight: 450,
-              maxHeight: '75vh',
               transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
               transformOrigin: 'center center',
               transition: dragging ? 'none' : 'transform 0.12s ease-out',
+              position: 'relative',
             }}
           >
-            {plots.length > 0 && buildLayout()}
+            {/* The actual layout plan image */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/site/layout-plan.jpg"
+              alt="Anandi Park plot layout plan"
+              className="w-full h-auto block"
+              draggable={false}
+            />
 
-            {/* North arrow */}
-            <g transform={`translate(${svgW - 35}, ${PAD_Y + ROAD_H + 10})`}>
-              <polygon points="0,16 5,0 10,16" fill="#334155" opacity={0.6} />
-              <text x={5} y={24} textAnchor="middle" fontSize="7" fill="#334155" fontWeight="600">N</text>
-            </g>
-          </svg>
+            {/* Transparent clickable SVG overlay */}
+            {showOverlay && (
+              <svg
+                viewBox={`0 0 100 100`}
+                preserveAspectRatio="none"
+                className="absolute inset-0 w-full h-full"
+                style={{ pointerEvents: 'none' }}
+              >
+                {plots.map((plot) => {
+                  const rect = getPlotRect(plot);
+                  if (!rect) return null;
+                  const colors = STATUS_COLORS[plot.status] || STATUS_COLORS.AVAILABLE;
+                  const isSelected = selectedPlot?.id === plot.id;
+
+                  return (
+                    <rect
+                      key={plot.id}
+                      x={`${rect.x}%`}
+                      y={`${rect.y}%`}
+                      width={`${rect.w}%`}
+                      height={`${rect.h}%`}
+                      fill={isSelected ? 'rgba(37,99,235,0.35)' : colors.bg}
+                      stroke={isSelected ? '#2563eb' : colors.border}
+                      strokeWidth={isSelected ? 0.4 : 0.15}
+                      rx={0.3}
+                      style={{ pointerEvents: 'all', cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedPlot(plot); }}
+                    />
+                  );
+                })}
+              </svg>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 text-xs flex-wrap">
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm border-2 border-emerald-500 bg-emerald-500/25" /> Available</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm border-2 border-amber-500 bg-amber-500/30" /> Reserved</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm border-2 border-red-500 bg-red-500/30" /> Sold</span>
+        <span className="text-muted-foreground">Toggle overlay: click the □ button</span>
+      </div>
 
       {/* Detail panel */}
       {selectedPlot && (
