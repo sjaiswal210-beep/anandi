@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Share2, Sparkles, Calendar, Send, Copy, ImagePlus, Download, RefreshCw } from 'lucide-react';
-import api, { mediaUrl } from '@/lib/api';
+import { Share2, Sparkles, Calendar, Send, Copy, ImagePlus, Download, RefreshCw, Video, Play } from 'lucide-react';
+import api, { mediaUrl, apiOrigin } from '@/lib/api';
 
 const platformStyles: Record<string, string> = {
   INSTAGRAM: 'bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300',
@@ -15,8 +15,10 @@ const platformStyles: Record<string, string> = {
 export default function SocialMediaPage() {
   const queryClient = useQueryClient();
   const [platform, setPlatform] = useState('INSTAGRAM');
-  const [topic, setTopic] = useState('Anandi Park NA plots at Bakori, Wagholi — limited corner plots left');
+  const [topic, setTopic] = useState('Anandi Park residential plots at Bakori, Wagholi — limited corner plots left');
   const [notice, setNotice] = useState('');
+
+  const videoUrl = `${typeof window !== 'undefined' ? apiOrigin() : ''}/uploads/video/anandi-park-promo.mp4`;
 
   const { data: posts = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['social-posts'],
@@ -86,6 +88,40 @@ export default function SocialMediaPage() {
       {notice && (
         <div className="bg-card border rounded-xl px-4 py-3 text-sm">{notice}</div>
       )}
+
+      {/* Promo Video */}
+      <div className="bg-card border rounded-xl p-6 space-y-4">
+        <h2 className="font-semibold flex items-center gap-2">
+          <Video className="h-5 w-5 text-primary" /> Promo Video (45s)
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          AI-generated promotional video for Instagram Reels, Facebook, and YouTube. Use in ads or share organically.
+        </p>
+        <div className="rounded-xl overflow-hidden bg-slate-900 aspect-video relative">
+          <video
+            src={videoUrl}
+            controls
+            playsInline
+            preload="metadata"
+            poster="/site/hero-aerial.jpg"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <a
+            href={videoUrl}
+            download="anandi-park-promo.mp4"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90"
+          >
+            <Download className="h-4 w-4" /> Download MP4
+          </a>
+          <p className="text-xs text-muted-foreground">
+            6 scenes: Hero · Pricing · Stats · Connectivity · Amenities · CTA. Render on VPS if not yet available.
+          </p>
+        </div>
+      </div>
 
       {/* Generator */}
       <div className="bg-card border rounded-xl p-6 space-y-4">
