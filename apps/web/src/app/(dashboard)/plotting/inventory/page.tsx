@@ -46,18 +46,35 @@ export default function PlotInventoryPage() {
     sold: plots.filter((p) => p.status === 'SOLD').length,
   };
 
-  // Layout constants
-  const CELL_W = 90;
-  const CELL_H = 70;
-  const GAP = 4;
-  const ROAD_H = 40;
-  const PAD = 30;
+  // Layout matching IMG_3389: variable-width plots based on actual area.
+  // The image shows a roughly L-shaped layout with main road on top,
+  // Wagholi-Bakori road at the bottom, internal roads between rows 6-7.
+  const BASE_H = 54; // standard plot height
+  const ROAD_H = 32;
+  const PAD = 20;
+  const SCALE = 0.055; // pixels per sqft of width (tuned to look like the plan)
 
-  const maxRow = Math.max(...plots.map((p) => p.row), 1);
-  const maxCol = Math.max(...plots.map((p) => p.col), 1);
+  // Group plots by row and calculate widths proportional to area.
+  const rows: Record<number, any[]> = {};
+  plots.forEach((p) => {
+    if (!rows[p.row]) rows[p.row] = [];
+    rows[p.row].push(p);
+  });
+  // Sort each row by col.
+  Object.values(rows).forEach((r) => r.sort((a: any, b: any) => a.col - b.col));
 
-  const svgW = PAD * 2 + maxCol * (CELL_W + GAP);
-  const svgH = PAD * 2 + maxRow * (CELL_H + GAP) + ROAD_H * 2;
+  // Compute width per plot: proportional to area, with a minimum.
+  const plotWidth = (area: number) => Math.max(50, Math.round(Number(area) * SCALE));
+
+  // Total SVG width = widest row + padding.
+  const rowWidths = Object.values(rows).map((r) =>
+    r.reduce((s: number, p: any) => s + plotWidth(Number(p.area)) + 3, 0),
+  );
+  const svgW = Math.max(...rowWidths) + PAD * 2 + 20;
+
+  const totalRows = Object.keys(rows).length;
+  // Roads: between boundary and row 1, between rows 6 and 7, and below row 8.
+  const svgH = PAD * 2 + totalRows * (BASE_H + 3) + ROAD_H * 3 + 20;
 
   // Zoom/pan handlers
   const zoomIn = () => setZoom((z) => Math.min(z + 0.3, 3));
@@ -147,69 +164,107 @@ export default function PlotInventoryPage() {
             viewBox={`0 0 ${svgW} ${svgH}`}
             className="w-full"
             style={{
-              minHeight: 400,
-              maxHeight: '70vh',
+              minHeight: 420,
+              maxHeight: '72vh',
               transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
               transformOrigin: 'center center',
               transition: dragging ? 'none' : 'transform 0.15s ease',
             }}
           >
-            {/* Roads */}
-            <rect x={0} y={PAD - 5} width={svgW} height={ROAD_H} fill="#e2e8f0" rx={4} />
-            <text x={svgW / 2} y={PAD + 14} textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="600">
-              — MAIN ROAD (30 ft) —
+            {/* Background */}
+            <rect x={0} y={0} width={svgW} height={svgH} fill="#f8fafc" rx={8} />
+
+            {/* Top road — boundary/main road */}
+            <rect x={PAD - 10} y={PAD} width={svgW - PAD * 2 + 20} height={ROAD_H} fill="#cbd5e1" rx={4} />
+            <text x={svgW / 2} y={PAD + 20} textAnchor="middle" fontSize="10" fill="#475569" fontWeight="600">
+              30 FT ROAD
             </text>
 
-            <rect x={0} y={PAD + ROAD_H + maxRow * (CELL_H + GAP) + 5} width={svgW} height={ROAD_H} fill="#e2e8f0" rx={4} />
-            <text x={svgW / 2} y={PAD + ROAD_H + maxRow * (CELL_H + GAP) + 24} textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="600">
-              — INTERNAL ROAD (40 ft) —
-            </text>
+            {(() => {
+              // Render each row
+              const elements: JSX.Element[] = [];
+              let currentY = PAD + ROAD_H + 6;
 
-            {/* Plots */}
-            {plots.map((plot) => {
-              const x = PAD + (plot.col - 1) * (CELL_W + GAP);
-              const y = PAD + ROAD_H + (plot.row - 1) * (CELL_H + GAP);
-              const fill = STATUS_FILL[plot.status] || '#9ca3af';
-              const isSelected = selectedPlot?.id === plot.id;
+              const sortedRowKeys = Object.keys(rows).map(Number).sort((a, b) => a - b);
 
-              return (
-                <g
-                  key={plot.id}
-                  className="plot-rect"
-                  onClick={(e) => { e.stopPropagation(); setSelectedPlot(plot); }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <rect
-                    x={x}
-                    y={y}
-                    width={CELL_W}
-                    height={CELL_H}
-                    rx={6}
-                    fill={fill}
-                    stroke={isSelected ? '#1d4ed8' : plot.corner ? '#eab308' : 'transparent'}
-                    strokeWidth={isSelected ? 3 : plot.corner ? 2.5 : 0}
-                    opacity={isSelected ? 1 : 0.9}
-                  >
-                    <title>{`${plot.plotNumber} — ${Number(plot.area).toLocaleString()} sqft — ${formatCurrency(Number(plot.price))}`}</title>
-                  </rect>
-                  <text x={x + CELL_W / 2} y={y + 24} textAnchor="middle" fontSize="11" fontWeight="700" fill="white">
-                    {plot.plotNumber}
+              for (const rowIdx of sortedRowKeys) {
+                const rowPlots = rows[rowIdx];
+
+                // Insert internal road between row 6 and row 7
+                if (rowIdx === 7) {
+                  elements.push(
+                    <g key="road-internal">
+                      <rect x={PAD - 10} y={currentY} width={svgW - PAD * 2 + 20} height={ROAD_H} fill="#cbd5e1" rx={4} />
+                      <text x={svgW / 2} y={currentY + 20} textAnchor="middle" fontSize="10" fill="#475569" fontWeight="600">
+                        40 FT INTERNAL ROAD
+                      </text>
+                    </g>,
+                  );
+                  currentY += ROAD_H + 6;
+                }
+
+                // Center the row within the SVG width.
+                const totalRowW = rowPlots.reduce((s: number, p: any) => s + plotWidth(Number(p.area)) + 3, 0) - 3;
+                let x = (svgW - totalRowW) / 2;
+
+                for (const plot of rowPlots) {
+                  const w = plotWidth(Number(plot.area));
+                  const fill = STATUS_FILL[plot.status] || '#9ca3af';
+                  const isSelected = selectedPlot?.id === plot.id;
+
+                  elements.push(
+                    <g
+                      key={plot.id}
+                      className="plot-rect"
+                      onClick={(e) => { e.stopPropagation(); setSelectedPlot(plot); }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <rect
+                        x={x}
+                        y={currentY}
+                        width={w}
+                        height={BASE_H}
+                        rx={4}
+                        fill={fill}
+                        stroke={isSelected ? '#2563eb' : plot.corner ? '#eab308' : '#ffffff'}
+                        strokeWidth={isSelected ? 3 : plot.corner ? 2 : 0.5}
+                        opacity={isSelected ? 1 : 0.92}
+                      />
+                      <text x={x + w / 2} y={currentY + 18} textAnchor="middle" fontSize="10" fontWeight="700" fill="white">
+                        {plot.plotNumber}
+                      </text>
+                      <text x={x + w / 2} y={currentY + 32} textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.9)">
+                        {Number(plot.area).toLocaleString()} sqft
+                      </text>
+                      <text x={x + w / 2} y={currentY + 44} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.8)">
+                        {formatCurrency(Number(plot.price))}
+                      </text>
+                      {plot.corner && (
+                        <polygon
+                          points={`${x + w - 12},${currentY} ${x + w},${currentY} ${x + w},${currentY + 12}`}
+                          fill="#eab308"
+                        />
+                      )}
+                    </g>,
+                  );
+                  x += w + 3;
+                }
+
+                currentY += BASE_H + 3;
+              }
+
+              // Bottom road — Wagholi-Bakori road
+              elements.push(
+                <g key="road-bottom">
+                  <rect x={PAD - 10} y={currentY + 4} width={svgW - PAD * 2 + 20} height={ROAD_H} fill="#94a3b8" rx={4} />
+                  <text x={svgW / 2} y={currentY + 24} textAnchor="middle" fontSize="10" fill="white" fontWeight="600">
+                    WAGHOLI — BAKORI ROAD (30 FT)
                   </text>
-                  <text x={x + CELL_W / 2} y={y + 40} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.85)">
-                    {Number(plot.area).toLocaleString()} sqft
-                  </text>
-                  <text x={x + CELL_W / 2} y={y + 54} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.8)">
-                    {formatCurrency(Number(plot.price))}
-                  </text>
-                  {plot.corner && (
-                    <circle cx={x + CELL_W - 8} cy={y + 8} r={4} fill="#eab308" stroke="white" strokeWidth={1} />
-                  )}
-                  {plot.roadFacing && (
-                    <rect x={x + 3} y={y + 3} width={14} height={8} rx={2} fill="rgba(255,255,255,0.3)" />
-                  )}
-                </g>
+                </g>,
               );
-            })}
+
+              return elements;
+            })()}
           </svg>
         </div>
       )}
