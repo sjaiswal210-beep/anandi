@@ -77,6 +77,26 @@ export class VobizController {
   }
 
   /**
+   * Stateless "play audio file" endpoint. Vobiz fetches this over GET and
+   * we return VobizXML that plays the audio URL passed in the query string.
+   */
+  @Public()
+  @Get('play-audio')
+  @ApiOperation({ summary: 'Vobiz answer_url that plays a hosted audio file' })
+  playAudio(@Res() res: Response, @Query('url') url: string) {
+    const audioUrl = url || '';
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<Response>\n' +
+      `  <Play>${audioUrl}</Play>\n` +
+      '  <Hangup/>\n' +
+      '</Response>';
+
+    res.set('Content-Type', 'application/xml');
+    res.send(xml);
+  }
+
+  /**
    * Stateless "speak custom text" endpoint. Vobiz fetches this over GET and
    * we return VobizXML that speaks the text passed in the query string.
    * Text and language travel in the URL so no DB lookup or state is needed.

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/co
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AICallingService } from './ai-calling.service';
 import { VobizService } from './vobiz.service';
+import { TtsService } from './tts.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
 import { WorkspaceId } from '../../common/decorators/workspace.decorator';
@@ -13,6 +14,7 @@ export class AICallingController {
   constructor(
     private readonly service: AICallingService,
     private readonly vobiz: VobizService,
+    private readonly tts: TtsService,
   ) {}
 
   @Public()
@@ -22,9 +24,26 @@ export class AICallingController {
     return {
       provider: 'vobiz',
       configured: this.vobiz.isConfigured,
+      ttsConfigured: this.tts.isConfigured,
       fromNumber: this.vobiz.fromNumber ? this.vobiz.fromNumber.slice(0, 6) + '...' : null,
       authIdPrefix: this.vobiz.authId ? this.vobiz.authId.slice(0, 8) + '...' : null,
     };
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @Post('generate-voice')
+  @ApiOperation({ summary: 'Generate human voice audio from text script (Sarvam TTS)' })
+  async generateVoice(@Body() dto: { text: string; language?: string; speaker?: string }) {
+    return this.tts.generate(dto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @Get('voice-files')
+  @ApiOperation({ summary: 'List previously generated voice files' })
+  async listVoiceFiles() {
+    return this.tts.listGenerated();
   }
 
   @ApiBearerAuth()

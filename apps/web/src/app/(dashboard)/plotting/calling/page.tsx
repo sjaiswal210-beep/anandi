@@ -25,6 +25,8 @@ export default function CallingPage() {
   const [useCustom, setUseCustom] = useState(false);
   const [customText, setCustomText] = useState('');
   const [customLang, setCustomLang] = useState('hi-IN');
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: metricsData } = useQuery({
     queryKey: ['call-metrics'],
@@ -37,10 +39,38 @@ export default function CallingPage() {
     refetchInterval: 10000,
   });
 
-  const scriptPayload = () =>
-    useCustom && customText.trim()
-      ? { text: customText.trim(), language: customLang }
-      : { script: selectedScript };
+  const scriptPayload = () => {
+    // If we have a generated audio URL, use it as the script (it'll be played via <Play>)
+    if (useCustom && generatedAudioUrl) {
+      return { script: generatedAudioUrl };
+    }
+    // If custom text but no audio generated yet, use the speak endpoint
+    if (useCustom && customText.trim()) {
+      return { text: customText.trim(), language: customLang };
+    }
+    return { script: selectedScript };
+  };
+
+  const generateVoice = async () => {
+    if (!customText.trim()) { toast.error('Type a script first'); return; }
+    setIsGenerating(true);
+    try {
+      const res: any = await api.post('/ai-calling/generate-voice', {
+        text: customText.trim(),
+        language: customLang,
+      });
+      const url = res?.data?.url || res?.url;
+      if (url) {
+        setGeneratedAudioUrl(url);
+        toast.success('Voice generated! You can preview it and then call.');
+      } else {
+        toast.error('No audio returned');
+      }
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Voice generation failed');
+    }
+    setIsGenerating(false);
+  };
 
   const callSingle = useMutation({
     mutationFn: () => api.post('/ai-calling/call', { phone: singlePhone, ...scriptPayload() }),
@@ -154,26 +184,48 @@ export default function CallingPage() {
               <>
                 <textarea
                   value={customText}
-                  onChange={(e) => setCustomText(e.target.value)}
+                  onChange={(e) => { setCustomText(e.target.value); setGeneratedAudioUrl(null); }}
                   rows={4}
-                  maxLength={900}
-                  placeholder="Type the message to be spoken on the call, e.g. Namaste, Anandi Park mein residential plots uplabdha hain, sirf 18 lakh se shuru. Site visit ke liye 1 dabaiye."
+                  maxLength={2000}
+                  placeholder="Type your script in Hindi or Marathi, e.g.&#10;&#10;Namaste! Main Anandi Park se bol rahi hoon. Wagholi Bakori road par premium residential plots available hain, sirf atharah lakh se. Clear titles, gated layout. Site visit ke liye ek dabaiye."
                   className="w-full px-4 py-3 border rounded-lg text-sm bg-background"
                 />
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
                   <select
                     value={customLang}
-                    onChange={(e) => setCustomLang(e.target.value)}
+                    onChange={(e) => { setCustomLang(e.target.value); setGeneratedAudioUrl(null); }}
                     className="px-3 py-2 border rounded-lg text-sm bg-background"
                   >
                     <option value="hi-IN">Hindi voice</option>
                     <option value="mr-IN">Marathi voice</option>
                     <option value="en-IN">English voice</option>
                   </select>
-                  <span className="text-xs text-muted-foreground">{customText.length}/900</span>
+                  <span className="text-xs text-muted-foreground">{customText.length}/2000</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Your text is read aloud by a voice on the call. No recording needed.
+
+                {/* Generate Voice Button */}
+                <button
+                  onClick={generateVoice}
+                  disabled={isGenerating || customText.trim().length < 10}
+                  className="w-full py-3 bg-purple-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-purple-700"
+                >
+                  {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                  {isGenerating ? 'Generating voice...' : '🎙 Generate Human Voice'}
+                </button>
+
+                {/* Audio Preview */}
+                {generatedAudioUrl && (
+                  <div className="border border-purple-200 bg-purple-50 dark:bg-purple-950/20 dark:border-purple-900 rounded-lg p-4 space-y-2">
+                    <p className="text-xs font-medium text-purple-700 dark:text-purple-300">✅ Voice generated — preview below:</p>
+                    <audio controls className="w-full" src={`${typeof window !== 'undefined' ? window.location.protocol + '//' + window.location.hostname + ':4000' : ''}${generatedAudioUrl}`} />
+                    <p className="text-xs text-muted-foreground">
+                      This voice will be played on the call. Hit &quot;Call&quot; below to dial your leads with this audio.
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground">
+                  Step 1: Type script → Step 2: Generate Voice → Step 3: Preview → Step 4: Call leads
                 </p>
               </>
             )}

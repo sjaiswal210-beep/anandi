@@ -120,11 +120,21 @@ Keep it natural, like a human salesperson. Max 2 minutes of talk.`;
   /** Resolves which HTTPS answer_url to use for Vobiz. */
   private resolveAnswerUrl(script?: string): string {
     const base = 'https://raw.githubusercontent.com/sjaiswal210-beep/anandi/main/uploads/tts';
+    const callbackBase =
+      this.configService.get<string>('VOBIZ_CALLBACK_URL') ||
+      this.configService.get<string>('API_URL') ||
+      'http://147.93.169.183:4000';
 
-    // If script looks like an XML URL already
+    // If script is a full HTTPS URL to an XML file
     if (script?.startsWith('https://') && script.endsWith('.xml')) return script;
 
-    // Match known audio keywords to XML files
+    // If script is a local audio file path (/uploads/tts/voice-xxx.wav),
+    // use our HTTPS "say-audio" endpoint which returns XML with <Play>
+    if (script?.startsWith('/uploads/')) {
+      return `${callbackBase}/api/v1/ai-calling/vobiz/play-audio?url=${encodeURIComponent(callbackBase + script)}`;
+    }
+
+    // Match known keywords to preset XML files
     if (script?.includes('marathi')) return `${base}/answer-marathi.xml`;
     if (script?.includes('english')) return `${base}/answer-english.xml`;
     if (script?.includes('followup')) return `${base}/answer-hindi.xml`;
