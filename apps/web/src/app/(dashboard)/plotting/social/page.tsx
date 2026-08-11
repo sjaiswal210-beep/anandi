@@ -89,38 +89,49 @@ export default function SocialMediaPage() {
         <div className="bg-card border rounded-xl px-4 py-3 text-sm">{notice}</div>
       )}
 
-      {/* Promo Video */}
+      {/* Promo Videos */}
       <div className="bg-card border rounded-xl p-6 space-y-4">
         <h2 className="font-semibold flex items-center gap-2">
-          <Video className="h-5 w-5 text-primary" /> Promo Video (45s)
+          <Video className="h-5 w-5 text-primary" /> Promo Videos (45s each)
         </h2>
         <p className="text-sm text-muted-foreground">
-          AI-generated promotional video for Instagram Reels, Facebook, and YouTube. Use in ads or share organically.
+          AI-generated promotional videos with human voiceover. Use in Instagram Reels, Facebook Ads, YouTube, or WhatsApp broadcast.
         </p>
-        <div className="rounded-xl overflow-hidden bg-slate-900 aspect-video relative">
-          <video
-            src={videoUrl}
-            controls
-            playsInline
-            preload="metadata"
-            poster="/site/hero-aerial.jpg"
-            className="w-full h-full object-contain"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { label: 'Hindi', file: 'anandi-park-promo-hindi.mp4' },
+            { label: 'Marathi', file: 'anandi-park-promo-marathi.mp4' },
+            { label: 'English', file: 'anandi-park-promo-english.mp4' },
+          ].map((v) => (
+            <div key={v.file} className="rounded-xl overflow-hidden border">
+              <div className="bg-slate-900 aspect-video relative">
+                <video
+                  src={`${typeof window !== 'undefined' ? apiOrigin() : ''}/uploads/video/${v.file}`}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/site/hero-aerial.jpg"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="p-3 flex items-center justify-between">
+                <span className="text-sm font-medium">{v.label} Version</span>
+                <a
+                  href={`${typeof window !== 'undefined' ? apiOrigin() : ''}/uploads/video/${v.file}`}
+                  download={v.file}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:bg-primary/90"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </a>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <a
-            href={videoUrl}
-            download="anandi-park-promo.mp4"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90"
-          >
-            <Download className="h-4 w-4" /> Download MP4
-          </a>
-          <p className="text-xs text-muted-foreground">
-            6 scenes: Hero · Pricing · Stats · Connectivity · Amenities · CTA. Render on VPS if not yet available.
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          Render on VPS: <code className="font-mono bg-muted px-1 rounded">npx hyperframes render anandi-park-promo -o uploads/video/anandi-park-promo-hindi.mp4</code>
+        </p>
       </div>
 
       {/* Generator */}
