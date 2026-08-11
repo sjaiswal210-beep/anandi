@@ -20,8 +20,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         // Auto-login
         const res: any = await api.post('/auth/login', { email: 'Kalpdev@outlook.com', password: 'Kalpdev@1234' });
-        if (res?.data?.accessToken) {
-          localStorage.setItem('realtyos-auth', JSON.stringify({ state: { token: res.data.accessToken } }));
+        // The response interceptor unwraps response.data, so the token is at res.data.accessToken or res.accessToken
+        const token = res?.data?.accessToken || res?.accessToken;
+        if (token) {
+          localStorage.setItem('realtyos-auth', JSON.stringify({ state: { token } }));
         }
       } catch {
         // Continue without auth — public endpoints still work
