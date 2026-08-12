@@ -48,6 +48,9 @@ async function bootstrap() {
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://147.93.169.183:3000',
+    'https://anandipark.in',
+    'https://www.anandipark.in',
+    'https://api.anandipark.in',
   ];
 
   const allowedOrigins = new Set([...defaultOrigins, ...configuredOrigins]);
