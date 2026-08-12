@@ -250,8 +250,14 @@ export default function SocialMediaPage() {
                     disabled={publish.isPending}
                     className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5"
                   >
-                    <Send className="h-3.5 w-3.5" /> Mark Published
+                    <Send className="h-3.5 w-3.5" /> Publish to {post.platform === 'INSTAGRAM' ? 'IG' : 'FB'}
                   </button>
+                )}
+                {post.status === 'PUBLISHED' && post.adapterResponse?.facebook?.url && (
+                  <a href={post.adapterResponse.facebook.url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">View on FB</a>
+                )}
+                {post.status === 'PUBLISHED' && post.adapterResponse?.instagram?.url && (
+                  <a href={post.adapterResponse.instagram.url} target="_blank" rel="noreferrer" className="text-xs text-pink-600 hover:underline">View on IG</a>
                 )}
               </div>
             </div>

@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SocialImageService } from './social-image.service';
+import { MetaPublishService } from './meta-publish.service';
 
 const PROJECT_BLURB =
   'Anandi Park - Premium residential plots by Yuvraj Gade & Rajan Kute Developers, ' +
@@ -17,6 +18,7 @@ export class SocialMediaService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private imageService: SocialImageService,
+    private metaPublish: MetaPublishService,
   ) {
     this.initGemini();
   }
@@ -161,11 +163,44 @@ Return a JSON object with:
   }
 
   async publishPost(id: string) {
-    // Stub: In production, this calls Meta Graph API
-    this.logger.log(`Publishing post ${id} via adapter (stub)`);
+    const post = await this.prisma.socialPost.findUnique({ where: { id } });
+    if (!post) throw new NotFoundException(`Post ${id} not found`);
+
+    const hasImage = post.mediaUrls?.length > 0;
+    const caption = [
+      post.content,
+      '', // blank line before hashtags
+      ...(post.hashtags || []).map((h: string) => (h.startsWith('#') ? h : `#${h}`)),
+    ]
+      .join('\n')
+      .trim();
+
+    let publishResult: any = { stub: true };
+
+    if (hasImage) {
+      const localImage = post.mediaUrls[0]; // e.g. "/uploads/social/ad-xxx.jpg"
+      try {
+        publishResult = await this.metaPublish.publish({
+          platform: post.platform,
+          caption,
+          localImagePath: localImage,
+        });
+      } catch (err: any) {
+        this.logger.error(`Publish failed for post ${id}: ${err.message}`);
+        publishResult = { error: err.message };
+      }
+    } else {
+      // No image — text-only posts aren't supported on IG; fall back to FB.
+      publishResult = { error: 'No image attached. Instagram requires an image.' };
+    }
+
     return this.prisma.socialPost.update({
       where: { id },
-      data: { status: 'published', publishedAt: new Date(), adapterResponse: { stub: true, message: 'Published via stub adapter' } },
+      data: {
+        status: publishResult.error ? 'draft' : 'published',
+        publishedAt: publishResult.error ? undefined : new Date(),
+        adapterResponse: publishResult as any,
+      },
     });
   }
 }

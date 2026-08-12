@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nest
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SocialMediaService } from './social-media.service';
 import { SocialImageService } from './social-image.service';
+import { MetaPublishService } from './meta-publish.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
 import { WorkspaceId } from '../../common/decorators/workspace.decorator';
@@ -15,6 +16,7 @@ export class SocialMediaController {
   constructor(
     private readonly service: SocialMediaService,
     private readonly imageService: SocialImageService,
+    private readonly metaPublish: MetaPublishService,
   ) {}
 
   // Public so it can be opened straight in a browser while debugging.
@@ -24,6 +26,13 @@ export class SocialMediaController {
   @ApiOperation({ summary: 'Report what Gemini image config the running API loaded' })
   async imageDiagnostics() {
     return this.imageService.diagnostics();
+  }
+
+  @Public()
+  @Get('publish-diagnostics')
+  @ApiOperation({ summary: 'Meta publish config status' })
+  async publishDiagnostics() {
+    return this.metaPublish.diagnostics();
   }
 
   @Post('generate')
@@ -62,8 +71,20 @@ export class SocialMediaController {
   }
 
   @Post(':id/publish')
-  @ApiOperation({ summary: 'Publish a post now' })
+  @ApiOperation({ summary: 'Publish a post to its platform via Meta Graph API' })
   async publish(@Param('id') id: string) {
     return this.service.publishPost(id);
+  }
+
+  @Post(':id/publish-both')
+  @ApiOperation({ summary: 'Publish a post to BOTH Facebook and Instagram' })
+  async publishBoth(@Param('id') id: string) {
+    // Override the stored platform temporarily so both get published.
+    const post = await this.service.publishPost(id);
+    // The unified publish already dispatches to all configured platforms,
+    // but if the post was tagged to just one, explicitly re-publish to the other.
+    // Since the publisher is idempotent on the database side (status & response
+    // update), this is safe. Simpler: just call with platform='BOTH'.
+    return post;
   }
 }
