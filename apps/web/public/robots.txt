@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+Allow: /project
+
+# Private admin area — keep out of search results
+Disallow: /dashboard
+Disallow: /plotting
+Disallow: /leads
+Disallow: /customers
+Disallow: /documents
+Disallow: /settings
+Disallow: /reports
+Disallow: /login
 
 Sitemap: https://anandipark.in/sitemap.xml
