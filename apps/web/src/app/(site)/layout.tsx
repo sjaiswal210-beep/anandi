@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { LeadPopup } from '@/components/site/lead-popup';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://anandipark.in'),
@@ -115,6 +116,9 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {children}
+      {/* Entry lead capture. Mounted at the layout level so it appears on every
+          public page, not just /project. */}
+      <LeadPopup />
     </div>
   );
 }

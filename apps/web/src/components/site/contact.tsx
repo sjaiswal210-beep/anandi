@@ -1,18 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle2, Phone, Mail, MapPin } from 'lucide-react';
 import { PROJECT, CONFIGURATIONS } from './site-data';
-
-function resolveApiUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  if (typeof window !== 'undefined') {
-    return `${window.location.protocol}//${window.location.hostname}:4000/api/v1`;
-  }
-  return 'http://localhost:4000/api/v1';
-}
+import { normalisePhone, submitLead } from './site-api';
 
 export function SiteContact() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', message: '', config: CONFIGURATIONS[0].type });
@@ -21,16 +13,17 @@ export function SiteContact() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || form.phone.trim().length < 10) {
-      setError('Please enter your name and a valid 10-digit phone number.');
+    const local = normalisePhone(form.phone);
+    if (!form.name.trim() || !local) {
+      setError('Please enter your name and a valid 10-digit mobile number.');
       return;
     }
     setError('');
     setStatus('sending');
     try {
-      await axios.post(`${resolveApiUrl()}/website/public/${PROJECT.subdomain}/inquiry`, {
-        name: form.name,
-        phone: form.phone,
+      await submitLead({
+        name: form.name.trim(),
+        phone: local,
         email: form.email || undefined,
         config: form.config,
         message: `Interested in ${form.config}. ${form.message}`.trim(),
