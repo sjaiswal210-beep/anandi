@@ -6,9 +6,9 @@ import { Providers } from '@/components/providers';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Fame Developers - Business Operating System for Real Estate',
-  description: 'AI Powered Platform for Real Estate by Fame Developers',
-  keywords: ['real estate', 'CRM', 'AI', 'property management', 'lead management'],
+  title: 'Anandi Park | Premium Residential Plots in Wagholi, Pune',
+  description: 'Anandi Park — 84 premium residential plots at Bakori, Wagholi, Pune East. Starting ₹18 Lakh. By Yuvraj Gade & Rajan Kute Developers.',
+  icons: { icon: '/site/entry-gate.jpg' },
 };
 
 export default function RootLayout({

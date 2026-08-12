@@ -8,9 +8,32 @@ import api from '@/lib/api';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [ready, setReady] = useState(false);
+  const [locked, setLocked] = useState(true);
+  const [password, setPassword] = useState('');
+  const [pwError, setPwError] = useState(false);
+
+  // Dashboard password gate
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const unlocked = sessionStorage.getItem('dashboard-unlocked');
+      if (unlocked === 'yes') setLocked(false);
+    }
+  }, []);
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === 'Kalpdev@1994') {
+      setLocked(false);
+      setPwError(false);
+      sessionStorage.setItem('dashboard-unlocked', 'yes');
+    } else {
+      setPwError(true);
+    }
+  };
 
   // Auto-login on mount (single user setup)
   useEffect(() => {
+    if (locked) return;
     const init = async () => {
       try {
         const stored = typeof window !== 'undefined' ? localStorage.getItem('realtyos-auth') : null;
@@ -31,7 +54,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setReady(true);
     };
     init();
-  }, []);
+  }, [locked]);
+
+  if (locked) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-slate-950 p-6">
+        <form onSubmit={handleUnlock} className="w-full max-w-sm space-y-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white">Anandi Park</h1>
+            <p className="text-sm text-slate-400 mt-1">Dashboard Access</p>
+          </div>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setPwError(false); }}
+            placeholder="Enter password"
+            autoFocus
+            className="w-full px-4 py-3 rounded-lg border border-slate-700 bg-slate-900 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+          />
+          {pwError && <p className="text-sm text-red-400 text-center">Wrong password</p>}
+          <button type="submit" className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700">
+            Enter Dashboard
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   if (!ready) {
     return <div className="h-screen flex items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
