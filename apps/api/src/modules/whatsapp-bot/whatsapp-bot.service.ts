@@ -134,9 +134,44 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
       where: { OR: [{ from }, { to: from }] }, orderBy: { createdAt: 'asc' }, take: 20,
     });
     const phone = from.startsWith('91') ? from.slice(2) : from;
-    const lead = await this.prisma.lead.findFirst({
+    let lead = await this.prisma.lead.findFirst({
       where: { OR: [{ phone }, { phone: from }, { phone: `+91${phone}` }] },
     });
+
+    // Capture the lead if this number is new. This is what makes Click-to-WhatsApp
+    // ads actually generate CRM leads: the ad opens a chat, the first message
+    // lands here, and we file it. detectAdReferral tags the source so paid
+    // WhatsApp leads are attributable in the ads dashboard.
+    if (!lead && workspaceId) {
+      const referral = this.detectAdReferral(message);
+      const owner = await this.prisma.user.findFirst({
+        where: { workspaces: { some: { workspaceId } } },
+        select: { id: true },
+      });
+      if (owner) {
+        lead = await this.prisma.lead
+          .create({
+            data: {
+              workspaceId,
+              createdById: owner.id,
+              name: `WhatsApp ${phone.slice(-4)}`,
+              phone,
+              source: 'WHATSAPP',
+              status: 'NEW',
+              tags: referral ? ['whatsapp', 'ctwa-ad'] : ['whatsapp', 'whatsapp-inbound'],
+              customFields: {
+                firstMessage: message,
+                capturedVia: referral ? 'click_to_whatsapp_ad' : 'whatsapp_inbound',
+                capturedAt: new Date().toISOString(),
+              },
+            },
+          })
+          .catch(() => null);
+        if (lead) {
+          this.logger.log(`New WhatsApp lead captured: ${phone} (${referral ? 'CTWA ad' : 'organic'})`);
+        }
+      }
+    }
     const chatHistory = history
       .map((m: any) => ({
         role: m.direction === 'incoming' ? 'user' : 'model',
@@ -204,6 +239,27 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
       await this.prisma.whatsAppMessage.create({ data: { workspaceId, from: '919999000001', to: from, type: 'text', content: { text: { body: reply } } as any, direction: 'outgoing', status: 'sent' } });
     }
     return { reply, intent };
+  }
+
+  /**
+   * Heuristic for whether a first message likely came from a Click-to-WhatsApp
+   * ad. Meta pre-fills the message box; advertisers usually set it to something
+   * that names the ad/offer. We can only see the text, so match on common
+   * ad-referral phrasings. Used purely for lead-source tagging.
+   */
+  private detectAdReferral(message: string): boolean {
+    const lower = (message || '').toLowerCase();
+    return [
+      'saw your ad',
+      'saw this ad',
+      'interested in this',
+      'anandi park',
+      'send me details',
+      'send details',
+      'plot details',
+      'more info',
+      'i want to know more',
+    ].some((k) => lower.includes(k));
   }
 
   private detectIntent(message: string): string {
