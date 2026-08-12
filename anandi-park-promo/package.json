@@ -3,9 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:hindi": "node ../scripts/build-promo-compositions.js hindi",
+    "build:marathi": "node ../scripts/build-promo-compositions.js marathi",
+    "build:english": "node ../scripts/build-promo-compositions.js english",
     "dev": "npx --yes hyperframes@0.7.104 preview",
     "check": "npx --yes hyperframes@0.7.104 check",
-    "render": "npx --yes hyperframes@0.7.104 render",
+    "render": "npx --yes hyperframes@0.7.104 render --quality high",
+    "render:hindi": "npm run build:hindi && npx --yes hyperframes@0.7.104 render --quality high --output renders/anandi-park-promo-hindi.mp4",
+    "render:marathi": "npm run build:marathi && npx --yes hyperframes@0.7.104 render --quality high --output renders/anandi-park-promo-marathi.mp4",
+    "render:english": "npm run build:english && npx --yes hyperframes@0.7.104 render --quality high --output renders/anandi-park-promo-english.mp4",
+    "render:all": "npm run render:hindi && npm run render:marathi && npm run render:english",
     "publish": "npx --yes hyperframes@0.7.104 publish"
   }
 }

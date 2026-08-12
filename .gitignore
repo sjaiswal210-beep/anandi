@@ -55,3 +55,12 @@ tmp/
 *.pem
 *.key
 *.crt
+
+# HyperFrames render output and scratch files.
+# Rendered MP4s are tens of MB each; they are rebuilt from the composition, so
+# they do not belong in the repo (which is public).
+anandi-park-promo/renders/
+anandi-park-promo/snapshots/
+anandi-park-promo/.media/
+anandi-park-promo/.hyperframes/
+anandi-park-promo/check-out.txt

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Share2, Sparkles, Calendar, Send, Copy, ImagePlus, Download, RefreshCw, Video, Play } from 'lucide-react';
+import { Share2, Sparkles, Calendar, Send, Copy, ImagePlus, Download, RefreshCw, Video } from 'lucide-react';
 import api, { mediaUrl, apiOrigin } from '@/lib/api';
 
 const platformStyles: Record<string, string> = {
@@ -17,8 +17,6 @@ export default function SocialMediaPage() {
   const [platform, setPlatform] = useState('INSTAGRAM');
   const [topic, setTopic] = useState('Anandi Park residential plots at Bakori, Wagholi — limited corner plots left');
   const [notice, setNotice] = useState('');
-
-  const videoUrl = `${typeof window !== 'undefined' ? apiOrigin() : ''}/uploads/video/anandi-park-promo.mp4`;
 
   const { data: posts = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['social-posts'],
@@ -130,7 +128,12 @@ export default function SocialMediaPage() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          Render on VPS: <code className="font-mono bg-muted px-1 rounded">npx hyperframes render anandi-park-promo -o uploads/video/anandi-park-promo-hindi.mp4</code>
+          Render all three on the VPS:{' '}
+          <code className="font-mono bg-muted px-1 rounded">
+            cd anandi-park-promo &amp;&amp; npm run render:all
+          </code>{' '}
+          then copy <code className="font-mono bg-muted px-1 rounded">renders/*.mp4</code> into{' '}
+          <code className="font-mono bg-muted px-1 rounded">uploads/video/</code>.
         </p>
       </div>
 
