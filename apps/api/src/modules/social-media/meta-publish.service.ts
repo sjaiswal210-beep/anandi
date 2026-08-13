@@ -46,6 +46,54 @@ export class MetaPublishService {
     );
   }
 
+  /**
+   * The token in .env may be a System User token rather than a Page token.
+   * Meta's publishing endpoints require a Page token. If we have a Page ID,
+   * we exchange the user token for the page-specific one on first use and
+   * cache it for the process lifetime.
+   */
+  private pageToken: string | null = null;
+
+  private async getPageToken(): Promise<string> {
+    if (this.pageToken) return this.pageToken;
+
+    const userToken = this.token;
+    if (!userToken) {
+      throw new BadRequestException('META_PAGE_ACCESS_TOKEN not set in .env');
+    }
+
+    const pageId = this.pageId;
+    if (!pageId) {
+      // No page ID — assume the token IS a page token already.
+      this.pageToken = userToken;
+      return userToken;
+    }
+
+    // Try to exchange the system-user token for a page-specific token.
+    // GET /{page-id}?fields=access_token&access_token=<system-user-token>
+    const axios = (await import('axios')).default;
+    try {
+      const res = await axios.get(`${GRAPH}/${pageId}`, {
+        params: { fields: 'access_token', access_token: userToken },
+        timeout: 15000,
+      });
+      if (res.data?.access_token) {
+        this.pageToken = res.data.access_token;
+        this.logger.log('Exchanged system-user token for Page token');
+        return this.pageToken!;
+      }
+    } catch (e: any) {
+      this.logger.warn(
+        `Could not exchange for page token (${e?.response?.data?.error?.message || e.message}). ` +
+          'Falling back to the configured token directly.',
+      );
+    }
+
+    // Fallback — use as-is (might already be a page token).
+    this.pageToken = userToken;
+    return userToken;
+  }
+
   // ─────────── Diagnostics ───────────
 
   diagnostics() {
@@ -73,9 +121,10 @@ export class MetaPublishService {
   private async post<T = any>(path: string, body: Record<string, unknown>): Promise<T> {
     const axios = (await import('axios')).default;
     const url = `${GRAPH}/${path.replace(/^\//, '')}`;
+    const pageToken = await this.getPageToken();
     try {
       const res = await axios.post(url, body, {
-        params: { access_token: this.requireToken() },
+        params: { access_token: pageToken },
         timeout: 60000,
       });
       return res.data;
@@ -167,11 +216,12 @@ export class MetaPublishService {
    */
   private async waitForContainer(containerId: string, maxAttempts = 15): Promise<void> {
     const axios = (await import('axios')).default;
+    const pageToken = await this.getPageToken();
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise((r) => setTimeout(r, 3000));
       try {
         const res = await axios.get(`${GRAPH}/${containerId}`, {
-          params: { fields: 'status_code', access_token: this.requireToken() },
+          params: { fields: 'status_code', access_token: pageToken },
           timeout: 15000,
         });
         const status = res.data.status_code;

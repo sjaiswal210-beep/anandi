@@ -41,11 +41,46 @@ export class MetaLeadsService {
     return t;
   }
 
+  /**
+   * The configured token may be a system-user token. Lead form APIs require a
+   * Page token, so we exchange on first use and cache it.
+   */
+  private cachedPageToken: string | null = null;
+
+  private async getPageToken(): Promise<string> {
+    if (this.cachedPageToken) return this.cachedPageToken;
+
+    const userToken = this.requireToken();
+    const pageId = this.pageId;
+    if (!pageId) {
+      this.cachedPageToken = userToken;
+      return userToken;
+    }
+
+    const axios = (await import('axios')).default;
+    try {
+      const res = await axios.get(`${GRAPH}/${pageId}`, {
+        params: { fields: 'access_token', access_token: userToken },
+        timeout: 15000,
+      });
+      if (res.data?.access_token) {
+        this.cachedPageToken = res.data.access_token;
+        this.logger.log('Exchanged system-user token for Page token (leads)');
+        return this.cachedPageToken!;
+      }
+    } catch (e: any) {
+      this.logger.warn(`Page token exchange failed: ${e?.response?.data?.error?.message || e.message}`);
+    }
+
+    this.cachedPageToken = userToken;
+    return userToken;
+  }
+
   private async get<T = any>(path: string, params: Record<string, string> = {}): Promise<T> {
     const axios = (await import('axios')).default;
     const url = new URL(`${GRAPH}/${path.replace(/^\//, '')}`);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    url.searchParams.set('access_token', this.requireToken());
+    url.searchParams.set('access_token', await this.getPageToken());
 
     try {
       const res = await axios.get(url.toString(), { timeout: 30000 });
