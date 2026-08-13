@@ -10,7 +10,15 @@ function resolveApiUrl(): string {
   if (fromEnv) return fromEnv;
 
   if (typeof window !== 'undefined') {
-    return `${window.location.protocol}//${window.location.hostname}:4000/api/v1`;
+    const { protocol, hostname } = window.location;
+
+    // On the production domain, the API sits behind its own subdomain via nginx.
+    if (hostname === 'anandipark.in' || hostname === 'www.anandipark.in') {
+      return 'https://api.anandipark.in/api/v1';
+    }
+
+    // VPS IP or localhost — same host, port 4000.
+    return `${protocol}//${hostname}:4000/api/v1`;
   }
 
   return 'http://localhost:4000/api/v1';
