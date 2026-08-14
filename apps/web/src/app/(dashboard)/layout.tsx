@@ -31,17 +31,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  // Auto-login on mount (single user setup)
+  // Auto-login on mount (single user setup).
+  // Always fetch a FRESH token rather than trusting whatever is in
+  // localStorage: the JWT expires after 24h, and a stale token makes every
+  // API call 403, which shows up as a dashboard full of zeros. Logging in on
+  // each load is cheap here and guarantees a valid token.
   useEffect(() => {
     if (locked) return;
     const init = async () => {
       try {
-        const stored = typeof window !== 'undefined' ? localStorage.getItem('realtyos-auth') : null;
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed?.state?.token) { setReady(true); return; }
-        }
-        // Auto-login
         const res: any = await api.post('/auth/login', { email: 'Kalpdev@outlook.com', password: 'Kalpdev@1234' });
         // The response interceptor unwraps response.data, so the token is at res.data.accessToken or res.accessToken
         const token = res?.data?.accessToken || res?.accessToken;
@@ -49,7 +47,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           localStorage.setItem('realtyos-auth', JSON.stringify({ state: { token } }));
         }
       } catch {
-        // Continue without auth — public endpoints still work
+        // Login failed — drop any stale token so we don't send an expired one.
+        try { localStorage.removeItem('realtyos-auth'); } catch {}
       }
       setReady(true);
     };

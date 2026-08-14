@@ -84,7 +84,11 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error: AxiosError) => {
-    // Don't redirect on 401/403 — just return empty
+    // A 401 almost always means the stored JWT expired. Clear it so the next
+    // dashboard load performs a fresh login instead of resending a dead token.
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      try { localStorage.removeItem('realtyos-auth'); } catch {}
+    }
     return Promise.reject(error);
   },
 );
