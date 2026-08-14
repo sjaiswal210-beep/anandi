@@ -87,7 +87,11 @@ api.interceptors.response.use(
     // A 401 almost always means the stored JWT expired. Clear it so the next
     // dashboard load performs a fresh login instead of resending a dead token.
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      try { localStorage.removeItem('realtyos-auth'); } catch {}
+      try {
+        localStorage.removeItem('realtyos-auth');
+      } catch {
+        /* localStorage unavailable */
+      }
     }
     return Promise.reject(error);
   },

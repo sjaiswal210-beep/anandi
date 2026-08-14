@@ -48,7 +48,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       } catch {
         // Login failed — drop any stale token so we don't send an expired one.
-        try { localStorage.removeItem('realtyos-auth'); } catch {}
+        try {
+          localStorage.removeItem('realtyos-auth');
+        } catch {
+          /* localStorage unavailable */
+        }
       }
       setReady(true);
     };
