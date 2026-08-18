@@ -64,3 +64,7 @@ anandi-park-promo/snapshots/
 anandi-park-promo/.media/
 anandi-park-promo/.hyperframes/
 anandi-park-promo/check-out.txt
+
+# Handoff archives (may contain real .env values — never commit)
+anandi-park-handoff*.zip
+/../anandi-park-handoff*.zip
