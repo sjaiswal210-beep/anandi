@@ -5,9 +5,9 @@ import { SocialImageService } from './social-image.service';
 import { MetaPublishService } from './meta-publish.service';
 
 const PROJECT_BLURB =
-  'Anandi Park - Premium residential plots by Yuvraj Gade & Rajan Kute Developers, ' +
-  'starting ₹18 Lakh, Bakori, Wagholi, Pune. Clear titles, ready for registration. ' +
-  'Do not mention RERA or NA.';
+  'Anandi Park - Premium residential plots by Rich-Land Developers (Yuvraj Gade & Rajan Kute), ' +
+  'starting ₹18 Lakh, Bakori, Wagholi, Pune. Contact +91 75584 44117. ' +
+  'Clear titles, ready for registration. Do not mention RERA or NA.';
 
 @Injectable()
 export class SocialMediaService {

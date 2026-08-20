@@ -45,7 +45,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">Anandi Park</h1>
         <p className="text-muted-foreground mt-1">
-          84 Premium NA Plots · Bakori, Wagholi-Bakori Road, Pune · by Yuvraj Gade & Rajan Kute Developers
+          84 Residential Plots · Bakori, Wagholi-Bakori Road, Pune · by Rich-Land Developers (Yuvraj Gade & Rajan Kute)
         </p>
       </div>
 
@@ -196,14 +196,15 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {[
               { label: 'Project', value: 'Anandi Park' },
-              { label: 'Developer', value: 'Yuvraj Gade & Rajan Kute' },
+              { label: 'Developer', value: 'Rich-Land Developers' },
+              { label: 'Partners', value: 'Yuvraj Gade & Rajan Kute' },
+              { label: 'Contact', value: '+91 75584 44117' },
               { label: 'Location', value: 'GAT No. 279, Village Bakori, Taluka Haveli, Pune' },
               { label: 'Road', value: 'Wagholi-Bakori Wide Road' },
               { label: 'Total Plots', value: '84 (1000–4510 sqft)' },
-              { label: 'Price Range', value: '₹15L – ₹83L' },
-              { label: 'Rate', value: '₹1,500/sqft + premiums' },
-              { label: 'Type', value: 'NA Residential Plots' },
-              { label: 'Status', value: 'RERA Registered · Clear Titles' },
+              { label: 'Price Range', value: '₹18L – ₹83L' },
+              { label: 'Type', value: 'Residential Plots' },
+              { label: 'Status', value: 'Clear Titles · Ready for Registration' },
             ].map((item) => (
               <div key={item.label} className="flex items-start justify-between gap-4 py-1.5 border-b last:border-0">
                 <span className="text-xs text-muted-foreground shrink-0">{item.label}</span>

@@ -26,8 +26,8 @@ Wagheshwar mandir sirf das minute, schools das minute, Kharadi IT hub pachchees 
 Landscaped entry gate, chaubees ghante paani-bijli, central garden, security cabin, CCTV.
 Loan facility available — sirf das percent booking se aaj hi plot aapke naam.
 Wagholi mein zameen ki value har saal badh rahi hai. Aaj khareedein, kal munafa kamayein.
-Site visit bilkul free hai. Aaj hi call karein.
-Yuvraj Gade aur Rajan Kute Developers.`,
+Site visit bilkul free hai. Aaj hi call karein — pchhattar aath char char one one seven.
+Rich-Land Developers. Yuvraj Gade aur Rajan Kute.`,
   },
   marathi: {
     lang: 'mr-IN',
@@ -41,7 +41,7 @@ Landscaped entry gate, chovis taas paani-vij, central garden, security cabin.
 Loan facility uplabdha aahe — phakta daha percent booking madhye plot tumchya naavavar.
 Wagholi madhe jameenichi kimmat darvaarshi vadhat aahe. Aaj ghya, udya nafa kamva.
 Site visit free aahe. Aajach call kara.
-Yuvraj Gade ani Rajan Kute Developers.`,
+Rich-Land Developers. Yuvraj Gade ani Rajan Kute.`,
   },
   english: {
     lang: 'en-IN',
@@ -54,8 +54,8 @@ Ten minutes from Wagheshwar Temple, ten minutes from top schools, twenty-five mi
 Landscaped entry gate, twenty-four-seven water and electricity, central garden, security with CCTV.
 Loan facility available. Just ten percent booking and the plot is yours today.
 Land prices in Wagholi are rising every year. Buy today, profit tomorrow.
-Free site visit available. Call now.
-By Yuvraj Gade and Rajan Kute Developers.`,
+Free site visit available. Call now on seven five five eight, four four four one one seven.
+By Rich-Land Developers. Yuvraj Gade and Rajan Kute.`,
   },
 };
 

@@ -314,7 +314,7 @@ export default function PlotInventoryPage() {
             <div className="mt-4 flex gap-3 flex-wrap">
               <button className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Enquire / Book</button>
               <a
-                href={`https://wa.me/919999000001?text=${encodeURIComponent(`Hi, I am interested in plot ${selectedPlot.plotNumber} (${Number(selectedPlot.area).toLocaleString()} sqft, ${formatCurrency(Number(selectedPlot.price))}). Please share details.`)}`}
+                href={`https://wa.me/917558444117?text=${encodeURIComponent(`Hi, I am interested in plot ${selectedPlot.plotNumber} (${Number(selectedPlot.area).toLocaleString()} sqft, ${formatCurrency(Number(selectedPlot.price))}). Please share details.`)}`}
                 target="_blank" rel="noreferrer"
                 className="px-5 py-2.5 border rounded-lg text-sm font-medium hover:bg-muted"
               >WhatsApp About This Plot</a>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Phone, MessageCircle } from 'lucide-react';
+import { Phone, MessageCircle } from 'lucide-react';
 import { PROJECT } from './site-data';
 
 export function SiteFooter() {
@@ -9,12 +9,10 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-5">
         <div className="grid gap-10 md:grid-cols-3">
           <div>
-            <div className="flex items-center gap-2.5 text-white">
-              <Building2 className="h-6 w-6 text-amber-400" aria-hidden="true" />
-              <span className="text-lg font-semibold">{PROJECT.name}</span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/rich-land-logo.svg" alt="Rich-Land Developers" className="h-12 w-auto" />
             <p className="mt-4 max-w-xs text-sm text-slate-400">
-              {PROJECT.tagline}. Developed by {PROJECT.builder}.
+              {PROJECT.name} — {PROJECT.tagline}. Developed by {PROJECT.builder} ({PROJECT.partners}).
             </p>
             <p className="mt-4 text-xs text-slate-500">Clear titles · Ready for registration</p>
           </div>
@@ -57,11 +55,8 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {PROJECT.builder}. All rights reserved.</p>
-          <p>
-            Images are artistic impressions. Powered by{' '}
-            <span className="text-amber-400">Fame Developers</span>
-          </p>
+          <p>© {new Date().getFullYear()} {PROJECT.builder} ({PROJECT.partners}). All rights reserved.</p>
+          <p>Images are artistic impressions.</p>
         </div>
       </div>
     </footer>

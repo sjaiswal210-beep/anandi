@@ -4,14 +4,15 @@
 export const PROJECT = {
   name: 'Anandi Park',
   tagline: 'Premium Residential Plots at Bakori, Wagholi — Pune East',
-  builder: 'Yuvraj Gade & Rajan Kute Developers',
+  builder: 'Rich-Land Developers',
+  partners: 'Yuvraj Gade & Rajan Kute',
   priceFrom: '₹18 Lakh',
   priceNote: 'all inclusive',
   possession: 'Ready for Registration',
   location: 'GAT No. 279, Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune',
   shortLocation: 'Bakori, Wagholi, Pune',
-  phone: '+91 99990 00001',
-  whatsapp: '919999000001',
+  phone: '+91 75584 44117',
+  whatsapp: '917558444117',
   email: 'sales@anandipark.in',
   subdomain: 'anandi-park',
   mapEmbed:

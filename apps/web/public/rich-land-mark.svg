@@ -1,0 +1,21 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rich-Land Developers mark">
+  <defs>
+    <linearGradient id="rlGold" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fcd34d"/>
+      <stop offset="0.55" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="rlSlate" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1e293b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <!-- Badge -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#rlSlate)" stroke="url(#rlGold)" stroke-width="2"/>
+  <!-- Land horizon / plot contour -->
+  <path d="M12 44 L24 34 L34 40 L44 30 L52 36" stroke="url(#rlGold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <!-- Plot grid baseline -->
+  <path d="M12 50 H52 M22 50 V45 M32 50 V47 M42 50 V45" stroke="#fbbf24" stroke-width="1.4" stroke-linecap="round" opacity="0.5"/>
+  <!-- RL monogram -->
+  <text x="32" y="30" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700" fill="url(#rlGold)" letter-spacing="0.5">RL</text>
+</svg>

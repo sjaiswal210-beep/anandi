@@ -55,7 +55,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Map className="h-8 w-8 text-emerald-600 shrink-0" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/rich-land-mark.svg" alt="Rich-Land Developers" className="h-8 w-8 shrink-0" />
           {!collapsed && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -63,7 +64,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               className="leading-tight"
             >
               <span className="font-bold text-base block">Anandi Park</span>
-              <span className="text-[10px] text-muted-foreground">by Yuvraj Gade & Rajan Kute</span>
+              <span className="text-[10px] text-muted-foreground">by Rich-Land Developers</span>
             </motion.div>
           )}
         </Link>

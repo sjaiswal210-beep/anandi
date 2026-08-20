@@ -9,8 +9,9 @@ feature status.
 ## 1. What this project is
 
 **Anandi Park** — a marketing + CRM system for selling **84 residential plots**
-by **Yuvraj Gade & Rajan Kute Developers** at GAT No. 279, Village Bakori,
-Wagholi-Bakori Road, Taluka Haveli, Dist Pune.
+by **Rich-Land Developers** (partners **Yuvraj Gade & Rajan Kute**) at GAT No. 279,
+Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Dist Pune.
+Contact: **+91 75584 44117**.
 
 It is a Turborepo monorepo (originally a generic "RealtyOS" CRM) that has been
 heavily customised into a single-project app for Anandi Park.

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     'Anandi Park — 84 premium residential plots at Bakori, Wagholi-Bakori Road, Pune East. ' +
     'Starting ₹18 Lakh. Clear titles, gated layout, 30 & 40 ft wide roads. ' +
-    'By Yuvraj Gade & Rajan Kute Developers. Book a free site visit today.',
+    'By Rich-Land Developers (Yuvraj Gade & Rajan Kute). Book a free site visit today.',
   keywords: [
     'residential plots Wagholi',
     'plots for sale Pune',
@@ -18,14 +18,15 @@ export const metadata: Metadata = {
     'residential plots Pune East',
     'plots near Kharadi',
     'land for sale Wagholi',
-    'Yuvraj Gade Rajan Kute Developers',
+    'Rich-Land Developers',
+    'Rich Land Developers Pune',
     'affordable plots Pune',
     'gated plot layout Pune',
     'plots near Wagheshwar Temple',
   ],
-  authors: [{ name: 'Yuvraj Gade & Rajan Kute Developers' }],
-  creator: 'Anandi Park',
-  publisher: 'Yuvraj Gade & Rajan Kute Developers',
+  authors: [{ name: 'Rich-Land Developers' }],
+  creator: 'Rich-Land Developers',
+  publisher: 'Rich-Land Developers',
   openGraph: {
     title: 'Anandi Park — Premium Residential Plots, Wagholi, Pune',
     description:
@@ -91,12 +92,13 @@ const jsonLd = {
     latitude: '18.5918',
     longitude: '73.9900',
   },
-  telephone: '+919999000001',
+  telephone: '+917558444117',
   priceRange: '₹18 Lakh - ₹83 Lakh',
   openingHours: 'Mo-Su 10:00-19:00',
   founder: {
     '@type': 'Organization',
-    name: 'Yuvraj Gade & Rajan Kute Developers',
+    name: 'Rich-Land Developers',
+    founder: 'Yuvraj Gade & Rajan Kute',
   },
   offers: {
     '@type': 'AggregateOffer',

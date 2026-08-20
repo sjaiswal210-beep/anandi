@@ -22,7 +22,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'Kalpdev@1994') {
+    // Trim to tolerate a trailing space from autofill or mobile keyboards.
+    if (password.trim() === 'Kalpdev@1994') {
       setLocked(false);
       setPwError(false);
       sessionStorage.setItem('dashboard-unlocked', 'yes');

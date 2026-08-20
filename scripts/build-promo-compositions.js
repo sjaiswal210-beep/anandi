@@ -218,7 +218,7 @@ ${scene(
             <h1>Anandi Park</h1>
             <p class="subtitle">
               <span class="subtitle-line">Premium residential plots at Bakori, Wagholi-Bakori Road</span>
-              <span class="subtitle-line">by Yuvraj Gade &amp; Rajan Kute Developers</span>
+              <span class="subtitle-line">by Rich-Land Developers (Yuvraj Gade &amp; Rajan Kute)</span>
             </p>`
 )}
 
@@ -282,8 +282,8 @@ ${scene(
               <p class="subtitle" style="color: rgba(255,255,255,0.88); font-size: 28px;">
                 GAT No. 279, Village Bakori, Wagholi-Bakori Road, Pune
               </p>
-              <span class="cta-phone">Call Now &middot; anandipark.in</span>
-              <span class="cta-foot">Yuvraj Gade &amp; Rajan Kute Developers</span>
+              <span class="cta-phone">Call +91 75584 44117 &middot; anandipark.in</span>
+              <span class="cta-foot">Rich-Land Developers &middot; Yuvraj Gade &amp; Rajan Kute</span>
             </div>`
 )}
 

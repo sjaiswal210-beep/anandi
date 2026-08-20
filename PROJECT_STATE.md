@@ -7,7 +7,10 @@ lives, and what's done vs pending. Written for the next agent.
 
 ## Project facts (do not get these wrong)
 
-- Developer names: **Yuvraj Gade & Rajan Kute** (not "Yuraj & Rajan").
+- Developer / company: **Rich-Land Developers** (partners **Yuvraj Gade & Rajan Kute**).
+  Display as "Rich-Land Developers" with "by Yuvraj Gade & Rajan Kute" where useful.
+- Contact number: **+91 75584 44117** (WhatsApp `917558444117`).
+- Logo assets: `apps/web/public/rich-land-logo.svg` (horizontal), `rich-land-mark.svg` (icon).
 - Product is **"residential plots"** — never "NA plots".
 - **NO RERA registration** — never claim it anywhere (site, bot, ads, captions).
 - Price is **₹18 Lakh+** (not ₹15 Lakh).
