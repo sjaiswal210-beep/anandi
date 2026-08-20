@@ -68,3 +68,6 @@ anandi-park-promo/check-out.txt
 # Handoff archives (may contain real .env values — never commit)
 anandi-park-handoff*.zip
 /../anandi-park-handoff*.zip
+
+# TypeScript incremental build info
+*.tsbuildinfo
