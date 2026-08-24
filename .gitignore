@@ -71,3 +71,9 @@ anandi-park-handoff*.zip
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Brand kit: generated HD derivatives are large and rebuildable from the master.
+# Keep the master (brand/richlandlogo-master.png), the web copies
+# (apps/web/public/brand/), the SVGs, docs, and the build script — regenerate
+# brand/dist with: node scripts/build-brand-kit.js  (or brand/build-brand-kit.cmd)
+brand/dist/

@@ -10,7 +10,7 @@ export function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-3">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/rich-land-logo.svg" alt="Rich-Land Developers" className="h-12 w-auto" />
+            <img src="/brand/richland-transparent.png" alt="Rich-Land Developers" className="h-16 w-16 object-contain" />
             <p className="mt-4 max-w-xs text-sm text-slate-400">
               {PROJECT.name} — {PROJECT.tagline}. Developed by {PROJECT.builder} ({PROJECT.partners}).
             </p>

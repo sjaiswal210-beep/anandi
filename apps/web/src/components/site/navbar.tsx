@@ -33,7 +33,7 @@ export function SiteNavbar() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4" aria-label="Main">
         <a href="#top" className="flex items-center gap-3 text-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/rich-land-mark.svg" alt="Rich-Land Developers" className="h-9 w-9" />
+          <img src="/brand/richland-transparent.png" alt="Rich-Land Developers" className="h-10 w-10 object-contain" />
           <span className="leading-tight">
             <span className="block text-lg font-semibold tracking-tight">{PROJECT.name}</span>
             <span className="block text-[11px] text-slate-400">by {PROJECT.builder}</span>

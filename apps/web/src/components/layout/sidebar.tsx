@@ -56,7 +56,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="h-16 flex items-center px-4 border-b">
         <Link href="/dashboard" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/rich-land-mark.svg" alt="Rich-Land Developers" className="h-8 w-8 shrink-0" />
+          <img src="/brand/richland-transparent.png" alt="Rich-Land Developers" className="h-9 w-9 shrink-0 object-contain" />
           {!collapsed && (
             <motion.div
               initial={{ opacity: 0 }}
