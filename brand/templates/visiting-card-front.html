@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>@page{size:3.75in 2.25in;margin:0;}
+  :root{
+    --slate:#0F172A; --slate2:#1E293B; --gold:#F59E0B; --gold-lt:#FCD34D;
+    --gold-dp:#D97706; --emerald:#059669; --white:#ffffff; --muted:#94A3B8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  html,body{font-family:'Inter','Segoe UI',sans-serif;color:#fff;}
+  .gold{color:var(--gold);}
+  .goldgrad{background:linear-gradient(135deg,var(--gold-lt),var(--gold),var(--gold-dp));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .serif{font-family:Georgia,'Times New Roman',serif;}
+
+  .card{width:3.75in;height:2.25in;position:relative;overflow:hidden;background:var(--slate);}
+  .safe{position:absolute;inset:0.125in;}
+  .card .accent{position:absolute;top:0;left:0;width:0.22in;height:100%;background:linear-gradient(180deg,var(--gold-lt),var(--gold-dp));}
+  .card .logo{height:0.62in;}
+  .card .brand{font-size:15pt;font-weight:800;letter-spacing:.3px;}
+  .card .brand .rl{color:var(--gold);}
+  .card .role{font-size:7.5pt;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+  .card .rows{position:absolute;bottom:0.16in;left:0.42in;right:0.16in;font-size:8.2pt;line-height:1.5;}
+  .card .rows b{color:var(--gold);font-weight:700;}
+  .card .proj{position:absolute;top:0.16in;right:0.16in;text-align:right;}
+  .card .proj .p{font-size:12pt;font-weight:800;}
+  .card .proj .t{font-size:6.5pt;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+</style>
+<title>Visiting Card — Front</title></head><body><div class="card">
+    <div class="accent"></div>
+    <div class="safe">
+      <img class="logo" src="assets/logo.png" alt="">
+      <div class="proj"><div class="p">Anandi Park</div><div class="t">Premium Residential Plots</div></div>
+      <div class="rows">
+        <div style="font-size:12pt;font-weight:800;margin-bottom:2px;">Rich-Land Developers</div>
+        <div style="color:var(--muted);font-size:7.5pt;letter-spacing:1px;margin-bottom:5px;">Yuvraj Gade & Rajan Kute</div>
+        <div><b>Call</b> &nbsp;+91 75584 44117</div>
+        <div><b>Web</b> &nbsp;anandipark.in &nbsp;·&nbsp; <b>Email</b> &nbsp;sales@anandipark.in</div>
+      </div>
+    </div>
+  </div></body></html>

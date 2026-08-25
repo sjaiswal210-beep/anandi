@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:0;}
+  :root{
+    --slate:#0F172A; --slate2:#1E293B; --gold:#F59E0B; --gold-lt:#FCD34D;
+    --gold-dp:#D97706; --emerald:#059669; --white:#ffffff; --muted:#94A3B8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  html,body{font-family:'Inter','Segoe UI',sans-serif;color:#fff;}
+  .gold{color:var(--gold);}
+  .goldgrad{background:linear-gradient(135deg,var(--gold-lt),var(--gold),var(--gold-dp));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .serif{font-family:Georgia,'Times New Roman',serif;}
+
+    .cover{width:210mm;height:297mm;position:relative;overflow:hidden;background:var(--slate);}
+    .cover .hero{position:absolute;inset:0;background:url('assets/hero-aerial.jpg') center/cover;}
+    .cover .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.35) 45%,rgba(15,23,42,.95));}
+    .cover .top{position:absolute;top:16mm;left:0;right:0;display:flex;flex-direction:column;align-items:center;}
+    .cover .logo{height:26mm;}
+    .cover .co{margin-top:4mm;font-size:15pt;font-weight:700;letter-spacing:.5px;}
+    .cover .co .rl{color:var(--gold);}
+    .cover .mid{position:absolute;top:120mm;left:0;right:0;text-align:center;padding:0 18mm;}
+    .cover .badge{display:inline-block;background:rgba(245,158,11,.92);color:#1e293b;font-size:10pt;font-weight:800;letter-spacing:2px;padding:5px 16px;border-radius:40px;text-transform:uppercase;}
+    .cover h1{font-size:52pt;font-weight:900;line-height:1.02;margin-top:10mm;text-shadow:0 4px 30px rgba(0,0,0,.6);}
+    .cover .tl{font-size:16pt;color:#e2e8f0;margin-top:6mm;font-weight:500;}
+    .cover .price{font-size:22pt;font-weight:900;margin-top:8mm;}
+    .cover .strip{position:absolute;bottom:0;left:0;right:0;background:rgba(15,23,42,.9);border-top:2px solid var(--gold);padding:8mm 16mm;display:flex;justify-content:space-between;align-items:center;font-size:11pt;}
+    .cover .strip .g{color:var(--gold);font-weight:700;}
+  </style>
+<title>Brochure / Book Cover — A4</title></head><body><div class="cover">
+    <div class="hero"></div><div class="veil"></div>
+    <div class="top">
+      <img class="logo" src="assets/logo.png" alt="">
+      <div class="co"><span class="rl">Rich-Land</span> Developers</div>
+    </div>
+    <div class="mid">
+      <span class="badge">Residential Plots · Pune East</span>
+      <h1>Anandi Park</h1>
+      <div class="tl">Premium Residential Plots at Bakori, Wagholi</div>
+      <div class="price goldgrad">Starting ₹18 Lakh</div>
+    </div>
+    <div class="strip">
+      <span>anandipark.in</span>
+      <span class="g">+91 75584 44117</span>
+    </div>
+  </div></body></html>
