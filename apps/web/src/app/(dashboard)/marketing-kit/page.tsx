@@ -120,15 +120,18 @@ export default function MarketingKitPage() {
             { f: 'anandi-park-ad-ugc', label: 'UGC talking-head', note: '30s advisor (Omni Flash) — best for Click-to-WhatsApp' },
             { f: 'anandi-park-ad-family', label: 'Family / couple', note: '38s emotional cinematic (Veo 3.1)' },
             { f: 'anandi-park-vo-multilang', label: 'Voiceovers — Hi / Mr / En', note: 'Same film, three language VO scripts' },
+            { f: 'audio/anandi-park-ad-marathi', ext: 'wav', label: 'Marathi VO — ready audio', note: 'Generated (Sarvam) · 26s · drop into the edit' },
           ].map((a) => (
             <div key={a.f} className="rounded-lg border p-4">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium">{a.label}</span>
                 <div className="flex gap-1.5">
-                  <a href={`/brand/ad-campaign/${a.f}.md`} target="_blank" rel="noreferrer" className="p-1.5 rounded-md border hover:bg-muted" aria-label="Open">
-                    <FileText className="h-3.5 w-3.5" />
-                  </a>
-                  <a href={`/brand/ad-campaign/${a.f}.md`} download className="p-1.5 rounded-md border hover:bg-muted" aria-label="Download">
+                  {a.ext !== 'wav' && (
+                    <a href={`/brand/ad-campaign/${a.f}.${a.ext || 'md'}`} target="_blank" rel="noreferrer" className="p-1.5 rounded-md border hover:bg-muted" aria-label="Open">
+                      <FileText className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                  <a href={`/brand/ad-campaign/${a.f}.${a.ext || 'md'}`} download className="p-1.5 rounded-md border hover:bg-muted" aria-label="Download">
                     <Download className="h-3.5 w-3.5" />
                   </a>
                 </div>
