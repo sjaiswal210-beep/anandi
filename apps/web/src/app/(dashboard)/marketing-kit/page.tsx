@@ -114,25 +114,31 @@ export default function MarketingKitPage() {
           lock, scene breakdown, and copy-paste prompts for Google Flow / Nano Banana Pro / Veo 3.1, plus the
           Hinglish voiceover and assembly notes.
         </p>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href="/brand/ad-campaign/anandi-park-ad-package.md"
-            download
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
-          >
-            <Download className="h-4 w-4" /> Download ad package (.md)
-          </a>
-          <a
-            href="/brand/ad-campaign/anandi-park-ad-package.md"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium hover:bg-muted"
-          >
-            <FileText className="h-4 w-4" /> Open in browser
-          </a>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { f: 'anandi-park-ad-package', label: 'Hero — "Land vs Flat"', note: '35s cinematic VO (Veo 3.1) + 15s cut' },
+            { f: 'anandi-park-ad-ugc', label: 'UGC talking-head', note: '30s advisor (Omni Flash) — best for Click-to-WhatsApp' },
+            { f: 'anandi-park-ad-family', label: 'Family / couple', note: '38s emotional cinematic (Veo 3.1)' },
+            { f: 'anandi-park-vo-multilang', label: 'Voiceovers — Hi / Mr / En', note: 'Same film, three language VO scripts' },
+          ].map((a) => (
+            <div key={a.f} className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-medium">{a.label}</span>
+                <div className="flex gap-1.5">
+                  <a href={`/brand/ad-campaign/${a.f}.md`} target="_blank" rel="noreferrer" className="p-1.5 rounded-md border hover:bg-muted" aria-label="Open">
+                    <FileText className="h-3.5 w-3.5" />
+                  </a>
+                  <a href={`/brand/ad-campaign/${a.f}.md`} download className="p-1.5 rounded-md border hover:bg-muted" aria-label="Download">
+                    <Download className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{a.note}</p>
+            </div>
+          ))}
         </div>
         <p className="text-xs text-muted-foreground mt-3">
-          Concept: <span className="font-medium">"Land vs Flat"</span> · 35s cinematic VO + a 15s crisp cut.
+          Each pack has copy-paste prompts for Google Flow / Nano Banana Pro / Veo 3.1 / Omni Flash.
           Run the image prompts first, approve each frame, then the matching video prompt.
         </p>
       </section>
