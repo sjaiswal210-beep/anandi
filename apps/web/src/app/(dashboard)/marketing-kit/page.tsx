@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Palette, Image as ImageIcon, FileText, Printer } from 'lucide-react';
+import { Download, Palette, Image as ImageIcon, FileText, Printer, Clapperboard } from 'lucide-react';
 
 // All assets are static files under apps/web/public/brand, served from the same
 // origin as the dashboard — no API call needed. Regenerate them on the machine
@@ -102,6 +102,39 @@ export default function MarketingKitPage() {
             <Download className="h-4 w-4" /> Vector mark (SVG)
           </a>
         </div>
+      </section>
+
+      {/* AI ad campaign package */}
+      <section className="bg-card border rounded-xl p-6">
+        <h2 className="font-semibold flex items-center gap-2 mb-1">
+          <Clapperboard className="h-5 w-5 text-primary" /> AI Video Ad Package
+        </h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          A full cinematic Reel built with the TOW AI Ad Generation method — script, character &amp; location
+          lock, scene breakdown, and copy-paste prompts for Google Flow / Nano Banana Pro / Veo 3.1, plus the
+          Hinglish voiceover and assembly notes.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="/brand/ad-campaign/anandi-park-ad-package.md"
+            download
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+          >
+            <Download className="h-4 w-4" /> Download ad package (.md)
+          </a>
+          <a
+            href="/brand/ad-campaign/anandi-park-ad-package.md"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium hover:bg-muted"
+          >
+            <FileText className="h-4 w-4" /> Open in browser
+          </a>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          Concept: <span className="font-medium">"Land vs Flat"</span> · 35s cinematic VO + a 15s crisp cut.
+          Run the image prompts first, approve each frame, then the matching video prompt.
+        </p>
       </section>
 
       {/* Print collateral */}
