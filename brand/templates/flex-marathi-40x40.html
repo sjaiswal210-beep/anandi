@@ -22,14 +22,13 @@
   .header { position: relative; height: 20vw; }
   .header .arc { position: absolute; top: -22vw; left: 50%; transform: translateX(-50%);
                  width: 60vw; height: 40vw; background: #2b1a66; border-radius: 50%; }
-  .badges { position: absolute; top: 2.2vw; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 3vw; }
-  .badge { width: 12vw; height: 12vw; border-radius: 50%; background: #0b1020; border: 0.45vw solid #f0b429;
-           display: flex; flex-direction: column; align-items: center; justify-content: center; color: #f0b429; }
-  .badge .proj { font-size: 0.95vw; color: #cbd5e1; letter-spacing: .2vw; position: absolute; top: -2.1vw; font-weight: 700; }
-  .badge svg { width: 4.4vw; height: 4.4vw; }
-  .badge .nm { font-family: "Baloo 2"; font-weight: 800; font-size: 1.5vw; line-height: 1; margin-top: .3vw; color: #f0b429; }
-  .badge .sub { font-size: 0.8vw; color: #e2e8f0; letter-spacing: .15vw; }
-  .badge .leg { font-size: 0.62vw; color: #f0b429; font-style: italic; margin-top: .15vw; }
+  .badges { position: absolute; top: 2.2vw; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 3vw; align-items: flex-start; }
+  .badge { width: 15vw; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .badge .proj { font-size: 1vw; color: #16205A; letter-spacing: .2vw; font-weight: 800; margin-bottom: .5vw; }
+  .badge img { width: 11vw; height: 11vw; object-fit: contain;
+               background: #0b1020; border-radius: 2vw; border: 0.35vw solid #f0b429; padding: 0.8vw; }
+  .badge .nm { font-family: "Baloo 2"; font-weight: 800; font-size: 1.6vw; line-height: 1; margin-top: .5vw; color: #16205A; }
+  .badge .nm .rl { color: #d97706; }
   .tagline { position: absolute; top: 5.4vw; left: 0; right: 0; text-align: center;
              font-family: "Baloo 2"; font-weight: 700; font-size: 3.1vw; color: #16205A; }
 
@@ -76,13 +75,13 @@
     <div class="header">
       <div class="arc"></div>
       <div class="badges">
-        <div class="badge"><span class="proj">A Project By</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f0b429" stroke-width="1.6"><path d="M3 21V9l6-4 6 4v12"/><path d="M15 21V11l6 3v7"/><path d="M6 12h2M6 15h2M6 18h2"/></svg>
-          <div class="nm">YUVRAJ GADE</div><div class="sub">REALTY &amp; INFRA</div><div class="leg">Legacy of Excellence</div>
+        <div class="badge"><span class="proj">A PROJECT BY</span>
+          <img src="assets/logo.png" alt="Rich-Land Developers">
+          <div class="nm"><span class="rl">RICH-LAND</span> DEVELOPERS</div>
         </div>
-        <div class="badge"><span class="proj">A Project By</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f0b429" stroke-width="1.6"><path d="M3 21V9l6-4 6 4v12"/><path d="M15 21V11l6 3v7"/><path d="M6 12h2M6 15h2M6 18h2"/></svg>
-          <div class="nm">YUVRAJ GADE</div><div class="sub">REALTY &amp; INFRA</div><div class="leg">Legacy of Excellence</div>
+        <div class="badge"><span class="proj">A PROJECT BY</span>
+          <img src="assets/logo.png" alt="Rich-Land Developers">
+          <div class="nm"><span class="rl">RICH-LAND</span> DEVELOPERS</div>
         </div>
       </div>
       <div class="tagline">स्वप्न तुमची... निर्मिती आमची ..!</div>
