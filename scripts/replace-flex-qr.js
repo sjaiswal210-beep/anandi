@@ -1,11 +1,14 @@
 /**
- * Replaces the decorative QR on the final Anandi Park flex with a REAL scannable
- * WhatsApp QR: opens wa.me/917558444117 with prefilled "Hi, Information pathva".
+ * Final flex edits, all measured against the extracted artwork (1254x1254):
  *
- * Detection: the old QR is found by dark-pixel density per row/column inside a
- * search window (a QR reads ~40-60% dark). The white panel around it is then
- * the QR bounds plus its white margin. Only that panel is repainted, so the
- * Marathi text beside it ("स्कॅन करा आणि...") is untouched.
+ * 1. Real WhatsApp QR with a TIGHT white border, placed in the measured safe
+ *    area (offer band corner ends x<=752/y<=612; Marathi text starts x~940;
+ *    white feature band starts y~810; old QR spanned x762-925/y620-785):
+ *      panel  x 758-936, y 616-798  ·  QR 168px, ~5-7px border
+ * 2. Prefilled message: "Hi- Send more information"
+ * 3. "+91 " removed from the second phone number by shifting the digits
+ *    "75584 44117" (x813-1195) left to x690 and navy-filling the vacated strip.
+ *    Phone line rows measured at y1084-1139 (crop band y1075-1150 with padding).
  *
  * Usage: node scripts/replace-flex-qr.js
  */
@@ -20,102 +23,45 @@ const SRC = path.join(REPO, 'brand', 'dist', 'flex-final', 'flex-source.png');
 const OUT_PNG = path.join(REPO, 'brand', 'dist', 'flex-final', 'anandi-park-flex-40x40-final.png');
 const OUT_PDF = path.join(REPO, 'brand', 'dist', 'flex-final', 'anandi-park-flex-40x40-final.pdf');
 
-const WA_URL = 'https://wa.me/917558444117?text=' + encodeURIComponent('Hi, Information pathva');
+const WA_URL = 'https://wa.me/917558444117?text=' + encodeURIComponent('Hi- Send more information');
 
-const W = 1254, H = 1254;
-
-function ff(args) { execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { stdio: 'inherit' }); }
-
-// ── read raw pixels ──
-const rawFile = path.join(os.tmpdir(), 'flexraw.raw');
-ff(['-i', SRC, '-f', 'rawvideo', '-pix_fmt', 'rgb24', rawFile]);
-const raw = fs.readFileSync(rawFile);
-fs.unlinkSync(rawFile);
-
-// The flex background is dark navy, so the QR is located by its WHITE modules,
-// which stand out. The Marathi text right of the QR is also white, so the
-// search window stops before it (text starts ~x 940).
-const isWhite = (x, y) => {
-  const i = (y * W + x) * 3;
-  return raw[i] > 200 && raw[i + 1] > 200 && raw[i + 2] > 200;
-};
-
-// y capped at 800: the full-width white feature band starts at y=810 and would
-// otherwise contaminate the row detection.
-const wx0 = 720, wx1 = 940, wy0 = 590, wy1 = 800;
-
-const colDensity = [];
-for (let x = wx0; x < wx1; x++) {
-  let d = 0;
-  for (let y = wy0; y < wy1; y++) if (isWhite(x, y)) d++;
-  colDensity[x] = d / (wy1 - wy0);
-}
-const rowDensity = [];
-for (let y = wy0; y < wy1; y++) {
-  let d = 0;
-  for (let x = wx0; x < wx1; x++) if (isWhite(x, y)) d++;
-  rowDensity[y] = d / (wx1 - wx0);
-}
-
-function bounds(density, from, to, threshold) {
-  let lo = -1, hi = -1;
-  for (let i = from; i < to; i++) {
-    if (density[i] > threshold) { if (lo < 0) lo = i; hi = i; }
-  }
-  return [lo, hi];
-}
-
-const [qrX0, qrX1] = bounds(colDensity, wx0, wx1, 0.18);
-const [qrY0, qrY1] = bounds(rowDensity, wy0, wy1, 0.18);
-console.log(`QR modules detected: x ${qrX0}-${qrX1}, y ${qrY0}-${qrY1} (${qrX1 - qrX0}x${qrY1 - qrY0})`);
-
-if (qrX1 - qrX0 < 90 || qrY1 - qrY0 < 90 || qrX1 - qrX0 > 260 || qrY1 - qrY0 > 260) {
-  console.error('QR detection outside plausible size. Aborting rather than guessing.');
-  process.exit(1);
-}
-// A QR is square; if the detected box is far from square, something else got
-// swept in (band, text) and repainting would damage the design.
-if (Math.abs((qrX1 - qrX0) - (qrY1 - qrY0)) > 30) {
-  console.error('Detected box is not square — refusing to repaint. Adjust the window.');
-  process.exit(1);
-}
-
-// Enlarged panel: measured safe area around the old QR is x 690-935 (navy left
-// strip is clear down to x~690; Marathi text starts ~x940) and y 600-798 (photo
-// graphics above y~600; white feature band below y~810). The panel spans
-// x 714-935 so it also fully covers the old QR's extents (x 754-933), and the
-// new QR is sized to the full available height for maximum scan distance.
-const px0 = 714, py0 = 600, pw = 221, ph = 198;
-
-// Sanity: the detected old QR must sit inside the repaint area.
-if (qrX0 < px0 || qrX1 > px0 + pw || qrY0 < py0 || qrY1 > py0 + ph) {
-  console.error('Old QR extends outside the repaint panel — adjust bounds.');
-  process.exit(1);
-}
-
-const qrSize = 186; // ph - 2*6px quiet margin ≈ 6 ft at 40 ft print
+// ── QR panel geometry (measured) ──
+const px0 = 758, py0 = 616, pw = 179, ph = 183;
+const qrSize = 168;
 const qx = px0 + Math.round((pw - qrSize) / 2);
 const qy = py0 + Math.round((ph - qrSize) / 2);
+
+// ── phone-line edit geometry (measured) ──
+const D = { x: 813, y: 1075, w: 382, h: 75 };  // "75584 44117" crop
+const PASTE_X = 690;                            // digits' new left edge (over old "+91")
+const FILL = { x: PASTE_X + D.w, y: 1075, w: 1200 - (PASTE_X + D.w), h: 75 }; // vacated strip
+const NAVY = '0x071222'; // sampled band background RGB(7,18,34)
+
+function ff(args) { execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { stdio: 'inherit' }); }
 
 const qrFile = path.join(os.tmpdir(), 'waqr.png');
 
 QRCode.toFile(qrFile, WA_URL, {
   errorCorrectionLevel: 'M',
-  width: qrSize * 6, // oversample for crisp downscale
+  width: qrSize * 6,
   margin: 0,
   color: { dark: '#0b1020', light: '#ffffff' },
 }).then(() => {
   ff([
     '-i', SRC, '-i', qrFile,
     '-filter_complex',
-    `[0:v]drawbox=x=${px0}:y=${py0}:w=${pw}:h=${ph}:color=white:t=fill[bg];` +
+    `[0:v]split=2[base][forcrop];` +
+    `[forcrop]crop=${D.w}:${D.h}:${D.x}:${D.y}[digits];` +
     `[1:v]scale=${qrSize}:${qrSize}:flags=neighbor[qr];` +
-    `[bg][qr]overlay=${qx}:${qy}`,
+    `[base]drawbox=x=${px0}:y=${py0}:w=${pw}:h=${ph}:color=white:t=fill[p1];` +
+    `[p1][qr]overlay=${qx}:${qy}[p2];` +
+    `[p2][digits]overlay=${PASTE_X}:${D.y}[p3];` +
+    `[p3]drawbox=x=${FILL.x}:y=${FILL.y}:w=${FILL.w}:h=${FILL.h}:color=${NAVY}:t=fill`,
     '-frames:v', '1', OUT_PNG,
   ]);
   console.log(`final PNG: ${OUT_PNG}`);
 
-  // Wrap in a 40in x 40in PDF (printer scales 1in -> 1ft).
+  // 40in x 40in print PDF (printer scales 1in -> 1ft)
   const html = path.join(os.tmpdir(), 'flexwrap.html');
   fs.writeFileSync(html, `<!doctype html><html><head><meta charset="utf-8">
 <style>@page{size:40in 40in;margin:0}*{margin:0;padding:0}
@@ -133,4 +79,4 @@ img{width:40in;height:40in;display:block;object-fit:fill}</style></head>
     'file:///' + html.replace(/\\/g, '/')], { stdio: 'ignore', timeout: 120000 });
   console.log(`final PDF: ${OUT_PDF}`);
   console.log(`\nQR encodes: ${WA_URL}`);
-}).catch((e) => { console.error('QR generation failed:', e.message); process.exit(1); });
+}).catch((e) => { console.error('failed:', e.message); process.exit(1); });
