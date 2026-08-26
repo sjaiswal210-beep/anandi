@@ -25,11 +25,17 @@ const OUT_PDF = path.join(REPO, 'brand', 'dist', 'flex-final', 'anandi-park-flex
 
 const WA_URL = 'https://wa.me/917558444117?text=' + encodeURIComponent('Hi- Send more information');
 
-// ── QR panel geometry (measured) ──
-const px0 = 758, py0 = 616, pw = 179, ph = 183;
-const qrSize = 168;
+// ── QR section geometry (redesigned) ──
+// The whole strip x754-1230 / y600-806 is cleared (old QR + the Marathi
+// "स्कॅन करा आणि..." text + swoosh), then: big QR on the LEFT of the strip,
+// "SCAN NOW" caption to its right. Photo graphics above y600 and the white
+// feature band below y810 stay untouched.
+const WIPE = { x: 754, y: 600, w: 1230 - 754, h: 806 - 600 };
+const px0 = 758, py0 = 602, pw = 200, ph = 200;
+const qrSize = 188;
 const qx = px0 + Math.round((pw - qrSize) / 2);
 const qy = py0 + Math.round((ph - qrSize) / 2);
+const FONT = 'C\\:/Windows/Fonts/arialbd.ttf';
 
 // ── phone-line edit geometry (measured) ──
 const D = { x: 813, y: 1075, w: 382, h: 75 };  // "75584 44117" crop
@@ -53,13 +59,20 @@ QRCode.toFile(qrFile, WA_URL, {
     `[0:v]split=2[base][forcrop];` +
     `[forcrop]crop=${D.w}:${D.h}:${D.x}:${D.y}[digits];` +
     `[1:v]scale=${qrSize}:${qrSize}:flags=neighbor[qr];` +
-    `[base]drawbox=x=${px0}:y=${py0}:w=${pw}:h=${ph}:color=white:t=fill[p1];` +
+    // clear the whole old QR + Marathi text strip
+    `[base]drawbox=x=${WIPE.x}:y=${WIPE.y}:w=${WIPE.w}:h=${WIPE.h}:color=${NAVY}:t=fill[p0];` +
+    // white QR panel on the left of the strip + the QR
+    `[p0]drawbox=x=${px0}:y=${py0}:w=${pw}:h=${ph}:color=white:t=fill[p1];` +
     `[p1][qr]overlay=${qx}:${qy}[p2];` +
-    `[p2][digits]overlay=${PASTE_X}:${D.y}[p3];` +
-    `[p3]drawbox=x=${FILL.x}:y=${FILL.y}:w=${FILL.w}:h=${FILL.h}:color=${NAVY}:t=fill[p4];` +
-    // The old "+" started at x684 but the digits paste begins at x690, leaving a
-    // 6px sliver of the plus sign. Wipe the gap strip just left of the digits.
-    `[p4]drawbox=x=676:y=${D.y}:w=14:h=${D.h}:color=${NAVY}:t=fill`,
+    // caption to the right of the QR, centered in the remaining strip
+    `[p2]drawtext=fontfile='${FONT}':text='SCAN':fontcolor=white:fontsize=64:` +
+    `x=${px0 + pw}+((${WIPE.x + WIPE.w}-${px0 + pw})-text_w)/2:y=655[p2b];` +
+    `[p2b]drawtext=fontfile='${FONT}':text='NOW':fontcolor=0xF0B429:fontsize=64:` +
+    `x=${px0 + pw}+((${WIPE.x + WIPE.w}-${px0 + pw})-text_w)/2:y=735[p3];` +
+    // phone-line edit (unchanged): shift digits over "+91", fill remnants
+    `[p3][digits]overlay=${PASTE_X}:${D.y}[p4];` +
+    `[p4]drawbox=x=${FILL.x}:y=${FILL.y}:w=${FILL.w}:h=${FILL.h}:color=${NAVY}:t=fill[p5];` +
+    `[p5]drawbox=x=676:y=${D.y}:w=14:h=${D.h}:color=${NAVY}:t=fill`,
     '-frames:v', '1', OUT_PNG,
   ]);
   console.log(`final PNG: ${OUT_PNG}`);
