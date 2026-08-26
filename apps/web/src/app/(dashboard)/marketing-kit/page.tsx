@@ -33,6 +33,7 @@ const PRINT = [
   { label: 'Hoarding — Landscape', base: 'flex-hoarding', size: '12 × 6 ft' },
   { label: 'Carry Bag', base: 'carry-bag', size: '12 × 15 in' },
   { label: 'Letterhead', base: 'letterhead', size: 'A4' },
+  { label: 'Flex — Marathi (आनंदी पार्क)', base: 'flex-marathi-40x40', size: '40 × 40 ft · HD' },
 ];
 
 export default function MarketingKitPage() {
