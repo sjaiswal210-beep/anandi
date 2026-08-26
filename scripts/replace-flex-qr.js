@@ -56,7 +56,10 @@ QRCode.toFile(qrFile, WA_URL, {
     `[base]drawbox=x=${px0}:y=${py0}:w=${pw}:h=${ph}:color=white:t=fill[p1];` +
     `[p1][qr]overlay=${qx}:${qy}[p2];` +
     `[p2][digits]overlay=${PASTE_X}:${D.y}[p3];` +
-    `[p3]drawbox=x=${FILL.x}:y=${FILL.y}:w=${FILL.w}:h=${FILL.h}:color=${NAVY}:t=fill`,
+    `[p3]drawbox=x=${FILL.x}:y=${FILL.y}:w=${FILL.w}:h=${FILL.h}:color=${NAVY}:t=fill[p4];` +
+    // The old "+" started at x684 but the digits paste begins at x690, leaving a
+    // 6px sliver of the plus sign. Wipe the gap strip just left of the digits.
+    `[p4]drawbox=x=676:y=${D.y}:w=14:h=${D.h}:color=${NAVY}:t=fill`,
     '-frames:v', '1', OUT_PNG,
   ]);
   console.log(`final PNG: ${OUT_PNG}`);
