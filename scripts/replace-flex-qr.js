@@ -80,15 +80,20 @@ if (Math.abs((qrX1 - qrX0) - (qrY1 - qrY0)) > 30) {
   process.exit(1);
 }
 
-// The white panel = QR + its white margin. Use a conservative margin so we stay
-// inside the panel and never touch the surrounding design/text.
-const margin = 8;
-const px0 = qrX0 - margin, py0 = qrY0 - margin;
-const pw = (qrX1 - qrX0 + 1) + margin * 2;
-const ph = (qrY1 - qrY0 + 1) + margin * 2;
+// Enlarged panel: measured safe area around the old QR is x 690-935 (navy left
+// strip is clear down to x~690; Marathi text starts ~x940) and y 600-798 (photo
+// graphics above y~600; white feature band below y~810). The panel spans
+// x 714-935 so it also fully covers the old QR's extents (x 754-933), and the
+// new QR is sized to the full available height for maximum scan distance.
+const px0 = 714, py0 = 600, pw = 221, ph = 198;
 
-// New QR fills the same box as the old modules (crisper: slightly larger, still inside panel).
-const qrSize = Math.min(qrX1 - qrX0, qrY1 - qrY0) + 2;
+// Sanity: the detected old QR must sit inside the repaint area.
+if (qrX0 < px0 || qrX1 > px0 + pw || qrY0 < py0 || qrY1 > py0 + ph) {
+  console.error('Old QR extends outside the repaint panel — adjust bounds.');
+  process.exit(1);
+}
+
+const qrSize = 186; // ph - 2*6px quiet margin ≈ 6 ft at 40 ft print
 const qx = px0 + Math.round((pw - qrSize) / 2);
 const qy = py0 + Math.round((ph - qrSize) / 2);
 
