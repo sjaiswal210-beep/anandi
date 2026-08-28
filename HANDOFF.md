@@ -194,7 +194,56 @@ The web app MUST be rebuilt (`npx next build`) after any frontend change — a
 4. **Blog pages** (`apps/web/src/components/site/blog-content.ts`) were written
    but the `/blog/[slug]` pages are not wired up yet (SEO work in progress).
 5. **Meta lead forms** show empty until a Lead Ad form is created in Ads Manager.
+   (Meta IS connected — page token, publish, and diagnostics all verified working.)
 6. **Google Ads** has no API integration (dev-token approval takes weeks) —
    spend is tracked manually in the Ads & Costs dashboard.
+7. **Exposed secrets in chat history.** The Meta system-user token and Sarvam key
+   were pasted in conversation. They work; rotate them when convenient.
 
 See `PROJECT_STATE.md` for the full per-feature status.
+
+---
+
+## 8. Branding + Marketing assets (all in `brand/`)
+
+**Brand:** Rich-Land Developers (partners Yuvraj Gade & Rajan Kute). Contact
+**+91 75584 44117**. Colors: slate `#0F172A`, gold `#F59E0B`, emerald `#059669`.
+
+- **Logo:** master `brand/richlandlogo-master.png` (also `apps/web/public/rich-land-*.svg`).
+  Regenerate the full HD kit (favicons, social, transparent/white/print variants)
+  with `node scripts/build-brand-kit.js` (or `brand/build-brand-kit.cmd`).
+- **Brand guide:** `brand/BRAND_GUIDE.md`, `brand/PHOTOSHOP_AND_PRINT.md`.
+- **Print collateral** (`brand/templates/*.html` → render via
+  `node scripts/render-print-templates.js`): visiting card, brochure cover +
+  inside, flex portrait, hoarding, carry bag, letterhead.
+- **40x40 ft Marathi flex** (the ground hoarding): source artwork was supplied as
+  a PDF; extracted + edited by `scripts/extract-pdf-a85.js` then
+  `scripts/replace-flex-qr.js`, which swaps the decorative QR for a REAL scannable
+  WhatsApp QR (`wa.me/917558444117?text=Hi- Send more information`), removes the
+  "+91", and enlarges the QR. Final: `brand/dist/flex-final/anandi-park-flex-40x40-final.pdf`.
+  To regenerate: `node scripts/replace-flex-qr.js` (needs `qrcode` + `jsqr`
+  installed: `npm i qrcode@1.5.4 jsqr@1.4.0 --no-save`; Chrome + ffmpeg on PATH).
+- **AI video ad packages** (`brand/ad-campaign/*.md`): hero "Land vs Flat"
+  cinematic, UGC talking-head, family/couple, and multi-language VO scripts — all
+  copy-paste prompts for Google Flow / Nano Banana Pro / Veo 3.1 / Omni Flash.
+  Marathi VO audio generated at `brand/ad-campaign/audio/marathi/`
+  (`node scripts/generate-ad-vo-marathi.js`).
+- **Dashboard:** everything above is downloadable at `/marketing-kit` (sidebar →
+  Marketing Kit), served from `apps/web/public/brand/`.
+
+**What is NOT committed** (gitignored, rebuildable): `brand/dist/` (HD raster
+derivatives + flex renders). The masters, SVGs, templates, scripts, web-servable
+PDFs/previews, and the extracted flex source ARE committed. After unzip on the
+new machine, run the regenerate commands above to recreate `brand/dist/`.
+
+## 9. Moving to another laptop / a different agent (e.g. Antigravity)
+
+- The whole project is on GitHub; a fresh `git clone` + `npm install` + recreating
+  `.env` is the cleanest start (see Section 3).
+- If zipping instead, use `scripts/make-handoff-zip.ps1` (excludes node_modules,
+  build output, `brand/dist`, renders; keeps `.env.example`, all source, brand
+  masters/templates, ad packages, and these docs).
+- A different AI agent should read `HANDOFF.md` then `PROJECT_STATE.md` first.
+  All the image/video/flex tooling is plain Node scripts driven by ffmpeg + headless
+  Chrome (no Kiro-specific dependency), so they run anywhere with Node 22 + ffmpeg
+  + Chrome installed.

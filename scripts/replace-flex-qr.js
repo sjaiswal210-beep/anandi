@@ -19,9 +19,10 @@ const { execFileSync } = require('child_process');
 const QRCode = require('qrcode');
 
 const REPO = path.join(__dirname, '..');
-const SRC = path.join(REPO, 'brand', 'dist', 'flex-final', 'flex-source.png');
-const OUT_PNG = path.join(REPO, 'brand', 'dist', 'flex-final', 'anandi-park-flex-40x40-final.png');
-const OUT_PDF = path.join(REPO, 'brand', 'dist', 'flex-final', 'anandi-park-flex-40x40-final.pdf');
+// brand/flex/ is committed (travels in the zip / git); brand/dist/ is gitignored.
+const SRC = path.join(REPO, 'brand', 'flex', 'flex-source.png');
+const OUT_PNG = path.join(REPO, 'brand', 'flex', 'anandi-park-flex-40x40-final.png');
+const OUT_PDF = path.join(REPO, 'brand', 'flex', 'anandi-park-flex-40x40-final.pdf');
 
 const WA_URL = 'https://wa.me/917558444117?text=' + encodeURIComponent('Hi- Send more information');
 

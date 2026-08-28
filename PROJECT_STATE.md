@@ -22,6 +22,30 @@ lives, and what's done vs pending. Written for the next agent.
 - Dashboard is private (password `Kalpdev@1994`); `/project` is the public site.
 - Admin login: `Kalpdev@outlook.com` / `Kalpdev@1234`.
 - Hardcoded workspace ID: `cmsai8kh50001rapl8ioxehxe`.
+- Brand/company: **Rich-Land Developers** (Yuvraj Gade & Rajan Kute). Contact
+  **+91 75584 44117**. Colors: slate `#0F172A`, gold `#F59E0B`, emerald `#059669`.
+
+---
+
+## Branding + Marketing Kit — DONE (flex needs more design iteration)
+- Logo master `brand/richlandlogo-master.png`; HD kit via `scripts/build-brand-kit.js`.
+- Print templates (`brand/templates/`) → `scripts/render-print-templates.js`:
+  visiting card, brochure cover/inside, flex portrait, hoarding, carry bag, letterhead.
+- **40x40 ft Marathi ground flex** — `brand/dist/flex-final/anandi-park-flex-40x40-final.pdf`.
+  The source artwork was supplied as a PDF (`../Anandi_Park_40x40ft_UltraHD_Print-2.pdf`);
+  extracted with `scripts/extract-pdf-a85.js` → `brand/dist/flex-final/flex-source.png`,
+  then edited by `scripts/replace-flex-qr.js`: real scannable WhatsApp QR
+  (`wa.me/917558444117?text=Hi- Send more information`), "+91" removed, QR enlarged,
+  Marathi caption block replaced with "SCAN NOW". **User still wants further changes**
+  — rebuild with `node scripts/replace-flex-qr.js` (deps: `npm i qrcode@1.5.4 jsqr@1.4.0
+  --no-save`; needs ffmpeg + Chrome). Pixel geometry is measured in the script; use
+  `scripts/probe-flex-panel.js` / `inspect-png.js` to re-measure after any layout change.
+- **AI video ad packages** in `brand/ad-campaign/` (TOW SOP): hero "Land vs Flat",
+  UGC talking-head, family/couple, multi-lang VO. Marathi VO audio generated via
+  `scripts/generate-ad-vo-marathi.js` → `brand/ad-campaign/audio/marathi/`.
+- All downloadable on the dashboard at `/marketing-kit`.
+- `brand/dist/` is gitignored (rebuildable); masters, SVGs, templates, scripts,
+  web-servable PDFs/previews, and the extracted flex source are committed.
 
 ---
 
