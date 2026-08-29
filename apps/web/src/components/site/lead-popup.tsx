@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, CheckCircle2, X, Phone } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { PROJECT } from './site-data';
 import { normalisePhone, submitLead } from './site-api';
 
@@ -16,6 +17,20 @@ const OPEN_DELAY_MS = 2500;
 type Status = 'idle' | 'sending' | 'done' | 'error';
 
 export function LeadPopup() {
+  const pathname = usePathname();
+
+  // Exclude lead capture dialog on HR terminal, worker portal, and scanner pages
+  const isExcluded = 
+    pathname?.includes('/worker-portal') ||
+    pathname?.includes('/attendance/scan') ||
+    pathname?.includes('/plotting/hr');
+
+  if (isExcluded) return null;
+
+  return <LeadPopupContent />;
+}
+
+function LeadPopupContent() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
