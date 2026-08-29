@@ -2,6 +2,7 @@ import { SiteNavbar } from '@/components/site/navbar';
 import { SiteHero } from '@/components/site/hero';
 import { SiteAbout, SitePlans } from '@/components/site/about-plans';
 import { SiteAmenities, SiteGallery } from '@/components/site/experience';
+import { SiteVideoTour } from '@/components/site/video-tour';
 import { SiteLocation, SiteTestimonials, SiteFaq } from '@/components/site/location-trust';
 import { SiteBlog, SiteSocial } from '@/components/site/blog-social';
 import { SiteContact } from '@/components/site/contact';
@@ -17,6 +18,7 @@ export default function ProjectWebsitePage() {
         <SitePlans />
         <SiteAmenities />
         <SiteGallery />
+        <SiteVideoTour />
         <SiteLocation />
         <SiteTestimonials />
         <SiteBlog />
