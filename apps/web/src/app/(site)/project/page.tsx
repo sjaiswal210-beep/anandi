@@ -1,3 +1,6 @@
+'use client';
+
+import { LanguageProvider } from '@/components/site/language-context';
 import { SiteNavbar } from '@/components/site/navbar';
 import { SiteHero } from '@/components/site/hero';
 import { SiteAbout, SitePlans } from '@/components/site/about-plans';
@@ -10,7 +13,7 @@ import { SiteFooter, FloatingActions } from '@/components/site/footer';
 
 export default function ProjectWebsitePage() {
   return (
-    <>
+    <LanguageProvider>
       <SiteNavbar />
       <main>
         <SiteHero />
@@ -28,6 +31,6 @@ export default function ProjectWebsitePage() {
       </main>
       <SiteFooter />
       <FloatingActions />
-    </>
+    </LanguageProvider>
   );
 }

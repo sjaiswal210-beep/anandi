@@ -1,21 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Menu, X, Phone } from 'lucide-react';
+import { Menu, X, Phone, Globe, ChevronDown } from 'lucide-react';
 import { PROJECT } from './site-data';
-
-const links = [
-  { href: '#overview', label: 'Overview' },
-  { href: '#plans', label: 'Plot Sizes' },
-  { href: '#amenities', label: 'Amenities' },
-  { href: '#location', label: 'Location' },
-  { href: '#blog', label: 'Insights' },
-  { href: '#contact', label: 'Contact' },
-];
+import { useLanguage } from './language-context';
 
 export function SiteNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+
+  const { language, setLanguage, t } = useLanguage();
+
+  const links = [
+    { href: '#overview', label: t('nav.overview') },
+    { href: '#plans', label: t('nav.plans') },
+    { href: '#amenities', label: t('nav.amenities') },
+    { href: '#location', label: t('nav.location') },
+    { href: '#blog', label: t('nav.insights') },
+    { href: '#contact', label: t('nav.contact') },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -23,6 +27,9 @@ export function SiteNavbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const currentLangLabel = 
+    language === 'mr' ? 'मराठी' : language === 'hi' ? 'हिंदी' : 'English';
 
   return (
     <header
@@ -53,7 +60,44 @@ export function SiteNavbar() {
           ))}
         </ul>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-4 lg:flex">
+          {/* Language Selector Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition"
+            >
+              <Globe className="h-3.5 w-3.5 text-amber-500" />
+              {currentLangLabel}
+              <ChevronDown className="h-3 w-3 text-slate-400" />
+            </button>
+
+            {langOpen && (
+              <div className="absolute right-0 mt-2 w-28 rounded-xl border border-slate-800 bg-slate-950 p-1.5 shadow-xl z-50">
+                {[
+                  { code: 'mr', label: 'मराठी' },
+                  { code: 'hi', label: 'हिंदी' },
+                  { code: 'en', label: 'English' }
+                ].map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code as any);
+                      setLangOpen(false);
+                    }}
+                    className={`w-full text-left rounded-lg px-3 py-2 text-xs font-medium transition ${
+                      language === lang.code 
+                        ? 'bg-amber-500 text-slate-950 font-semibold' 
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <a
             href={`tel:${PROJECT.phone.replace(/\s/g, '')}`}
             className="flex items-center gap-2 text-sm text-slate-200 hover:text-white"
@@ -65,18 +109,56 @@ export function SiteNavbar() {
             href="#contact"
             className="rounded-full bg-amber-500 px-5 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-amber-400"
           >
-            Book a Visit
+            {t('nav.book')}
           </a>
         </div>
 
-        <button
-          onClick={() => setOpen(!open)}
-          className="rounded-lg p-2 text-white lg:hidden"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          aria-expanded={open}
-        >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-3 lg:hidden">
+          {/* Mobile Language Selector button */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold text-slate-300"
+            >
+              <Globe className="h-3.5 w-3.5 text-amber-500" />
+              {currentLangLabel}
+            </button>
+
+            {langOpen && (
+              <div className="absolute right-0 mt-2 w-28 rounded-xl border border-slate-800 bg-slate-950 p-1.5 shadow-xl z-50">
+                {[
+                  { code: 'mr', label: 'मराठी' },
+                  { code: 'hi', label: 'हिंदी' },
+                  { code: 'en', label: 'English' }
+                ].map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code as any);
+                      setLangOpen(false);
+                    }}
+                    className={`w-full text-left rounded-lg px-3 py-2 text-xs font-medium transition ${
+                      language === lang.code 
+                        ? 'bg-amber-500 text-slate-950 font-semibold' 
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setOpen(!open)}
+            className="rounded-lg p-2 text-white"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+          >
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </nav>
 
       {open && (
@@ -99,7 +181,7 @@ export function SiteNavbar() {
             onClick={() => setOpen(false)}
             className="mt-3 block rounded-full bg-amber-500 px-5 py-3 text-center text-sm font-medium text-slate-950"
           >
-            Book a Visit
+            {t('nav.book')}
           </a>
         </div>
       )}
