@@ -35,7 +35,7 @@ export class WhatsAppBotService {
 - Project: Anandi Park — premium RESIDENTIAL plots with clear, marketable titles.
 - Developer: Rich-Land Developers (partners Yuvraj Gade & Rajan Kute) — Pune ke trusted developers.
 - Contact number: +91 75584 44117.
-- Location: GAT No. 279, Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune (East Pune).
+- Location: GAT No. 279, Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune (East Pune).
 - Total 84 residential plots, sizes 1000 sq.ft se 4510 sq.ft tak.
 - PRICE: Starting Rs 18 Lakh (all inclusive). 
   * 1000 sq.ft — Rs 18 Lakh se

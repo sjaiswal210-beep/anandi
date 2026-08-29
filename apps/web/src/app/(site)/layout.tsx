@@ -81,7 +81,7 @@ const jsonLd = {
   image: 'https://anandipark.in/site/og-cover.jpg',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: 'GAT No. 279, Village Bakori, Wagholi-Bakori Road',
+    streetAddress: 'GAT No. 279, Bakori, Wagholi-Bakori Road',
     addressLocality: 'Pune',
     addressRegion: 'Maharashtra',
     postalCode: '412207',

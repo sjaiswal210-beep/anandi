@@ -116,7 +116,7 @@ export const ARTICLES: Article[] = [
       {
         heading: 'Where Anandi Park fits',
         paras: [
-          'Anandi Park is an 84-plot residential layout at GAT No. 279, Village Bakori, on the Wagholi–Bakori Road in Taluka Haveli. Plots run from 1,000 to 4,510 sq.ft., starting at ₹18 Lakh all inclusive.',
+          'Anandi Park is an 84-plot residential layout at GAT No. 279, Bakori, on the Wagholi–Bakori Road in Taluka Haveli. Plots run from 1,000 to 4,510 sq.ft., starting at ₹18 Lakh all inclusive.',
           'The layout has 30 and 40 ft internal roads, a compound wall, street lighting, underground electricity, storm water drainage, a central garden and a landscaped entry. Every plot carries a clear, marketable title, so registration and construction can proceed without a legal wait.',
           'We are happy to walk you through the full document set before you commit to anything. Site visits run daily including weekends.',
         ],

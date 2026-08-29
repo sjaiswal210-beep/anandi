@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "AI Powered Business Operating System for Real Estate",
+  "packageManager": "npm@10.7.0",
   "workspaces": [
     "apps/*",
     "packages/*"

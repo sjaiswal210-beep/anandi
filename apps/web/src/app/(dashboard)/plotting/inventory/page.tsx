@@ -206,7 +206,7 @@ export default function PlotInventoryPage() {
     els.push(
       <g key="title">
         <text x={PAD + TOTAL_W / 2} y={SVG_H - 8} textAnchor="middle" fontSize="10" fill="#64748b">
-          ANANDI PARK — GAT NO. 279, VILLAGE BAKORI, TALUKA HAVELI, PUNE — LAYOUT PLAN
+          ANANDI PARK — GAT NO. 279, BAKORI, TALUKA HAVELI, PUNE — LAYOUT PLAN
         </text>
       </g>,
     );

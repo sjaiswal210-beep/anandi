@@ -9,7 +9,7 @@ export const PROJECT = {
   priceFrom: '₹18 Lakh',
   priceNote: 'all inclusive',
   possession: 'Ready for Registration',
-  location: 'GAT No. 279, Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune',
+  location: 'GAT No. 279, Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune',
   shortLocation: 'Bakori, Wagholi, Pune',
   phone: '+91 75584 44117',
   whatsapp: '917558444117',

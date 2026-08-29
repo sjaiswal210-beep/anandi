@@ -66,7 +66,7 @@ export class SocialImageService {
       '',
       'PROJECT: Anandi Park — premium NA residential plots (land plotting project)',
       'DEVELOPER: Yuvraj Gade & Rajan Kute Developers',
-      'LOCATION: Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune, Maharashtra, India',
+      'LOCATION: Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune, Maharashtra, India',
       'SELLING POINTS: clear titles, gated layout, wide internal roads,',
       'ready for construction, prices from Rs 15 Lakh',
       '',

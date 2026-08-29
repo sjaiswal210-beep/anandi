@@ -45,7 +45,7 @@ export async function processWhatsAppJob(job: Job, prisma: PrismaClient) {
       from: phoneNumberId || '',
       to,
       type,
-      content: payload,
+      content: payload as any,
       direction: 'outgoing',
       status: 'sent',
       messageId: response.data?.messages?.[0]?.id,
