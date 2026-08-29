@@ -65,7 +65,7 @@ export function SiteLocation() {
           </ul>
 
           <a
-            href="https://www.google.com/maps/search/Bakori+Wagholi+Pune"
+            href={PROJECT.mapSearch}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-8 inline-flex rounded-full border border-slate-300 px-6 py-3 text-sm font-medium text-slate-900 transition hover:bg-white dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"

@@ -16,7 +16,9 @@ export const PROJECT = {
   email: 'sales@anandipark.in',
   subdomain: 'anandi-park',
   mapEmbed:
-    'https://www.google.com/maps?q=Bakori,+Wagholi,+Pune,+Maharashtra&output=embed',
+    'https://www.google.com/maps?q=18.595755,74.042230&output=embed',
+  mapSearch:
+    'https://www.google.com/maps?q=18.595755,74.042230',
   instagram: 'https://instagram.com/anandipark',
   facebook: 'https://facebook.com/anandipark',
   youtube: 'https://youtube.com/@anandipark',
