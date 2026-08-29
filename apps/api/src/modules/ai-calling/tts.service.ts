@@ -36,6 +36,7 @@ export class TtsService {
     text: string;
     language?: string;
     speaker?: string;
+    pace?: number;
   }): Promise<{ url: string; filePath: string; duration?: number }> {
     if (!this.sarvamKey) {
       throw new BadRequestException(
@@ -62,6 +63,10 @@ export class TtsService {
     const targetLang = langMap[lang] || 'hi-IN';
     const speaker = dto.speaker || 'shreya';
 
+    // Language-specific pacing defaults (Marathi is best at 1.2x, Hindi/others at 1.0x)
+    const defaultPace = targetLang === 'mr-IN' ? 1.2 : 1.0;
+    const pace = dto.pace !== undefined ? dto.pace : defaultPace;
+
     const axios = (await import('axios')).default;
 
     try {
@@ -72,6 +77,7 @@ export class TtsService {
           target_language_code: targetLang,
           speaker,
           model: 'bulbul:v3',
+          pace,
         },
         {
           headers: { 'api-subscription-key': this.sarvamKey },
