@@ -59,7 +59,7 @@ export class VobizController {
       // Default Anandi Park pitch in Hindi.
       const script =
         callRecord?.script ||
-        'Namaste! Anandi Park ki taraf se yeh ek exclusive offer hai. ' +
+        'Namaste! Rich-land developers ka project Anandi Park ki taraf se yeh ek exclusive offer hai. ' +
         'Humne aapke saath WhatsApp par saari details share kar di hain. ' +
         'Humari team se baat karne aur apni free site visit book karne ke liye, ' +
         'please humein WhatsApp par reply karein. Dhanyavaad!';
