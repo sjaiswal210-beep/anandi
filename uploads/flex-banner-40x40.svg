@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1600 1600" width="100%" height="100%">
+  <defs>
+    <!-- Fonts -->
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@700;800&amp;display=swap');
+      .title-serif { font-family: 'Playfair Display', 'Georgia', serif; }
+      .text-sans { font-family: 'Montserrat', 'Helvetica', 'Arial', sans-serif; }
+    </style>
+
+    <!-- Gradients -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdfbf7" />
+      <stop offset="50%" stop-color="#f5f2eb" />
+      <stop offset="100%" stop-color="#eae6db" />
+    </linearGradient>
+
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+
+    <linearGradient id="accent-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+
+    <linearGradient id="pill-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#065f46" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadows for high-quality printing depth -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#064e3b" flood-opacity="0.15" />
+    </filter>
+    <filter id="shadow-heavy" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <!-- 1. Background Fill with Elegant Champagne/Warm Stone Gradient -->
+  <rect width="1600" height="1600" fill="url(#bg-grad)" />
+
+  <!-- 2. Watermarked Aerial Layout Image (Low Opacity, 8%) -->
+  <image href="https://raw.githubusercontent.com/sjaiswal210-beep/anandi/main/apps/web/public/site/hero-aerial.jpg" x="0" y="0" width="1600" height="1600" opacity="0.08" preserveAspectRatio="xMidYMid slice" />
+
+  <!-- 3. Decorative CAD Plot Grid Lines (Represents Land Layout/Plotting) -->
+  <g stroke="#064e3b" stroke-width="1.5" opacity="0.04" stroke-dasharray="8 8">
+    <line x1="100" y1="0" x2="100" y2="1600" />
+    <line x1="200" y1="0" x2="200" y2="1600" />
+    <line x1="300" y1="0" x2="300" y2="1600" />
+    <line x1="400" y1="0" x2="400" y2="1600" />
+    <line x1="500" y1="0" x2="500" y2="1600" />
+    <line x1="600" y1="0" x2="600" y2="1600" />
+    <line x1="700" y1="0" x2="700" y2="1600" />
+    <line x1="800" y1="0" x2="800" y2="1600" />
+    <line x1="900" y1="0" x2="900" y2="1600" />
+    <line x1="1000" y1="0" x2="1000" y2="1600" />
+    <line x1="1100" y1="0" x2="1100" y2="1600" />
+    <line x1="1200" y1="0" x2="1200" y2="1600" />
+    <line x1="1300" y1="0" x2="1300" y2="1600" />
+    <line x1="1400" y1="0" x2="1400" y2="1600" />
+    <line x1="1500" y1="0" x2="1500" y2="1600" />
+
+    <line x1="0" y1="100" x2="1600" y2="100" />
+    <line x1="0" y1="200" x2="1600" y2="200" />
+    <line x1="0" y1="300" x2="1600" y2="300" />
+    <line x1="0" y1="400" x2="1600" y2="400" />
+    <line x1="0" y1="500" x2="1600" y2="500" />
+    <line x1="0" y1="600" x2="1600" y2="600" />
+    <line x1="0" y1="700" x2="1600" y2="700" />
+    <line x1="0" y1="800" x2="1600" y2="800" />
+    <line x1="0" y1="900" x2="1600" y2="900" />
+    <line x1="0" y1="1000" x2="1600" y2="1000" />
+    <line x1="0" y1="1100" x2="1600" y2="1100" />
+    <line x1="0" y1="1200" x2="1600" y2="1200" />
+    <line x1="0" y1="1300" x2="1600" y2="1300" />
+    <line x1="0" y1="1400" x2="1600" y2="1400" />
+    <line x1="0" y1="1500" x2="1600" y2="1500" />
+  </g>
+
+  <!-- 4. Top Header & Corporate Identity -->
+  <g class="text-sans">
+    <!-- Richland Developers Branding -->
+    <rect x="0" y="0" width="1600" height="110" fill="#064e3b" />
+    <text x="800" y="65" text-anchor="middle" fill="#fbbf24" font-size="28" font-weight="800" letter-spacing="8">RICH-LAND DEVELOPERS</text>
+    <text x="800" y="92" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="600" letter-spacing="4" opacity="0.9">YUVRAJ GADE &amp; RAJAN KUTE PRESENTATION</text>
+  </g>
+
+  <!-- 5. Main Centerpiece: Project Branding -->
+  <g class="title-serif">
+    <!-- Project Name with drop shadow -->
+    <text x="800" y="290" text-anchor="middle" fill="url(#primary-grad)" font-size="124" font-weight="900" letter-spacing="2" filter="url(#shadow)">ANANDI PARK</text>
+  </g>
+
+  <g class="text-sans">
+    <!-- Sub-Heading Banner -->
+    <rect x="350" y="340" width="900" height="70" rx="35" fill="url(#pill-grad)" filter="url(#shadow)" />
+    <text x="800" y="385" text-anchor="middle" fill="#ffffff" font-size="30" font-weight="700" letter-spacing="6">PREMIUM RESIDENTIAL PLOTS</text>
+
+    <!-- Location Pill -->
+    <rect x="520" y="440" width="560" height="60" rx="30" fill="#fef3c7" stroke="#fbbf24" stroke-width="2" />
+    <!-- Location Pin Icon -->
+    <g transform="translate(555, 452)">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#d97706" transform="scale(1.2)" />
+    </g>
+    <text x="815" y="481" text-anchor="middle" fill="#b45309" font-size="24" font-weight="700" letter-spacing="3">BAKORI, WAGHOLI, PUNE EAST</text>
+  </g>
+
+  <!-- 6. Features / Highlights Column (Left side) -->
+  <g class="text-sans" transform="translate(100, 560)">
+    <!-- Section Title -->
+    <rect x="0" y="0" width="560" height="64" rx="16" fill="#064e3b" />
+    <text x="40" y="42" fill="#ffffff" font-size="24" font-weight="700" letter-spacing="4">PROJECT HIGHLIGHTS</text>
+
+    <!-- Feature 1 -->
+    <g transform="translate(0, 110)">
+      <rect x="0" y="0" width="560" height="85" rx="12" fill="#ffffff" filter="url(#shadow)" />
+      <circle cx="45" cy="42" r="22" fill="#d1fae5" />
+      <path d="M40 42 l4 4 l8 -8" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+      <text x="90" y="48" fill="#0f172a" font-size="20" font-weight="700">100% Clear &amp; Marketable Titles</text>
+    </g>
+
+    <!-- Feature 2 -->
+    <g transform="translate(0, 215)">
+      <rect x="0" y="0" width="560" height="85" rx="12" fill="#ffffff" filter="url(#shadow)" />
+      <circle cx="45" cy="42" r="22" fill="#d1fae5" />
+      <path d="M35 48 l5 -12 l10 12" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+      <line x1="45" y1="36" x2="45" y2="48" stroke="#059669" stroke-width="4" stroke-linecap="round" />
+      <text x="90" y="48" fill="#0f172a" font-size="20" font-weight="700">Ready for Immediate Registration</text>
+    </g>
+
+    <!-- Feature 3 -->
+    <g transform="translate(0, 320)">
+      <rect x="0" y="0" width="560" height="85" rx="12" fill="#ffffff" filter="url(#shadow)" />
+      <circle cx="45" cy="42" r="22" fill="#d1fae5" />
+      <!-- Road Vector Icon -->
+      <path d="M35 52 l5 -20 m10 0 l5 20 m-12 -20 l1 20" stroke="#059669" stroke-width="3" stroke-linecap="round" />
+      <text x="90" y="48" fill="#0f172a" font-size="20" font-weight="700">30 &amp; 40 Ft. Wide Internal Roads</text>
+    </g>
+
+    <!-- Feature 4 -->
+    <g transform="translate(0, 425)">
+      <rect x="0" y="0" width="560" height="85" rx="12" fill="#ffffff" filter="url(#shadow)" />
+      <circle cx="45" cy="42" r="22" fill="#d1fae5" />
+      <!-- Trees Icon -->
+      <path d="M45 28 l-8 12 h16 z M45 36 l-10 15 h20 z M45 51 v5" stroke="#059669" stroke-width="3" fill="none" />
+      <text x="90" y="48" fill="#0f172a" font-size="19" font-weight="700">Central Garden &amp; Play Zone</text>
+    </g>
+
+    <!-- Feature 5 -->
+    <g transform="translate(0, 530)">
+      <rect x="0" y="0" width="560" height="85" rx="12" fill="#ffffff" filter="url(#shadow)" />
+      <circle cx="45" cy="42" r="22" fill="#d1fae5" />
+      <!-- Electricity Icon -->
+      <path d="M48 28 l-10 16 h8 l-4 12 l12 -18 h-8 z" fill="#059669" />
+      <text x="90" y="48" fill="#0f172a" font-size="20" font-weight="700">Water &amp; Electricity Supply Line</text>
+    </g>
+
+    <!-- Feature 6 -->
+    <g transform="translate(0, 635)">
+      <rect x="0" y="0" width="560" height="85" rx="12" fill="#ffffff" filter="url(#shadow)" />
+      <circle cx="45" cy="42" r="22" fill="#d1fae5" />
+      <!-- Bank Icon -->
+      <path d="M32 50 h26 v3 h-26 z M35 38 h3 v12 h-3 z M44 38 h3 v12 h-3 z M52 38 h3 v12 h-3 z M45 30 l-15 8 h30 z" fill="#059669" />
+      <text x="90" y="48" fill="#0f172a" font-size="20" font-weight="700">Easy Loan Approved from SBI &amp; HDFC</text>
+    </g>
+  </g>
+
+  <!-- 7. Pricing & Exclusive Offer Column (Right side) -->
+  <g class="text-sans" transform="translate(940, 560)">
+    <!-- Outer Card Container -->
+    <rect x="0" y="0" width="560" height="480" rx="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" filter="url(#shadow-heavy)" />
+    
+    <!-- Top Ribbon -->
+    <path d="M 24 0 L 536 0 A 24 24 0 0 1 560 24 L 560 85 L 0 85 L 0 24 A 24 24 0 0 1 24 0 Z" fill="url(#pill-grad)" />
+    <text x="280" y="52" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="800" letter-spacing="6">EXCLUSIVE INAUGURAL OFFER</text>
+
+    <!-- Content inside Card -->
+    <text x="280" y="145" text-anchor="middle" fill="#64748b" font-size="20" font-weight="700" letter-spacing="2">PREMIUM RESIDENTIAL PLOTS</text>
+    <text x="280" y="185" text-anchor="middle" fill="#064e3b" font-size="24" font-weight="700" letter-spacing="4">Plot Sizes: 1000 to 4510 Sq.Ft.</text>
+
+    <text x="280" y="260" text-anchor="middle" fill="#0f172a" font-size="22" font-weight="600">Starting At Just</text>
+    
+    <!-- Price with gold gradient -->
+    <text x="280" y="365" text-anchor="middle" fill="url(#accent-gold)" font-size="92" font-weight="900" filter="url(#shadow)">₹18 LAKH</text>
+    
+    <text x="280" y="415" text-anchor="middle" fill="#ef4444" font-size="22" font-weight="800" letter-spacing="2">ALL-INCLUSIVE PRICING</text>
+    <text x="280" y="445" text-anchor="middle" fill="#64748b" font-size="14" font-weight="600">*Limited plots remaining. Special corner plots available.</text>
+
+    <!-- Booking CTA Button Inside Card -->
+    <g transform="translate(50, 520)" filter="url(#shadow-heavy)">
+      <rect x="0" y="0" width="460" height="90" rx="45" fill="url(#accent-gold)" />
+      <text x="230" y="55" text-anchor="middle" fill="#064e3b" font-size="26" font-weight="800" letter-spacing="1">BOOK A FREE SITE VISIT</text>
+    </g>
+  </g>
+
+  <!-- 8. Footer Block with Contacts & CTA -->
+  <g class="text-sans" transform="translate(0, 1330)">
+    <!-- Solid Forest Green Bottom Band -->
+    <rect x="0" y="0" width="1600" height="270" fill="url(#primary-grad)" />
+
+    <!-- Trust Stamp -->
+    <text x="800" y="60" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="700" letter-spacing="4" opacity="0.95">NO RERA APPLICABLE · CLEAR LAND TITLES</text>
+
+    <!-- Big Contact Number -->
+    <g transform="translate(800, 155)">
+      <!-- Phone Vector Icon -->
+      <g transform="translate(-250, -42)">
+        <circle cx="35" cy="35" r="35" fill="#ffffff" />
+        <path d="M22 22v3a2 2 0 0 0 2 2 20 19.8 0 0 0 8.6 -3 19.4 19.4 0 0 0 6 -6 20 19.8 0 0 0 3 -8.6 2 2 0 0 0 -2 -2h-3a2 2 0 0 0 -2 1.7 12.8 12.8 0 0 1 -.7 2.8 2 2 0 0 0 .45 2.1l1.3 1.3c2.4 4 4.3 6.3 6 6l-1.3-1.3a2 2 0 0 0 -2.1 -.4 12.8 12.8 0 0 1 -2.8 .7A2 2 0 0 0 22 22z" fill="#064e3b" transform="translate(5, 5) scale(0.85)" />
+      </g>
+      <text x="20" y="10" text-anchor="middle" fill="#ffffff" font-size="64" font-weight="900" letter-spacing="3">CALL: +91 75584 44117</text>
+    </g>
+
+    <!-- Footer Links / Offices -->
+    <text x="100" y="235" fill="#fef3c7" font-size="16" font-weight="700" letter-spacing="1">Site Address: GAT No. 279, Bakori, Wagholi-Bakori Road, Pune - 412207</text>
+    <text x="1500" y="235" text-anchor="end" fill="#fef3c7" font-size="16" font-weight="700" letter-spacing="1">Website: www.anandipark.in</text>
+  </g>
+
+  <!-- Elegant Outer Border Frame -->
+  <rect x="25" y="25" width="1550" height="1550" fill="none" stroke="#fbbf24" stroke-width="6" opacity="0.85" />
+</svg>
