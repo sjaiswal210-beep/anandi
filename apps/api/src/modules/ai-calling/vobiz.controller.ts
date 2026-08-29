@@ -48,20 +48,29 @@ export class VobizController {
       : null;
 
     if (audioUrl) {
-      xml = this.vobiz.buildPlayAndGatherXml({ audioUrl });
+      xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<Response>',
+        `  <Play>${audioUrl}</Play>`,
+        '  <Hangup/>',
+        '</Response>',
+      ].join('\n');
     } else {
       // Default Anandi Park pitch in Hindi.
       const script =
         callRecord?.script ||
-        'Namaste! Main Anandi Park se bol raha hoon. Bakori, Wagholi Pune mein premium residential plots ' +
-          'available hain, starting atharah lakh se. Clear titles, ready for registration. ' +
-          'Agar aapko site visit karna hai toh please 1 dabaiye. Dhanyavaad.';
+        'Namaste! Anandi Park ki taraf se yeh ek exclusive offer hai. ' +
+        'Humne aapke saath WhatsApp par saari details share kar di hain. ' +
+        'Humari team se baat karne aur apni free site visit book karne ke liye, ' +
+        'please humein WhatsApp par reply karein. Dhanyavaad!';
 
-      xml = this.vobiz.buildSpeakAndGatherXml({
-        text: script,
-        language: 'hi-IN',
-        voice: 'WOMAN',
-      });
+      xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<Response>',
+        `  <Speak voice="WOMAN" language="hi-IN" loop="1">${script}</Speak>`,
+        '  <Hangup/>',
+        '</Response>',
+      ].join('\n');
     }
 
     // Update call status.

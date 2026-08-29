@@ -60,7 +60,7 @@ export class TtsService {
       'en': 'en-IN',
     };
     const targetLang = langMap[lang] || 'hi-IN';
-    const speaker = dto.speaker || 'anushka';
+    const speaker = dto.speaker || 'shreya';
 
     const axios = (await import('axios')).default;
 
@@ -71,7 +71,7 @@ export class TtsService {
           inputs: [text],
           target_language_code: targetLang,
           speaker,
-          model: 'bulbul:v2',
+          model: 'bulbul:v3',
         },
         {
           headers: { 'api-subscription-key': this.sarvamKey },
