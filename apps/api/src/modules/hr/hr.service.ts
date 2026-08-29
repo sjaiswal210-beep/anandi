@@ -533,13 +533,21 @@ export class HrService {
   // WORKER PORTAL SELF-SERVICE METHODS
   // =========================================================================
 
-  async getWorkerPortalData(phone: string) {
+  async getWorkerPortalData(phone: string, device?: string) {
     const employee = await this.prisma.employee.findFirst({
       where: { phone, status: 'ACTIVE' },
     });
 
     if (!employee) {
       throw new NotFoundException('Active employee profile not found for this phone number.');
+    }
+
+    if (device && employee.deviceInfo !== device) {
+      await this.prisma.employee.update({
+        where: { id: employee.id },
+        data: { deviceInfo: device },
+      });
+      employee.deviceInfo = device;
     }
 
     const [attendance, leaves, payrolls] = await Promise.all([

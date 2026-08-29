@@ -60,7 +60,34 @@ function WorkerPortalContent() {
     setCheckingPhone(true);
     setAuthError('');
     try {
-      const res: any = await api.get(`/hr/worker-portal?phone=${workerPhone}`);
+      const getDeviceDetails = () => {
+        if (typeof window === 'undefined') return 'Unknown';
+        const ua = navigator.userAgent;
+        let os = 'Unknown OS';
+        if (/android/i.test(ua)) os = 'Android';
+        else if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) os = 'iOS';
+        else if (/windows/i.test(ua)) os = 'Windows';
+        else if (/macintosh/i.test(ua)) os = 'Mac';
+        
+        let brand = '';
+        if (/samsung|sm-/i.test(ua)) brand = 'Samsung ';
+        else if (/oneplus/i.test(ua)) brand = 'OnePlus ';
+        else if (/pixel/i.test(ua)) brand = 'Google Pixel ';
+        else if (/xiaomi|mi |redmi/i.test(ua)) brand = 'Xiaomi ';
+        else if (/oppo/i.test(ua)) brand = 'Oppo ';
+        else if (/vivo/i.test(ua)) brand = 'Vivo ';
+
+        let browser = 'Browser';
+        if (/chrome|crios/i.test(ua) && !/edge|edg/i.test(ua)) browser = 'Chrome';
+        else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = 'Safari';
+        else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
+        else if (/edge|edg/i.test(ua)) browser = 'Edge';
+        
+        return `${brand}${os} (${browser})`;
+      };
+
+      const device = getDeviceDetails();
+      const res: any = await api.get(`/hr/worker-portal?phone=${workerPhone}&device=${encodeURIComponent(device)}`);
       const data = res?.data || res;
       if (data && data.employee) {
         setEmployee(data.employee);

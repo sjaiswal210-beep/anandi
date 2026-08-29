@@ -398,11 +398,17 @@ export default function HrDashboardPage() {
                         {emp.department}
                       </span>
                     </div>
-                    
                     <div className="text-sm space-y-1.5 border-t border-b py-3 text-muted-foreground">
                       <p><span className="font-semibold text-foreground">Phone:</span> {emp.phone}</p>
                       <p><span className="font-semibold text-foreground">Salary Structure:</span> {emp.salaryType} (₹{parseFloat(emp.baseSalary).toLocaleString('en-IN')})</p>
                       <p><span className="font-semibold text-foreground">Joining Date:</span> {new Date(emp.joiningDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                      <p className="flex items-center gap-1.5"><span className="font-semibold text-foreground">Active Device:</span> {emp.deviceInfo ? (
+                        <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800/30">
+                          {emp.deviceInfo}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Not logged in yet</span>
+                      )}</p>
                     </div>
 
                     <div className="flex gap-2 text-xs">

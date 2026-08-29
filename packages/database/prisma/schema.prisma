@@ -1218,6 +1218,7 @@ model Employee {
   department        String          // e.g. "Sales", "Construction", "Finance", "Admin"
   designation       String          // e.g. "Executive", "Manager", "Site Engineer"
   status            EmployeeStatus  @default(ACTIVE)
+  deviceInfo        String?         // Details of the mobile device logged into the worker portal
   
   // Payroll / Salary settings
   salaryType        SalaryType      @default(MONTHLY)

@@ -210,9 +210,12 @@ export class HrController {
   @Public()
   @Get('worker-portal')
   @ApiOperation({ summary: 'Get worker profile details and logs' })
-  async getWorkerPortal(@Query('phone') phone: string) {
+  async getWorkerPortal(
+    @Query('phone') phone: string,
+    @Query('device') device?: string,
+  ) {
     if (!phone) throw new BadRequestException('Phone number query parameter is required');
-    return this.hrService.getWorkerPortalData(phone);
+    return this.hrService.getWorkerPortalData(phone, device);
   }
 
   @Public()
