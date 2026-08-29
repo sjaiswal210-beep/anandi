@@ -18,6 +18,7 @@
     "db:migrate": "turbo run db:migrate",
     "db:seed": "turbo run db:seed",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "vps:deploy": "powershell scripts/deploy.ps1",
     "prepare": "husky"
   },
   "devDependencies": {
