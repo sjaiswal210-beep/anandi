@@ -14,7 +14,9 @@ ssh -i $sshKey -o StrictHostKeyChecking=accept-new "${vpsUser}@${vpsHost}" @"
   echo '--- VPS deployment started ---'
   cd /opt/anandi-park/anandi
   
-  echo '[1/5] Pulling latest code...'
+  echo '[1/5] Resetting server modifications and pulling latest code...'
+  git reset --hard
+  git clean -df
   git pull origin main
   
   echo '[2/5] Installing dependencies...'
