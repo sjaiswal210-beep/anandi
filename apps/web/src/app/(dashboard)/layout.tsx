@@ -11,12 +11,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [locked, setLocked] = useState(true);
   const [password, setPassword] = useState('');
   const [pwError, setPwError] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   // Dashboard password gate
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const unlocked = sessionStorage.getItem('dashboard-unlocked');
-      if (unlocked === 'yes') setLocked(false);
+      const unlockedSession = sessionStorage.getItem('dashboard-unlocked');
+      const unlockedLocal = localStorage.getItem('dashboard-unlocked');
+      if (unlockedSession === 'yes' || unlockedLocal === 'yes') {
+        setLocked(false);
+      }
     }
   }, []);
 
@@ -27,6 +31,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setLocked(false);
       setPwError(false);
       sessionStorage.setItem('dashboard-unlocked', 'yes');
+      if (rememberMe) {
+        localStorage.setItem('dashboard-unlocked', 'yes');
+      }
     } else {
       setPwError(true);
     }
@@ -76,8 +83,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             autoFocus
             className="w-full px-4 py-3 rounded-lg border border-slate-700 bg-slate-900 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
           />
+          <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input 
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500 h-4 w-4 cursor-pointer"
+              />
+              <span>Remember me on this device</span>
+            </label>
+          </div>
           {pwError && <p className="text-sm text-red-400 text-center">Wrong password</p>}
-          <button type="submit" className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700">
+          <button type="submit" className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 cursor-pointer transition-colors">
             Enter Dashboard
           </button>
         </form>
