@@ -3,29 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
-
-const TOUR_SLIDES = [
-  {
-    image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=1600',
-    title: 'Top-Down Aerial Master Plan',
-    subtext: 'Perfect 84-plot geometric layout with sprawling green pockets.',
-    badge: 'Drone View'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1600',
-    title: 'Nestled Below Bakori Hills',
-    subtext: 'Breathtaking hillside views and refreshing morning breezes.',
-    badge: 'Imagination View'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600',
-    title: 'Premium Villa Developments',
-    subtext: 'Build your dream bungalow on 1000 - 4510 sq.ft ready plots.',
-    badge: 'Infrastructure'
-  }
-];
+import { useLanguage } from './language-context';
 
 export function SiteVideoTour() {
+  const { t } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const [isPlaying, setIshowPlaying] = useState(true);
   const [voiceLang, setVoiceLang] = useState<'hi' | 'mr' | null>(null);
@@ -34,11 +15,32 @@ export function SiteVideoTour() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const slideInterval = useRef<NodeJS.Timeout | null>(null);
 
+  const slides = [
+    {
+      image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=1600',
+      title: t('tour.slide.title.0'),
+      subtext: t('tour.slide.body.0'),
+      badge: t('tour.slide.badge.0')
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1600',
+      title: t('tour.slide.title.1'),
+      subtext: t('tour.slide.body.1'),
+      badge: t('tour.slide.badge.1')
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600',
+      title: t('tour.slide.title.2'),
+      subtext: t('tour.slide.body.2'),
+      badge: t('tour.slide.badge.2')
+    }
+  ];
+
   // Auto-play slideshow logic
   useEffect(() => {
     if (isPlaying) {
       slideInterval.current = setInterval(() => {
-        setActiveSlide((prev) => (prev + 1) % TOUR_SLIDES.length);
+        setActiveSlide((prev) => (prev + 1) % slides.length);
       }, 6000); // 6 seconds per drone shot
     } else {
       if (slideInterval.current) clearInterval(slideInterval.current);
@@ -47,7 +49,7 @@ export function SiteVideoTour() {
     return () => {
       if (slideInterval.current) clearInterval(slideInterval.current);
     };
-  }, [isPlaying]);
+  }, [isPlaying, slides.length]);
 
   // Audio play/pause logic
   const handleVoicePlay = (lang: 'hi' | 'mr') => {
@@ -82,11 +84,11 @@ export function SiteVideoTour() {
   };
 
   const nextSlide = () => {
-    setActiveSlide((prev) => (prev + 1) % TOUR_SLIDES.length);
+    setActiveSlide((prev) => (prev + 1) % slides.length);
   };
 
   const prevSlide = () => {
-    setActiveSlide((prev) => (prev - 1 + TOUR_SLIDES.length) % TOUR_SLIDES.length);
+    setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   return (
@@ -102,13 +104,13 @@ export function SiteVideoTour() {
         <div className="mx-auto max-w-3xl text-center mb-12 sm:mb-16">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3.5 py-1.5 text-xs font-semibold text-amber-400 border border-amber-500/20">
             <Sparkles className="h-3 w-3" />
-            AI Interactive Tour
+            {t('tour.tag')}
           </span>
           <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl text-white">
-            Experience Anandi Park In HD
+            {t('tour.title')}
           </h2>
-          <p className="mt-4 text-base text-slate-400">
-            Take a cinematic, virtual flight over your future residential plots. Turn on the AI voiceover to hear our exclusive inaugural layout features.
+          <p className="mt-4 text-sm sm:text-base text-slate-400 leading-relaxed">
+            {t('tour.sub')}
           </p>
         </div>
 
@@ -126,8 +128,8 @@ export function SiteVideoTour() {
               {/* Image with Custom CSS Ken Burns Zoom Animation */}
               <div className="absolute inset-0 w-full h-full overflow-hidden scale-105">
                 <img
-                  src={TOUR_SLIDES[activeSlide].image}
-                  alt={TOUR_SLIDES[activeSlide].title}
+                  src={slides[activeSlide].image}
+                  alt={slides[activeSlide].title}
                   className="w-full h-full object-cover animate-ken-burns"
                 />
                 {/* Cinematic dark overlay gradient */}
@@ -136,8 +138,8 @@ export function SiteVideoTour() {
 
               {/* Floating Slide Badge */}
               <div className="absolute top-6 left-6 z-10">
-                <span className="rounded-full bg-slate-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-amber-400 border border-slate-700">
-                  {TOUR_SLIDES[activeSlide].badge}
+                <span className="rounded-full bg-slate-900/80 backdrop-blur-md px-3 py-1.5 text-[10px] sm:text-xs font-semibold text-amber-400 border border-slate-700">
+                  {slides[activeSlide].badge}
                 </span>
               </div>
 
@@ -148,11 +150,11 @@ export function SiteVideoTour() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                  <h3 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
-                    {TOUR_SLIDES[activeSlide].title}
+                  <h3 className="text-lg sm:text-3xl font-bold text-white tracking-tight leading-tight">
+                    {slides[activeSlide].title}
                   </h3>
-                  <p className="mt-2 text-sm sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
-                    {TOUR_SLIDES[activeSlide].subtext}
+                  <p className="mt-2 text-xs sm:text-base text-slate-300 max-w-2xl leading-relaxed">
+                    {slides[activeSlide].subtext}
                   </p>
                 </motion.div>
               </div>
@@ -195,14 +197,22 @@ export function SiteVideoTour() {
             }`}>
               <Volume2 className="h-6 w-6" />
             </div>
-            <div>
-              <h4 className="font-semibold text-white">AI Voiceover Narrator</h4>
-              <p className="text-xs text-slate-400 mt-0.5">
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-white">{t('tour.narrator')}</h4>
+              <p className="text-xs text-slate-400 mt-0.5 leading-snug">
                 {voiceLang 
-                  ? `Playing high-fidelity ${voiceLang === 'hi' ? 'Hindi (1.0x)' : 'Marathi (1.2x)'} campaign script...` 
-                  : 'Select a language to play the audio presentation'
+                  ? t(`tour.playing.${voiceLang}`)
+                  : t('tour.playing.idle')
                 }
               </p>
+              {voiceLang && (
+                <div className="w-full max-w-[200px] h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
+                  <div 
+                    className="h-full bg-amber-500 transition-all duration-300"
+                    style={{ width: `${audioProgress}%` }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -210,7 +220,7 @@ export function SiteVideoTour() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => handleVoicePlay('hi')}
-              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition flex items-center gap-2 border ${
+              className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 border ${
                 voiceLang === 'hi'
                   ? 'bg-amber-500 border-amber-600 text-slate-950'
                   : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-white'
@@ -222,14 +232,14 @@ export function SiteVideoTour() {
                 </>
               ) : (
                 <>
-                  <Play className="h-4 w-4" /> Play Hindi Voice
+                  <Play className="h-4 w-4" /> {t('tour.btn.hi')}
                 </>
               )}
             </button>
 
             <button
               onClick={() => handleVoicePlay('mr')}
-              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition flex items-center gap-2 border ${
+              className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 border ${
                 voiceLang === 'mr'
                   ? 'bg-amber-500 border-amber-600 text-slate-950'
                   : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-white'
@@ -241,7 +251,7 @@ export function SiteVideoTour() {
                 </>
               ) : (
                 <>
-                  <Play className="h-4 w-4" /> Play Marathi (1.2x)
+                  <Play className="h-4 w-4" /> {t('tour.btn.mr')}
                 </>
               )}
             </button>
@@ -251,15 +261,15 @@ export function SiteVideoTour() {
 
             <button
               onClick={() => setIshowPlaying(!isPlaying)}
-              className="px-4 py-2.5 rounded-full text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition flex items-center gap-1.5"
             >
               {isPlaying ? (
                 <>
-                  <Pause className="h-3.5 w-3.5" /> Pause Auto-Flight
+                  <Pause className="h-3.5 w-3.5" /> {t('tour.btn.pause')}
                 </>
               ) : (
                 <>
-                  <Play className="h-3.5 w-3.5" /> Resume Auto-Flight
+                  <Play className="h-3.5 w-3.5" /> {t('tour.btn.resume')}
                 </>
               )}
             </button>

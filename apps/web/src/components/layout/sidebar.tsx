@@ -38,6 +38,7 @@ const navigation = [
   { name: 'Ads & Costs', href: '/plotting/ads', icon: BarChart3 },
   { name: 'Lead Scraper', href: '/plotting/scraper', icon: Search },
   { name: 'Customers', href: '/plotting/customers', icon: Users },
+  { name: 'Team & HR', href: '/plotting/hr', icon: Users },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Project Website', href: '/project', icon: Globe },
   { name: 'Reports', href: '/reports', icon: BarChart3 },

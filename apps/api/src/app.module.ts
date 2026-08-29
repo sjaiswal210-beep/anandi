@@ -31,6 +31,7 @@ import { AICallingModule } from './modules/ai-calling/ai-calling.module';
 import { LeadScraperModule } from './modules/lead-scraper/lead-scraper.module';
 import { AdsModule } from './modules/ads/ads.module';
 import { HealthModule } from './modules/health/health.module';
+import { HrModule } from './modules/hr/hr.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { HealthModule } from './modules/health/health.module';
     AICallingModule,
     LeadScraperModule,
     AdsModule,
+    HrModule,
   ],
 })
 export class AppModule {}

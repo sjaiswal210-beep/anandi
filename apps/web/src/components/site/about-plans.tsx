@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Check, Maximize2, Home, TrendingUp, ArrowRight } from 'lucide-react';
 import { CONFIGURATIONS, WHY, PROJECT, img } from './site-data';
+import { useLanguage } from './language-context';
 
 const whyIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   shield: Check, trending: TrendingUp, map: Maximize2, landmark: Home,
@@ -14,6 +15,22 @@ const reveal = {
 };
 
 export function SiteAbout() {
+  const { t } = useLanguage();
+
+  const points = [
+    t('about.f1'),
+    t('about.f2'),
+    t('about.f3'),
+    t('about.f4'),
+    t('about.f5'),
+  ];
+
+  const whyPoints = WHY.map((w, i) => ({
+    ...w,
+    title: t(`why.title.${i}`),
+    body: t(`why.body.${i}`),
+  }));
+
   return (
     <section id="overview" className="bg-white py-24 dark:bg-slate-950">
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 lg:grid-cols-2">
@@ -24,29 +41,24 @@ export function SiteAbout() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <p className="text-sm font-medium uppercase tracking-widest text-amber-600 dark:text-amber-400">
-            The Address
+            {t('about.tag')}
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            Invest in land that grows with you
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white leading-[1.2]">
+            {t('about.title')}
           </h2>
-          <p className="mt-5 text-slate-600 dark:text-slate-400">
-            {PROJECT.name} is a gated, planned residential plotting project by {PROJECT.builder} at
-            Bakori, Wagholi — one of Pune East&apos;s fastest growing corridors. 84 residential plots
-            with clear titles, ready infrastructure and all approvals in place.
+          <p className="mt-5 text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+            {t('about.p1')}
+          </p>
+          <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+            {t('about.p2')}
           </p>
           <ul className="mt-8 space-y-3.5">
-            {[
-              'Residential plots, ready for construction',
-              'Clear, marketable titles — no legal disputes',
-              'Ready infrastructure: roads, water, electricity, drainage',
-              'Transparent, all-inclusive pricing',
-              'Corner and road-facing premium plots available',
-            ].map((point) => (
+            {points.map((point) => (
               <li key={point} className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
                   <Check className="h-3 w-3 text-amber-600 dark:text-amber-400" aria-hidden="true" />
                 </span>
-                <span className="text-sm text-slate-700 dark:text-slate-300">{point}</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{point}</span>
               </li>
             ))}
           </ul>
@@ -82,7 +94,7 @@ export function SiteAbout() {
       {/* Why Anandi Park */}
       <div className="mx-auto mt-20 max-w-7xl px-5">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {WHY.map((w, i) => {
+          {whyPoints.map((w, i) => {
             const Icon = whyIcons[w.icon] ?? Check;
             return (
               <motion.div
@@ -97,8 +109,8 @@ export function SiteAbout() {
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15">
                   <Icon className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
                 </span>
-                <h3 className="mt-4 text-base font-semibold text-slate-900 dark:text-white">{w.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{w.body}</p>
+                <h3 className="mt-4 text-base font-semibold text-slate-900 dark:text-white leading-snug">{w.title}</h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{w.body}</p>
               </motion.div>
             );
           })}
@@ -109,24 +121,32 @@ export function SiteAbout() {
 }
 
 export function SitePlans() {
+  const { t } = useLanguage();
+
+  const configs = CONFIGURATIONS.map((c, i) => ({
+    ...c,
+    type: t(`config.type.${i}`),
+    price: t(`config.price.${i}`),
+    ideal: t(`config.ideal.${i}`),
+  }));
+
   return (
     <section id="plans" className="bg-slate-50 py-24 dark:bg-slate-900">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-medium uppercase tracking-widest text-amber-600 dark:text-amber-400">
-            Configurations
+            {t('nav.plans')}
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            Choose your plot size
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+            {t('config.title')}
           </h2>
-          <p className="mt-4 text-slate-600 dark:text-slate-400">
-            Plot areas as per the sanctioned layout. All prices are all-inclusive;
-            request a plot-wise cost sheet for exact figures.
+          <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400">
+            {t('config.sub')}
           </p>
         </div>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {CONFIGURATIONS.map((c, i) => (
+          {configs.map((c, i) => (
             <motion.article
               key={c.type}
               variants={reveal}
@@ -152,30 +172,31 @@ export function SitePlans() {
                   </span>
                 )}
                 <span className="absolute left-4 top-4 rounded-full bg-slate-950/70 px-3 py-1 text-xs font-medium text-white">
-                  {c.available} left
+                  {c.available} {t('config.avail')}
                 </span>
               </div>
 
               <div className="p-5">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{c.type}</h3>
-                <p className="mt-1 text-base font-medium text-amber-600 dark:text-amber-400">{c.price}</p>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white truncate">{c.type}</h3>
+                <p className="mt-1 text-base font-semibold text-amber-600 dark:text-amber-400">{c.price}</p>
+                <div className="h-px bg-slate-100 dark:bg-slate-850 my-3" />
 
-                <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <div className="space-y-2.5">
                   <p className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                     <Maximize2 className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                    {c.carpet}
+                    <strong>{t('config.carpet')}</strong> {c.carpet}
                   </p>
                   <p className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                     <Home className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                    {c.ideal}
+                    <strong>{t('config.ideal')}</strong> {c.ideal}
                   </p>
                 </div>
 
                 <a
                   href="#contact"
-                  className="group mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                  className="group mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                 >
-                  Get cost sheet
+                  {t('config.btn')}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </a>
               </div>

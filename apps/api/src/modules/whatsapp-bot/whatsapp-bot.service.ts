@@ -120,11 +120,17 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
   }
 
   async handleIncomingMessage(from: string, message: string, workspaceId?: string) {
+    let resolvedWorkspaceId = workspaceId;
+    if (!resolvedWorkspaceId) {
+      const firstWorkspace = await this.prisma.workspace.findFirst();
+      resolvedWorkspaceId = firstWorkspace?.id;
+    }
+
     // Persist the incoming message first so conversation context builds up.
-    if (workspaceId) {
+    if (resolvedWorkspaceId) {
       await this.prisma.whatsAppMessage.create({
         data: {
-          workspaceId, from, to: '917558444117', type: 'text',
+          workspaceId: resolvedWorkspaceId, from, to: '917558444117', type: 'text',
           content: { text: { body: message } } as any,
           direction: 'incoming', status: 'received',
         },
@@ -143,17 +149,17 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     // ads actually generate CRM leads: the ad opens a chat, the first message
     // lands here, and we file it. detectAdReferral tags the source so paid
     // WhatsApp leads are attributable in the ads dashboard.
-    if (!lead && workspaceId) {
+    if (!lead && resolvedWorkspaceId) {
       const referral = this.detectAdReferral(message);
       const owner = await this.prisma.user.findFirst({
-        where: { workspaces: { some: { workspaceId } } },
+        where: { workspaces: { some: { workspaceId: resolvedWorkspaceId } } },
         select: { id: true },
       });
       if (owner) {
         lead = await this.prisma.lead
           .create({
             data: {
-              workspaceId,
+              workspaceId: resolvedWorkspaceId,
               createdById: owner.id,
               name: `WhatsApp ${phone.slice(-4)}`,
               phone,
@@ -236,8 +242,8 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     if (intent === 'HOT' && lead) {
       await this.prisma.lead.update({ where: { id: lead.id }, data: { score: Math.min(100, (lead.score || 0) + 20), tags: { push: 'hot-lead' } } });
     }
-    if (workspaceId) {
-      await this.prisma.whatsAppMessage.create({ data: { workspaceId, from: '917558444117', to: from, type: 'text', content: { text: { body: reply } } as any, direction: 'outgoing', status: 'sent' } });
+    if (resolvedWorkspaceId) {
+      await this.prisma.whatsAppMessage.create({ data: { workspaceId: resolvedWorkspaceId, from: '917558444117', to: from, type: 'text', content: { text: { body: reply } } as any, direction: 'outgoing', status: 'sent' } });
     }
     return { reply, intent };
   }

@@ -2,8 +2,19 @@
 
 import { Phone } from 'lucide-react';
 import { PROJECT } from './site-data';
+import { useLanguage } from './language-context';
 
 export function SiteFooter() {
+  const { t } = useLanguage();
+
+  const links = [
+    { href: '#overview', label: t('nav.overview') },
+    { href: '#plans', label: t('nav.plans') },
+    { href: '#amenities', label: t('nav.amenities') },
+    { href: '#gallery', label: t('gallery.tag') },
+    { href: '#location', label: t('nav.location') },
+  ];
+
   return (
     <footer className="border-t border-white/10 bg-slate-950 py-14">
       <div className="mx-auto max-w-7xl px-5">
@@ -11,24 +22,18 @@ export function SiteFooter() {
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/richland-transparent.png" alt="Rich-Land Developers" className="h-16 w-16 object-contain" />
-            <p className="mt-4 max-w-xs text-sm text-slate-400">
-              {PROJECT.name} — {PROJECT.tagline}. Developed by {PROJECT.builder} ({PROJECT.partners}).
+            <p className="mt-4 max-w-xs text-sm text-slate-400 leading-relaxed font-semibold">
+              {t('foot.sub')}
             </p>
-            <p className="mt-4 text-xs text-slate-500">Clear titles · Ready for registration</p>
+            <p className="mt-4 text-xs text-slate-500 font-bold">{t('hero.badge')}</p>
           </div>
 
           <nav aria-label="Footer">
-            <h2 className="text-sm font-semibold text-white">Explore</h2>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">{t('nav.overview')}</h2>
             <ul className="mt-4 space-y-2.5">
-              {[
-                { href: '#overview', label: 'Overview' },
-                { href: '#plans', label: 'Floor Plans' },
-                { href: '#amenities', label: 'Amenities' },
-                { href: '#gallery', label: 'Gallery' },
-                { href: '#location', label: 'Location' },
-              ].map((l) => (
+              {links.map((l) => (
                 <li key={l.href}>
-                  <a href={l.href} className="text-sm text-slate-400 transition hover:text-amber-400">
+                  <a href={l.href} className="text-sm text-slate-400 font-semibold transition hover:text-amber-400">
                     {l.label}
                   </a>
                 </li>
@@ -37,8 +42,8 @@ export function SiteFooter() {
           </nav>
 
           <div>
-            <h2 className="text-sm font-semibold text-white">Get in touch</h2>
-            <ul className="mt-4 space-y-2.5 text-sm text-slate-400">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">{t('foot.getintouch')}</h2>
+            <ul className="mt-4 space-y-2.5 text-sm text-slate-400 font-semibold">
               <li>
                 <a href={`tel:${PROJECT.phone.replace(/\s/g, '')}`} className="hover:text-amber-400">
                   {PROJECT.phone}
@@ -49,14 +54,14 @@ export function SiteFooter() {
                   {PROJECT.email}
                 </a>
               </li>
-              <li>{PROJECT.location}</li>
+              <li>{t('hero.location')}</li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {PROJECT.builder} ({PROJECT.partners}). All rights reserved.</p>
-          <p>Images are artistic impressions.</p>
+        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between font-medium">
+          <p>© {new Date().getFullYear()} {PROJECT.builder} ({PROJECT.partners}). {t('foot.rights')}</p>
+          <p>{t('foot.impress')}</p>
         </div>
       </div>
     </footer>

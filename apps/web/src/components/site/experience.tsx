@@ -7,6 +7,7 @@ import {
   Shield, Plug, Footprints, PartyPopper, Route, X,
 } from 'lucide-react';
 import { AMENITIES, GALLERY, img } from './site-data';
+import { useLanguage } from './language-context';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   waves: Waves, building: Building, dumbbell: Dumbbell, trees: Trees,
@@ -16,6 +17,20 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function SiteAmenities() {
+  const { t } = useLanguage();
+
+  const amens = AMENITIES.map((a, i) => {
+    const keys = [
+      'amen.road', 'amen.gate', 'amen.water', 'amen.elect',
+      'amen.drain', 'amen.garden', 'amen.kids', 'amen.security',
+      'amen.wall', 'amen.lights', 'amen.trees', 'amen.open'
+    ];
+    return {
+      ...a,
+      name: t(keys[i]) || a.name
+    };
+  });
+
   return (
     <section id="amenities" className="relative overflow-hidden bg-slate-950 py-24">
       <img
@@ -29,19 +44,15 @@ export function SiteAmenities() {
       <div className="relative mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-medium uppercase tracking-widest text-amber-400">
-            Lifestyle
+            {t('amen.tag')}
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Everything in place, ready to build
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl leading-tight">
+            {t('amen.title')}
           </h2>
-          <p className="mt-4 text-slate-400">
-            Complete infrastructure already set up — internal roads, water, electricity,
-            drainage, and landscaped entry. Move in and start building your dream.
-          </p>
         </div>
 
         <ul className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {AMENITIES.map((a, i) => {
+          {amens.map((a, i) => {
             const Icon = iconMap[a.icon] ?? Building;
             return (
               <motion.li
@@ -53,7 +64,7 @@ export function SiteAmenities() {
                 className="group rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition hover:border-amber-400/40 hover:bg-white/10"
               >
                 <Icon className="h-6 w-6 text-amber-400 transition-transform group-hover:scale-110" aria-hidden="true" />
-                <p className="mt-3 text-sm font-medium text-white">{a.name}</p>
+                <p className="mt-3 text-sm font-semibold text-white leading-snug">{a.name}</p>
               </motion.li>
             );
           })}
@@ -65,21 +76,27 @@ export function SiteAmenities() {
 
 export function SiteGallery() {
   const [active, setActive] = useState<number | null>(null);
+  const { t } = useLanguage();
+
+  const galleryItems = GALLERY.map((g, i) => ({
+    ...g,
+    caption: t(`gallery.caption.${i}`) || g.caption
+  }));
 
   return (
     <section id="gallery" className="bg-white py-24 dark:bg-slate-950">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-medium uppercase tracking-widest text-amber-600 dark:text-amber-400">
-            Gallery
+            {t('gallery.tag')}
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            Take a closer look
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white leading-tight">
+            {t('gallery.title')}
           </h2>
         </div>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {GALLERY.map((g, i) => (
+          {galleryItems.map((g, i) => (
             <motion.button
               key={g.seed}
               onClick={() => setActive(i)}
@@ -95,7 +112,7 @@ export function SiteGallery() {
                 alt={g.caption}
                 className="h-64 w-full bg-slate-100 object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-4 text-left text-sm font-medium text-white">
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-4 text-left text-xs sm:text-sm font-semibold text-white leading-snug">
                 {g.caption}
               </span>
             </motion.button>
@@ -108,7 +125,7 @@ export function SiteGallery() {
           className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/90 p-6"
           role="dialog"
           aria-modal="true"
-          aria-label={GALLERY[active].caption}
+          aria-label={galleryItems[active].caption}
           onClick={() => setActive(null)}
         >
           <button
@@ -120,12 +137,12 @@ export function SiteGallery() {
           </button>
           <figure onClick={(e) => e.stopPropagation()} className="max-w-4xl">
             <img
-              src={img(GALLERY[active].seed, 1400, 950)}
-              alt={GALLERY[active].caption}
+              src={img(galleryItems[active].seed, 1400, 950)}
+              alt={galleryItems[active].caption}
               className="max-h-[78vh] w-full rounded-2xl object-contain"
             />
-            <figcaption className="mt-4 text-center text-sm text-slate-300">
-              {GALLERY[active].caption}
+            <figcaption className="mt-4 text-center text-sm font-semibold text-slate-300">
+              {galleryItems[active].caption}
             </figcaption>
           </figure>
         </div>
