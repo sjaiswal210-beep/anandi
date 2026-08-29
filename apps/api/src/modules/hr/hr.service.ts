@@ -584,6 +584,7 @@ export class HrService {
 
     return this.prisma.leave.create({
       data: {
+        workspaceId: employee.workspaceId,
         employeeId: employee.id,
         type,
         startDate: start,
