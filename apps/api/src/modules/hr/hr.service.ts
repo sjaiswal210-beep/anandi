@@ -530,6 +530,72 @@ export class HrService {
   }
 
   // =========================================================================
+  // WORKER PORTAL SELF-SERVICE METHODS
+  // =========================================================================
+
+  async getWorkerPortalData(phone: string) {
+    const employee = await this.prisma.employee.findFirst({
+      where: { phone, status: 'ACTIVE' },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Active employee profile not found for this phone number.');
+    }
+
+    const [attendance, leaves, payrolls] = await Promise.all([
+      this.prisma.attendance.findMany({
+        where: { employeeId: employee.id },
+        orderBy: { date: 'desc' },
+        take: 30,
+      }),
+      this.prisma.leave.findMany({
+        where: { employeeId: employee.id },
+        orderBy: { startDate: 'desc' },
+        take: 20,
+      }),
+      this.prisma.payroll.findMany({
+        where: { employeeId: employee.id },
+        orderBy: { year: 'desc', month: 'desc' },
+        take: 12,
+      }),
+    ]);
+
+    return {
+      employee,
+      attendance,
+      leaves,
+      payrolls,
+    };
+  }
+
+  async createWorkerLeaveRequest(phone: string, type: any, startDate: string, endDate: string, reason: string) {
+    const employee = await this.prisma.employee.findFirst({
+      where: { phone, status: 'ACTIVE' },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Active employee profile not found.');
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    return this.prisma.leave.create({
+      data: {
+        employeeId: employee.id,
+        type,
+        startDate: start,
+        endDate: end,
+        days: diffDays,
+        reason,
+        status: 'PENDING',
+      },
+    });
+  }
+
+  // =========================================================================
   // UTILS
   // =========================================================================
 

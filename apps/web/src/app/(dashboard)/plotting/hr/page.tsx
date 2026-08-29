@@ -16,7 +16,10 @@ import {
   FileSpreadsheet, 
   Briefcase, 
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  Copy,
+  ExternalLink,
+  Smartphone
 } from 'lucide-react';
 
 export default function HrDashboardPage() {
@@ -29,6 +32,11 @@ export default function HrDashboardPage() {
   // Loading states
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const handleCopyLink = (url: string, label: string) => {
+    navigator.clipboard.writeText(url);
+    alert(`${label} link copied to clipboard! You can now send it to your workers via WhatsApp.`);
+  };
 
   // Form states - Add Employee
   const [showAddEmpModal, setShowAddEmpModal] = useState(false);
@@ -235,6 +243,90 @@ export default function HrDashboardPage() {
             <Plus className="h-4.5 w-4.5" />
             Add Staff Profile
           </button>
+        </div>
+      </div>
+
+      {/* Quick Access System Links */}
+      <div className="bg-slate-50 dark:bg-slate-900/30 border rounded-2xl p-5 grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <QrCode className="h-5 w-5 shrink-0" />
+              <h3 className="font-bold text-sm">QR Code Wall Terminal</h3>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-850 px-2 py-0.5 rounded text-slate-500 font-sans">Office Tablet</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Open on an office wall-mounted tablet or screen. Displays the rolling attendance QR code.</p>
+          <div className="flex items-center gap-2 pt-1 text-xs">
+            <button 
+              onClick={() => handleCopyLink('https://anandipark.in/plotting/hr/terminal', 'QR Terminal')}
+              className="flex-1 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy Link
+            </button>
+            <a 
+              href="/plotting/hr/terminal" 
+              target="_blank" 
+              className="px-3 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center cursor-pointer transition-colors text-slate-700"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </div>
+
+        <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <MapPin className="h-5 w-5 shrink-0" />
+              <h3 className="font-bold text-sm">Mobile Check-In Checkpoint</h3>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-850 px-2 py-0.5 rounded text-slate-500 font-sans">Worker GPS Scan</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Workers scan this page to verify their browser coordinates on-site and record punches.</p>
+          <div className="flex items-center gap-2 pt-1 text-xs">
+            <button 
+              onClick={() => handleCopyLink('https://anandipark.in/attendance/scan', 'Mobile Attendance Scan')}
+              className="flex-1 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy Link
+            </button>
+            <a 
+              href="/attendance/scan" 
+              target="_blank" 
+              className="px-3 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center cursor-pointer transition-colors text-slate-700"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </div>
+
+        <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Smartphone className="h-5 w-5 shrink-0" />
+              <h3 className="font-bold text-sm">Mobile Worker Portal</h3>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-850 px-2 py-0.5 rounded text-slate-500 font-sans">Worker App</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Workers log in using their phone to request leaves, view log history, and check wage slips.</p>
+          <div className="flex items-center gap-2 pt-1 text-xs">
+            <button 
+              onClick={() => handleCopyLink('https://anandipark.in/worker-portal', 'Worker Self-Service Portal')}
+              className="flex-1 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy Link
+            </button>
+            <a 
+              href="/worker-portal" 
+              target="_blank" 
+              className="px-3 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center cursor-pointer transition-colors text-slate-700"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Query, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, Param, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { HrService } from './hr.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -201,5 +201,39 @@ export class HrController {
     @Body() dto: { paymentReference?: string },
   ) {
     return this.hrService.markPayrollPaid(id, workspaceId, dto.paymentReference);
+  }
+
+  // =========================================================================
+  // WORKER PORTAL PUBLIC SYSTEM
+  // =========================================================================
+
+  @Public()
+  @Get('worker-portal')
+  @ApiOperation({ summary: 'Get worker profile details and logs' })
+  async getWorkerPortal(@Query('phone') phone: string) {
+    if (!phone) throw new BadRequestException('Phone number query parameter is required');
+    return this.hrService.getWorkerPortalData(phone);
+  }
+
+  @Public()
+  @Post('worker-portal/leave')
+  @ApiOperation({ summary: 'Submit leave request directly from worker portal' })
+  async submitWorkerLeave(
+    @Body() dto: {
+      phone: string;
+      type: LeaveType;
+      startDate: string;
+      endDate: string;
+      reason: string;
+    },
+  ) {
+    if (!dto.phone) throw new BadRequestException('Phone number is required');
+    return this.hrService.createWorkerLeaveRequest(
+      dto.phone,
+      dto.type,
+      dto.startDate,
+      dto.endDate,
+      dto.reason,
+    );
   }
 }
