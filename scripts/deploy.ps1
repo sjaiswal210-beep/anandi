@@ -29,7 +29,7 @@ ssh -i $sshKey -o StrictHostKeyChecking=accept-new "${vpsUser}@${vpsHost}" @"
   cd apps/api && npx nest build && cd ../..
   
   echo '[5/5] Building Next.js Web App...'
-  cd apps/web && npx next build && cd ../..
+  cd apps/web && rm -rf .next && npx next build && cd ../..
   
   echo '[Success] Restarting processes in PM2...'
   pm2 restart anandi-api
