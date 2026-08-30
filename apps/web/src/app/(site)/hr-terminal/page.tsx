@@ -2,10 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { QrCode, Shield, Clock, CheckCircle, Home, ExternalLink } from 'lucide-react';
+import { 
+  QrCode, 
+  Shield, 
+  Clock, 
+  CheckCircle, 
+  Home, 
+  ExternalLink,
+  Lock,
+  UserCheck,
+  ShieldAlert
+} from 'lucide-react';
 
 export default function HrQrTerminalPage() {
   const [checkingSession, setCheckingSession] = useState(true);
+  const [unlocked, setUnlocked] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
   const [token, setToken] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string>('');
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -21,28 +35,33 @@ export default function HrQrTerminalPage() {
     return () => clearInterval(clockInterval);
   }, []);
 
-  // 2. Silent login and loop triggers on mount
+  // 2. Silent login and check auth status on mount
   useEffect(() => {
     const runKioskAuthAndLoad = async () => {
-      try {
-        // Authenticate background session so API requests fetch seamlessly on raw kiosks
-        const res: any = await api.post('/auth/login', { email: 'Kalpdev@outlook.com', password: 'Kalpdev@1234' });
-        const accessToken = res?.data?.accessToken || res?.accessToken;
-        if (accessToken) {
-          localStorage.setItem('realtyos-auth', JSON.stringify({ state: { token: accessToken } }));
+      // Check shared HR lock state (sharing unlock session between dashboard and terminal for ease of use)
+      const savedUnlock = localStorage.getItem('realtyos_hr_portal_unlocked') || sessionStorage.getItem('realtyos_hr_portal_unlocked');
+      if (savedUnlock === 'yes') {
+        try {
+          // Authenticate background session so API requests fetch seamlessly on raw kiosks
+          const res: any = await api.post('/auth/login', { email: 'Kalpdev@outlook.com', password: 'Kalpdev@1234' });
+          const accessToken = res?.data?.accessToken || res?.accessToken;
+          if (accessToken) {
+            localStorage.setItem('realtyos-auth', JSON.stringify({ state: { token: accessToken } }));
+          }
+          setUnlocked(true);
+        } catch (err) {
+          console.error('Silent kiosk login restore failed:', err);
+          setUnlocked(true);
         }
-      } catch (err) {
-        console.error('Silent kiosk login restore failed:', err);
-      } finally {
-        setCheckingSession(false);
       }
+      setCheckingSession(false);
     };
     runKioskAuthAndLoad();
   }, []);
 
-  // 3. Start fetching and intervals after authentication is ready
+  // 3. Start fetching and intervals after authentication is ready and unlocked
   useEffect(() => {
-    if (checkingSession) return;
+    if (checkingSession || !unlocked) return;
 
     fetchToken();
     fetchTodayLogs();
@@ -59,7 +78,7 @@ export default function HrQrTerminalPage() {
       clearInterval(tokenInterval);
       clearInterval(logsInterval);
     };
-  }, [checkingSession]);
+  }, [checkingSession, unlocked]);
 
   // 4. Countdown timer ticker
   useEffect(() => {
@@ -73,6 +92,39 @@ export default function HrQrTerminalPage() {
 
     return () => clearInterval(timer);
   }, [expiresAt]);
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === 'richland2026') {
+      setCheckingSession(true);
+      setError('');
+      try {
+        const res: any = await api.post('/auth/login', { email: 'Kalpdev@outlook.com', password: 'Kalpdev@1234' });
+        const accessToken = res?.data?.accessToken || res?.accessToken;
+        if (accessToken) {
+          localStorage.setItem('realtyos-auth', JSON.stringify({ state: { token: accessToken } }));
+        }
+        localStorage.setItem('realtyos_hr_portal_unlocked', 'yes');
+        sessionStorage.setItem('realtyos_hr_portal_unlocked', 'yes');
+        setUnlocked(true);
+      } catch (err) {
+        console.error('API Gateway auth error:', err);
+        localStorage.setItem('realtyos_hr_portal_unlocked', 'yes');
+        setUnlocked(true);
+      } finally {
+        setCheckingSession(false);
+      }
+    } else {
+      setError('Invalid HR Password. Please verify and try again.');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('realtyos_hr_portal_unlocked');
+    sessionStorage.removeItem('realtyos_hr_portal_unlocked');
+    setUnlocked(false);
+    setPassword('');
+  };
 
   const fetchToken = async () => {
     try {
@@ -114,6 +166,58 @@ export default function HrQrTerminalPage() {
     );
   }
 
+  // Locked View
+  if (!unlocked) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl space-y-6 text-center">
+          <div className="mx-auto w-14 h-14 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center justify-center">
+            <Lock className="h-7 w-7" />
+          </div>
+          
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black tracking-tight text-slate-100">Anandi Park Terminal</h1>
+            <p className="text-sm text-slate-400 font-semibold">Secure GPS Attendance Checkpoint</p>
+          </div>
+
+          <form onSubmit={handleUnlock} className="space-y-4">
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Secure Terminal Password</label>
+              <input 
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full border border-slate-850 rounded-xl p-3 bg-slate-950 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-sans text-center text-lg tracking-widest"
+              />
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 text-rose-400 bg-rose-950/20 border border-rose-900/30 rounded-lg text-xs font-semibold text-left">
+                <ShieldAlert className="h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 text-sm"
+            >
+              <UserCheck className="h-4.5 w-4.5" />
+              Unlock Terminal Screen
+            </button>
+          </form>
+
+          <p className="text-xs text-slate-500 font-sans">
+            Secure, kiosk-restricted access. This dashboard is configured exclusively for authorized managers.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Full unlocked View
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-6 md:p-12 font-sans select-none">
       
@@ -137,6 +241,13 @@ export default function HrQrTerminalPage() {
               <Home className="h-3.5 w-3.5" />
               HR Portal
             </a>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-rose-400 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              Lock Terminal
+            </button>
           </div>
           <div className="text-right">
             <div className="text-2xl md:text-3xl font-black font-mono tracking-tight text-slate-100">{currentTime || '--:--:--'}</div>
@@ -235,7 +346,10 @@ export default function HrQrTerminalPage() {
       {/* Footer Branding */}
       <div className="text-center text-xs text-slate-500 border-t border-slate-800/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <span>Richland Developers HQ • Powered by RealtyOS Biometric Checkpoint System</span>
-        <a href="/hr-portal" className="sm:hidden text-slate-400 hover:text-white underline font-semibold">Go to HR Portal</a>
+        <div className="flex items-center gap-4">
+          <a href="/hr-portal" className="sm:hidden text-slate-400 hover:text-white underline font-semibold">Go to HR Portal</a>
+          <button onClick={handleLogout} className="sm:hidden text-rose-400 hover:text-rose-300 underline font-semibold">Lock Screen</button>
+        </div>
       </div>
 
     </div>
