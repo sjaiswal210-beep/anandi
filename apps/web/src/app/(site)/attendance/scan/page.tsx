@@ -411,7 +411,7 @@ function MobileScanPageContent() {
 
       {/* Footer */}
       <div className="text-center text-[10px] text-slate-400">
-        © Richland Developers • RealtyOS Cloud Node
+        © Richland Developers • Kalpdev Digitals Cloud Node
       </div>
 
     </div>

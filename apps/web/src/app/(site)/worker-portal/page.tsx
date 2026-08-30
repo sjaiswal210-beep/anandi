@@ -205,7 +205,7 @@ function WorkerPortalContent() {
         </div>
 
         <div className="text-center text-[10px] text-slate-500">
-          Powered by Richland Developers RealtyOS
+          Powered by Richland Developers Kalpdev Digitals
         </div>
       </div>
     );
@@ -525,7 +525,7 @@ function WorkerPortalContent() {
 
       {/* Mobile Footer */}
       <div className="text-center text-[10px] text-slate-500 border-t border-slate-900 py-4 mt-6">
-        Anandi Park RealtyOS Worker Node • SSL Secure
+        Anandi Park Kalpdev Digitals Worker Node • SSL Secure
       </div>
 
     </div>

@@ -100,7 +100,7 @@ async function bootstrap() {
 
   // Swagger Documentation
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('RealtyOS AI API')
+    .setTitle('Kalpdev Digitals AI API')
     .setDescription('AI Powered Business Operating System for Real Estate')
     .setVersion('1.0')
     .addBearerAuth()
@@ -113,7 +113,7 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT', 4000);
   await app.listen(port);
-  console.warn(`🚀 RealtyOS AI API running on port ${port}`);
+  console.warn(`🚀 Kalpdev Digitals AI API running on port ${port}`);
   console.warn(`📚 Swagger docs: http://localhost:${port}/docs`);
 }
 

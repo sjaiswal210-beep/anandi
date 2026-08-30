@@ -345,7 +345,7 @@ export default function HrQrTerminalPage() {
 
       {/* Footer Branding */}
       <div className="text-center text-xs text-slate-500 border-t border-slate-800/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <span>Richland Developers HQ • Powered by RealtyOS Biometric Checkpoint System</span>
+        <span>Richland Developers HQ • Powered by Kalpdev Digitals Biometric Checkpoint System</span>
         <div className="flex items-center gap-4">
           <a href="/hr-portal" className="sm:hidden text-slate-400 hover:text-white underline font-semibold">Go to HR Portal</a>
           <button onClick={handleLogout} className="sm:hidden text-rose-400 hover:text-rose-300 underline font-semibold">Lock Screen</button>
