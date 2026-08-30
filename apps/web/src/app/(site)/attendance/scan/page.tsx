@@ -253,36 +253,73 @@ function MobileScanPageContent() {
             </div>
           )}
 
-          {/* Success Card */}
+          {/* Success Modal Overlay */}
           {successCard && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-5 rounded-xl text-center space-y-3 animate-fade-in">
-              <CheckCircle className="h-10 w-10 text-emerald-600 mx-auto shrink-0" />
-              <div>
-                <h3 className="font-extrabold text-base text-emerald-800">Punch Successful!</h3>
-                <p className="text-sm mt-0.5 font-bold">Good {successCard.action === 'check-in' ? 'Morning' : 'Evening'}, {successCard.employeeName}!</p>
-                
-                {photo && (
-                  <div className="mt-3.5 flex justify-center">
-                    <img 
-                      src={photo} 
-                      alt="Captured Verification" 
-                      className="w-20 h-24 rounded-xl object-cover border-2 border-emerald-400 shadow-sm"
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center justify-center gap-1 text-xs text-emerald-700 font-semibold mt-3.5 bg-white border border-emerald-100 py-2 px-3 rounded-lg w-fit mx-auto shadow-sm">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>Recorded {successCard.action === 'check-in' ? 'Check-In' : 'Check-Out'} at <span className="font-bold">{successCard.time}</span></span>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle className="h-9 w-9" />
                 </div>
-                <p className="text-[10px] text-emerald-600 font-mono mt-3">Verified On-Site: {successCard.distanceMeters}m from center boundary</p>
+                
+                <div className="space-y-1">
+                  <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+                    हजेरी यशस्वीरित्या नोंदवली!
+                  </h2>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider">
+                    Punch Completed Successfully!
+                  </p>
+                </div>
+
+                <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-200 space-y-3">
+                  <p className="text-sm font-black">
+                    Good {successCard.action === 'check-in' ? 'Morning' : 'Evening'}, {successCard.employeeName}!
+                  </p>
+                  
+                  {photo && (
+                    <div className="flex justify-center">
+                      <img 
+                        src={photo} 
+                        alt="Captured Verification" 
+                        className="w-24 h-28 rounded-2xl object-cover border-4 border-white dark:border-slate-800 shadow-md"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-1 text-xs">
+                    <div className="flex items-center justify-center gap-1.5 font-bold text-slate-600 dark:text-slate-400">
+                      <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                      <span>
+                        Type: <span className="text-slate-900 dark:text-white uppercase font-black">{successCard.action}</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5 font-bold text-slate-600 dark:text-slate-400">
+                      <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                      <span>
+                        Time: <span className="text-slate-900 dark:text-white font-mono font-black">{successCard.time}</span>
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono mt-2">
+                      📍 GPS Geofenced: {successCard.distanceMeters}m from boundary
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccessCard(null);
+                    setPhoto(null);
+                  }}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg transition-colors cursor-pointer uppercase tracking-wider text-xs"
+                >
+                  ठीक आहे (Done)
+                </button>
               </div>
             </div>
           )}
 
           {/* Input Form */}
-          {!successCard && (
-            <form onSubmit={handlePunch} className="space-y-4">
+          <form onSubmit={handlePunch} className="space-y-4">
               
               {/* Phone Field */}
               <div className="space-y-1">
@@ -392,13 +429,12 @@ function MobileScanPageContent() {
               {/* Submit Punch */}
               <button 
                 type="submit" 
-                disabled={submitting || loadingLoc || !coords || !token || !photo}
+                disabled={submitting || loadingLoc}
                 className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm tracking-wide transition-colors disabled:opacity-50 cursor-pointer shadow-sm flex items-center justify-center gap-2"
               >
                 {submitting ? 'Processing Attendance...' : !photo ? 'Snap Selfie to Proceed' : 'Punch Daily Attendance'}
               </button>
             </form>
-          )}
 
           {/* Verification Badge */}
           <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center mt-2 border-t pt-3">

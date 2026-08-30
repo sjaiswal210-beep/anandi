@@ -138,6 +138,20 @@ export class HrService {
     ip?: string;
     photo?: string;
   }) {
+    // Resolve workspace by slug or ID, or fall back to the first available workspace in the database
+    let workspace = await this.prisma.workspace.findFirst({
+      where: {
+        OR: [
+          { id: workspaceId },
+          { slug: workspaceId }
+        ]
+      }
+    });
+    if (!workspace) {
+      workspace = await this.prisma.workspace.findFirst();
+    }
+    const resolvedWorkspaceId = workspace ? workspace.id : workspaceId;
+
     // 1. Verify rolling token
     const tokenRecord = await this.prisma.attendanceToken.findUnique({
       where: { token: dto.token },
@@ -153,7 +167,7 @@ export class HrService {
 
     // 2. Look up active employee
     const employee = await this.prisma.employee.findFirst({
-      where: { phone: dto.phone, workspaceId, status: 'ACTIVE' },
+      where: { phone: dto.phone, workspaceId: resolvedWorkspaceId, status: 'ACTIVE' },
     });
     if (!employee) {
       throw new NotFoundException('No active employee found with this phone number.');
@@ -201,7 +215,7 @@ export class HrService {
 
       await this.prisma.attendance.create({
         data: {
-          workspace: { connect: { id: workspaceId } },
+          workspace: { connect: { id: resolvedWorkspaceId } },
           employee: { connect: { id: employee.id } },
           date: today,
           checkIn: checkInTime,
