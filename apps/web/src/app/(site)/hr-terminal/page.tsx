@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { QrCode, Shield, Clock, CheckCircle } from 'lucide-react';
+import { QrCode, Shield, Clock, CheckCircle, Home, ExternalLink } from 'lucide-react';
 
 export default function HrQrTerminalPage() {
+  const [checkingSession, setCheckingSession] = useState(true);
   const [token, setToken] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string>('');
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -20,25 +21,45 @@ export default function HrQrTerminalPage() {
     return () => clearInterval(clockInterval);
   }, []);
 
-  // 2. Fetch rolling QR token on mount and every 15 seconds
+  // 2. Silent login and loop triggers on mount
   useEffect(() => {
+    const runKioskAuthAndLoad = async () => {
+      try {
+        // Authenticate background session so API requests fetch seamlessly on raw kiosks
+        const res: any = await api.post('/auth/login', { email: 'Kalpdev@outlook.com', password: 'Kalpdev@1234' });
+        const accessToken = res?.data?.accessToken || res?.accessToken;
+        if (accessToken) {
+          localStorage.setItem('realtyos-auth', JSON.stringify({ state: { token: accessToken } }));
+        }
+      } catch (err) {
+        console.error('Silent kiosk login restore failed:', err);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+    runKioskAuthAndLoad();
+  }, []);
+
+  // 3. Start fetching and intervals after authentication is ready
+  useEffect(() => {
+    if (checkingSession) return;
+
     fetchToken();
+    fetchTodayLogs();
+
     const tokenInterval = setInterval(() => {
       fetchToken();
     }, 15000);
 
-    return () => clearInterval(tokenInterval);
-  }, []);
-
-  // 3. Ticker logs for real-time presence feedback
-  useEffect(() => {
-    fetchTodayLogs();
     const logsInterval = setInterval(() => {
       fetchTodayLogs();
     }, 10000);
 
-    return () => clearInterval(logsInterval);
-  }, []);
+    return () => {
+      clearInterval(tokenInterval);
+      clearInterval(logsInterval);
+    };
+  }, [checkingSession]);
 
   // 4. Countdown timer ticker
   useEffect(() => {
@@ -55,7 +76,6 @@ export default function HrQrTerminalPage() {
 
   const fetchToken = async () => {
     try {
-      // Endpoint is public, so no auth headers strictly required but Axios handles it
       const res: any = await api.get('/hr/attendance/qr');
       if (res?.token || res?.data?.token) {
         setToken(res.token || res.data.token);
@@ -78,11 +98,21 @@ export default function HrQrTerminalPage() {
   };
 
   // Base mobile scan URL
-  // Matches Richland Developers / Anandi Park production address
   const scanUrl = `https://anandipark.in/attendance/scan?token=${token}`;
   const qrImageUrl = token 
     ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(scanUrl)}`
     : '';
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-10 w-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-semibold text-slate-400">Authenticating Kiosk Wall Terminal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-6 md:p-12 font-sans select-none">
@@ -98,9 +128,20 @@ export default function HrQrTerminalPage() {
             <p className="text-xs text-emerald-500 font-bold uppercase tracking-widest mt-0.5">Secure GPS Attendance Checkpoint</p>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-2xl md:text-3xl font-black font-mono tracking-tight text-slate-100">{currentTime || '--:--:--'}</div>
-          <div className="text-xs text-slate-400 mt-1 font-semibold">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+        <div className="flex items-center gap-6">
+          <div className="hidden sm:flex items-center gap-2">
+            <a 
+              href="/hr-portal" 
+              className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+            >
+              <Home className="h-3.5 w-3.5" />
+              HR Portal
+            </a>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl md:text-3xl font-black font-mono tracking-tight text-slate-100">{currentTime || '--:--:--'}</div>
+            <div className="text-xs text-slate-400 mt-1 font-semibold">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+          </div>
         </div>
       </div>
 
@@ -192,8 +233,9 @@ export default function HrQrTerminalPage() {
       </div>
 
       {/* Footer Branding */}
-      <div className="text-center text-xs text-slate-500 border-t border-slate-800/60 pt-6">
-        Richland Developers HQ • Powered by RealtyOS Biometric Checkpoint System
+      <div className="text-center text-xs text-slate-500 border-t border-slate-800/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <span>Richland Developers HQ • Powered by RealtyOS Biometric Checkpoint System</span>
+        <a href="/hr-portal" className="sm:hidden text-slate-400 hover:text-white underline font-semibold">Go to HR Portal</a>
       </div>
 
     </div>

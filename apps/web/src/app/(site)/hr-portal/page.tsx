@@ -395,7 +395,7 @@ export default function StandaloneHrPortal() {
           </div>
           <div className="flex items-center gap-3">
             <a 
-              href="/plotting/hr/terminal" 
+              href="/hr-terminal" 
               target="_blank" 
               className="flex items-center gap-2 bg-slate-900 border hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors"
             >
@@ -425,14 +425,14 @@ export default function StandaloneHrPortal() {
             <p className="text-xs text-muted-foreground">Open on an office wall-mounted tablet or screen. Displays the rolling attendance QR code.</p>
             <div className="flex items-center gap-2 pt-1 text-xs">
               <button 
-                onClick={() => handleCopyLink('https://anandipark.in/plotting/hr/terminal', 'QR Terminal')}
+                onClick={() => handleCopyLink('https://anandipark.in/hr-terminal', 'QR Terminal')}
                 className="flex-1 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
               >
                 <Copy className="h-3.5 w-3.5" />
                 Copy Link
               </button>
               <a 
-                href="/plotting/hr/terminal" 
+                href="/hr-terminal" 
                 target="_blank" 
                 className="px-3 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center cursor-pointer transition-colors text-slate-700"
               >
