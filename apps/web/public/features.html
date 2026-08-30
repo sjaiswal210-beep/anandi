@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,26 +31,47 @@
   <!-- Header -->
   <header class="text-center max-w-4xl mx-auto my-6">
     <div class="inline-flex items-center gap-2 bg-emerald-950/40 border border-emerald-500/20 px-3 py-1.5 rounded-full text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-3">
-      ✨ Kalpdev Digitals HR & Attendance Suite
+      <span class="mr-text">✨ कल्पदेव डिजिटल्स एचआर आणि उपस्थिती सूट</span>
+      <span class="en-text hidden">✨ Kalpdev Digitals HR & Attendance Suite</span>
     </div>
+    
     <h1 class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-400 tracking-tight">
-      Portal Features & Visual Guide
+      <span class="mr-text">पोर्टल वैशिष्ट्ये आणि संपूर्ण माहिती</span>
+      <span class="en-text hidden">Portal Features & Visual Guide</span>
     </h1>
+    
     <p class="mt-2 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
-      Three purpose-built digital portals streamlined for site workers, HR, and project managers. Click the tabs below to view and screenshot details.
+      <span class="mr-text">साईटवरील कामगार, एचआर (HR) आणि प्रकल्प व्यवस्थापकांसाठी खास तयार केलेले तीन सोपे डिजीटल पोर्टल्स. माहिती पाहण्यासाठी खालील टॅबवर क्लिक करा.</span>
+      <span class="en-text hidden">Three purpose-built digital portals streamlined for site workers, HR, and project managers. Click the tabs below to view and screenshot details.</span>
     </p>
   </header>
+
+  <!-- Language Switcher Selector -->
+  <div class="flex items-center justify-center gap-2 mb-6">
+    <button id="lang-mr" onclick="setLanguage('mr')" class="px-4 py-1.5 rounded-full font-black text-xs transition bg-emerald-500 text-slate-950 shadow-md">
+      मराठी (Marathi)
+    </button>
+    <button id="lang-en" onclick="setLanguage('en')" class="px-4 py-1.5 rounded-full font-bold text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40">
+      English
+    </button>
+  </div>
 
   <!-- Interactive Navigation Tabs -->
   <div class="max-w-5xl mx-auto w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl p-2 mb-8 flex flex-wrap gap-1 justify-center shadow-lg">
     <button onclick="switchTab('tab1')" id="btn-tab1" class="flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 shadow-md">
-      <span>📱</span> Mobile Checkpoint
+      <span>📱</span> 
+      <span class="mr-text">मोबाईल हजेरी</span>
+      <span class="en-text hidden">Mobile Checkpoint</span>
     </button>
     <button onclick="switchTab('tab2')" id="btn-tab2" class="flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
-      <span>💼</span> Mobile Worker Portal
+      <span>💼</span> 
+      <span class="mr-text">कामगार पोर्टल</span>
+      <span class="en-text hidden">Mobile Worker Portal</span>
     </button>
     <button onclick="switchTab('tab3')" id="btn-tab3" class="flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
-      <span>🖥️</span> Admin & Wall Terminal
+      <span>🖥️</span> 
+      <span class="mr-text">टर्मिनल आणि रिपोर्ट्स</span>
+      <span class="en-text hidden">Admin & Wall Terminal</span>
     </button>
   </div>
 
@@ -89,7 +110,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <div class="absolute -bottom-2 bg-emerald-500 text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Align Face
+                <span class="mr-text">चेहरा समोर ठेवा</span>
+                <span class="en-text hidden">Align Face</span>
               </div>
             </div>
 
@@ -97,7 +119,10 @@
             <div class="mt-5 flex items-center gap-2 bg-emerald-950/50 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
               <span class="text-emerald-400 text-xs">🛡️</span>
               <div class="text-left">
-                <div class="text-[10px] font-black text-emerald-400 uppercase tracking-tight">On-Site GPS Verified</div>
+                <div class="text-[10px] font-black text-emerald-400 uppercase tracking-tight">
+                  <span class="mr-text">जीपीएस व्हेरिफाईड</span>
+                  <span class="en-text hidden">On-Site GPS Verified</span>
+                </div>
                 <div class="text-[8px] text-slate-400">GAT No. 279 • Accuracy 12m</div>
               </div>
             </div>
@@ -106,10 +131,12 @@
           <!-- Action Buttons -->
           <div class="space-y-2 mb-2">
             <button class="w-full bg-emerald-500 text-slate-950 font-black text-xs py-3 rounded-2xl shadow-lg hover:bg-emerald-400 transition uppercase tracking-wider">
-              🟢 Punch Check-In
+              <span class="mr-text">🟢 चेक-इन (Check-In)</span>
+              <span class="en-text hidden">🟢 Punch Check-In</span>
             </button>
             <button class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs py-3 rounded-2xl transition uppercase tracking-wider">
-              🔴 Punch Check-Out
+              <span class="mr-text">🔴 चेक-आउट (Check-Out)</span>
+              <span class="en-text hidden">🔴 Punch Check-Out</span>
             </button>
           </div>
 
@@ -124,10 +151,13 @@
       <div class="md:col-span-7 space-y-6">
         <div>
           <h2 class="text-2xl font-extrabold text-emerald-400 flex items-center gap-2">
-            <span>📱</span> Mobile Attendance Checkpoint
+            <span>📱</span> 
+            <span class="mr-text">मोबाईल हजेरी चेकपॉइंट</span>
+            <span class="en-text hidden">Mobile Attendance Checkpoint</span>
           </h2>
-          <p class="text-slate-300 mt-2 leading-relaxed">
-            The ultimate secure on-site punching tool. It eliminates buddy punching by combining localized GPS validation and live selfie verification right in the browser.
+          <p class="text-slate-300 mt-2 leading-relaxed text-sm">
+            <span class="mr-text">साईटवरील हजेरी नोंदवण्याचे सर्वात सुरक्षित माध्यम. यामध्ये जीपीएस (GPS) स्थान आणि मोबाईल कॅमेराद्वारे लाईव्ह सेल्फी पडताळणी एकत्र करून बोगस हजेरी पूर्णपणे रोखली जाते.</span>
+            <span class="en-text hidden">The ultimate secure on-site punching tool. It eliminates buddy punching by combining localized GPS validation and live selfie verification right in the browser.</span>
           </p>
         </div>
 
@@ -137,8 +167,14 @@
               <span class="text-emerald-400 font-bold">📍</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Strict Geofence Accuracy</h4>
-              <p class="text-xs text-slate-400 mt-1">Automatically checks worker coordinates against Gat No. 279 coordinates, ensuring staff can only punch when physically inside the Anandi Park perimeter.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">अचूक जीपीएस (GPS) पडताळणी</span>
+                <span class="en-text hidden">Strict Geofence Accuracy</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">कामगार आनंद पार्कच्या प्रत्यक्ष सीमेत (२७० मीटरच्या परिसरात) असल्याशिवाय त्यांची हजेरी नोंदवली जाणार नाही याची स्वयंचलित खात्री केली जाते.</span>
+                <span class="en-text hidden">Automatically checks worker coordinates against Gat No. 279 coordinates, ensuring staff can only punch when physically inside the Anandi Park perimeter.</span>
+              </p>
             </div>
           </div>
 
@@ -147,8 +183,14 @@
               <span class="text-emerald-400 font-bold">📷</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Lightweight Selfie Verification</h4>
-              <p class="text-xs text-slate-400 mt-1">Captures real-time faces, compressing images to lightweight thumbnails (under 10KB) to verify on-site identity without bloating database storage.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">लाइव्ह सेल्फी पडताळणी</span>
+                <span class="en-text hidden">Lightweight Selfie Verification</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">हजेरी लावताना कामगाराचा लाईव्ह सेल्फी फोटो घेतला जातो आणि डेटा साठवणूक सुलभ करण्यासाठी तो अत्यंत लहान आकारात (१०KB पेक्षा कमी) जतन केला जातो.</span>
+                <span class="en-text hidden">Captures real-time faces, compressing images to lightweight thumbnails (under 10KB) to verify on-site identity without bloating database storage.</span>
+              </p>
             </div>
           </div>
 
@@ -157,8 +199,14 @@
               <span class="text-emerald-400 font-bold">⚡</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">No App Download Needed</h4>
-              <p class="text-xs text-slate-400 mt-1">Runs purely inside standard mobile safari/chrome browsers. Simply loads instantly on the spot via scanning a wall QR code.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">ॲप डाऊनलोड करण्याची गरज नाही</span>
+                <span class="en-text hidden">No App Download Needed</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">मोबाईलमधील कोणत्याही ब्राउझरमध्ये (Safari/Chrome) थेट चालते. भिंतीवरील क्यूआर (QR) कोड स्कॅन करून कामगार त्वरित हजेरी नोंदवू शकतात.</span>
+                <span class="en-text hidden">Runs purely inside standard mobile safari/chrome browsers. Simply loads instantly on the spot via scanning a wall QR code.</span>
+              </p>
             </div>
           </div>
         </div>
@@ -209,7 +257,8 @@
             <!-- Attendance Mini-Grid -->
             <div class="mt-3 bg-slate-900/40 p-2.5 rounded-xl border border-slate-800/60">
               <div class="flex justify-between items-center text-[8px] text-slate-400 font-bold mb-1.5 uppercase">
-                <span>August Log Calendar</span>
+                <span class="mr-text">ऑगस्ट उपस्थिती कॅलेंडर</span>
+                <span class="en-text hidden">August Log Calendar</span>
                 <span class="text-emerald-400">Present (22 Days)</span>
               </div>
               <!-- Green calendar dot simulation -->
@@ -227,19 +276,26 @@
             <!-- Quick Action Shortcuts -->
             <div class="mt-3 space-y-2">
               <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex items-center justify-between">
-                <span class="text-[9px] font-bold text-slate-300">📅 Request Leave Off</span>
+                <span class="text-[9px] font-bold text-slate-300">
+                  <span class="mr-text">📅 सुट्टीसाठी अर्ज</span>
+                  <span class="en-text hidden">📅 Request Leave Off</span>
+                </span>
                 <span class="text-[8px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-full font-black">Apply</span>
               </div>
               <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex items-center justify-between">
-                <span class="text-[9px] font-bold text-slate-300">💵 Monthly Payroll Slip</span>
-                <span class="text-[8px] bg-emerald-950 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-black">Active</span>
+                <span class="text-[9px] font-bold text-slate-300">
+                  <span class="mr-text">💵 मासिक पगार पत्रक</span>
+                  <span class="en-text hidden">💵 Monthly Payroll Slip</span>
+                </span>
+                <span class="text-[8px] bg-emerald-950 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-black font-mono">Active</span>
               </div>
             </div>
           </div>
 
           <!-- Logout Button -->
           <button class="w-full bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-[10px] py-2.5 rounded-xl transition">
-            Sign Out Securely
+            <span class="mr-text">सुरक्षितपणे बाहेर पडा</span>
+            <span class="en-text hidden">Sign Out Securely</span>
           </button>
 
           <!-- Branded Footer -->
@@ -253,10 +309,13 @@
       <div class="md:col-span-7 space-y-6">
         <div>
           <h2 class="text-2xl font-extrabold text-emerald-400 flex items-center gap-2">
-            <span>💼</span> Mobile Worker Portal
+            <span>💼</span> 
+            <span class="mr-text">मोबाईल कामगार पोर्टल</span>
+            <span class="en-text hidden">Mobile Worker Portal</span>
           </h2>
-          <p class="text-slate-300 mt-2 leading-relaxed">
-            The full-service employee dashboard. This portal serves as a secure gateway for site workers to manage profile details, trace past records, submit leave requests, and audit their payroll.
+          <p class="text-slate-300 mt-2 leading-relaxed text-sm">
+            <span class="mr-text">कामगारांसाठीची हजेरी आणि सुट्ट्यांची संपूर्ण माहिती देणारे स्वयंचलित पोर्टल. येथे कामगार स्वतःची हजेरी, सुट्ट्यांचे अर्ज आणि पगाराचा लेखाजोखा थेट मोबाईलवर पाहू शकतात.</span>
+            <span class="en-text hidden">The full-service employee dashboard. This portal serves as a secure gateway for site workers to manage profile details, trace past records, submit leave requests, and audit their payroll.</span>
           </p>
         </div>
 
@@ -266,8 +325,14 @@
               <span class="text-emerald-400 font-bold">🔐</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Secure Phone-Number Login</h4>
-              <p class="text-xs text-slate-400 mt-1">Allows staff to access personal dashboards easily using their registered mobile numbers, protecting privacy of personal wage records.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">मोबाईल नंबरने सुरक्षित लॉगिन</span>
+                <span class="en-text hidden">Secure Phone-Number Login</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">नोंदणीकृत मोबाईल नंबरचा वापर करून कामगार त्यांचे पोर्टल सहज आणि सुरक्षितपणे उघडू शकतात, ज्यामुळे वैयक्तिक माहिती सुरक्षित राहते.</span>
+                <span class="en-text hidden">Allows staff to access personal dashboards easily using their registered mobile numbers, protecting privacy of personal wage records.</span>
+              </p>
             </div>
           </div>
 
@@ -276,8 +341,14 @@
               <span class="text-emerald-400 font-bold">📝</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Leave Management Flow</h4>
-              <p class="text-xs text-slate-400 mt-1">Workers submit single or multi-day leave requests in just a few taps. Managers are instantly updated to approve or reject the request.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">सुट्टीचा अर्ज करण्याची सोपी सुविधा</span>
+                <span class="en-text hidden">Leave Management Flow</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">कामगार काही सेकंदात घरबसल्या सुट्टीचा अर्ज सादर करू शकतात आणि व्यवस्थापक त्वरित तो मंजूर किंवा नाकारू शकतात.</span>
+                <span class="en-text hidden">Workers submit single or multi-day leave requests in just a few taps. Managers are instantly updated to approve or reject the request.</span>
+              </p>
             </div>
           </div>
 
@@ -286,8 +357,14 @@
               <span class="text-emerald-400 font-bold">📊</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Attendance Calendar Audit</h4>
-              <p class="text-xs text-slate-400 mt-1">Empowers staff to audit their presence records monthly, helping reconcile worked hours transparently before pay is processed.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">हजेरी आणि पगाराचा मासिक लेखाजोखा</span>
+                <span class="en-text hidden">Attendance Calendar Audit</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">कामगारांना दरमहा त्यांची एकूण उपस्थिती आणि अपेक्षित पगार पारदर्शकपणे तपासता येतो, ज्यामुळे पगारासंबंधी गैरसमज टळतात.</span>
+                <span class="en-text hidden">Empowers staff to audit their presence records monthly, helping reconcile worked hours transparently before pay is processed.</span>
+              </p>
             </div>
           </div>
         </div>
@@ -378,10 +455,13 @@
       <div class="md:col-span-7 space-y-6">
         <div>
           <h2 class="text-2xl font-extrabold text-emerald-400 flex items-center gap-2">
-            <span>🖥️</span> Admin & Wall Terminal
+            <span>🖥️</span> 
+            <span class="mr-text">एचआर टर्मिनल आणि व्यवस्थापकीय नियंत्रण</span>
+            <span class="en-text hidden">Admin & Wall Terminal</span>
           </h2>
-          <p class="text-slate-300 mt-2 leading-relaxed">
-            The heart of site management. Combining an office wall QR terminal for immediate check-ins, a comprehensive management roster view, and automated daily business updates.
+          <p class="text-slate-300 mt-2 leading-relaxed text-sm">
+            <span class="mr-text">आनंद पार्क प्रकल्पाचे हजेरी नियंत्रण केंद्र. कार्यालयातील वॉल टर्मिनलद्वारे त्वरित हजेरी, व्यवस्थापकीय नियंत्रण आणि स्वयंचलित दैनिक रिपोर्ट्स एकाच ठिकाणी उपलब्ध.</span>
+            <span class="en-text hidden">The heart of site management. Combining an office wall QR terminal for immediate check-ins, a comprehensive management roster view, and automated daily business updates.</span>
           </p>
         </div>
 
@@ -391,8 +471,14 @@
               <span class="text-emerald-400 font-bold">📲</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Automated WhatsApp Daily Cron Alerts</h4>
-              <p class="text-xs text-slate-400 mt-1">Keeps managers fully informed. Sends daily check-in logs at 11:00 AM and checkout schedules/shift timings at 7:00 PM to +91 73507 85606.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">स्वयंचलित व्हॉट्सॲप (WhatsApp) दैनिक रिपोर्ट्स</span>
+                <span class="en-text hidden">Automated WhatsApp Daily Cron Alerts</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">नियमित दैनिक अहवाल. रोज सकाळी ११:०० वाजता उपस्थित कामगारांची नावे आणि संध्याकाळी ७:०० वाजता एकूण कामाच्या तासांसह अहवाल स्वयंचलितपणे ७३५०७८५६०६ या नंबरवर व्हॉट्सॲपवर पाठवला जातो.</span>
+                <span class="en-text hidden">Keeps managers fully informed. Sends daily check-in logs at 11:00 AM and checkout schedules/shift timings at 7:00 PM to +91 73507 85606.</span>
+              </p>
             </div>
           </div>
 
@@ -401,8 +487,14 @@
               <span class="text-emerald-400 font-bold">🔗</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Secure Terminal Stream</h4>
-              <p class="text-xs text-slate-400 mt-1">Generates encrypted, streaming QR codes on a wall monitor at the headquarters. Staff scan using their mobile browsers to begin verified punches.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">सुरक्षित लाइव्ह स्ट्रीमिंग क्यूआर (QR) टर्मिनल</span>
+                <span class="en-text hidden">Secure Terminal Stream</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">कार्यालयातील मुख्य स्क्रीनवर वेळोवेळी बदलणारा सुरक्षित क्यूआर कोड दर्शवला जातो, जो मोबाईल कॅमेऱ्याने स्कॅन करून कामगार हजेरी लावतात.</span>
+                <span class="en-text hidden">Generates encrypted, streaming QR codes on a wall monitor at the headquarters. Staff scan using their mobile browsers to begin verified punches.</span>
+              </p>
             </div>
           </div>
 
@@ -411,8 +503,14 @@
               <span class="text-emerald-400 font-bold">🔑</span>
             </div>
             <div>
-              <h4 class="font-bold text-white text-sm">Portal Gatekeeper Password</h4>
-              <p class="text-xs text-slate-400 mt-1">Protects managerial configuration. Secured with a session-locking password mechanism (`richland2026`) for maximum isolation from public layers.</p>
+              <h4 class="font-bold text-white text-sm">
+                <span class="mr-text">पासवर्ड सुरक्षित व्यवस्थापकीय नियंत्रण</span>
+                <span class="en-text hidden">Portal Gatekeeper Password</span>
+              </h4>
+              <p class="text-xs text-slate-400 mt-1">
+                <span class="mr-text">पगार आणि हजेरीचे व्यवस्थापकीय काम पूर्णपणे पासवर्डने (`richland2026`) सुरक्षित केले आहे, ज्यामुळे बाहेरील व्यक्ती बदल करू शकत नाही.</span>
+                <span class="en-text hidden">Protects managerial configuration. Secured with a session-locking password mechanism (`richland2026`) for maximum isolation from public layers.</span>
+              </p>
             </div>
           </div>
         </div>
@@ -428,8 +526,22 @@
 
   </main>
 
-  <!-- Interactive script to switch showcase views -->
+  <!-- Interactive script to switch showcase views & languages -->
   <script>
+    function setLanguage(lang) {
+      if (lang === 'mr') {
+        document.querySelectorAll('.mr-text').forEach(el => el.classList.remove('hidden'));
+        document.querySelectorAll('.en-text').forEach(el => el.classList.add('hidden'));
+        document.getElementById('lang-mr').className = "px-4 py-1.5 rounded-full font-black text-xs transition bg-emerald-500 text-slate-950 shadow-md";
+        document.getElementById('lang-en').className = "px-4 py-1.5 rounded-full font-bold text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40";
+      } else {
+        document.querySelectorAll('.mr-text').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.en-text').forEach(el => el.classList.remove('hidden'));
+        document.getElementById('lang-mr').className = "px-4 py-1.5 rounded-full font-bold text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40";
+        document.getElementById('lang-en').className = "px-4 py-1.5 rounded-full font-black text-xs transition bg-emerald-500 text-slate-950 shadow-md";
+      }
+    }
+
     function switchTab(tabId) {
       // Hide all contents
       document.querySelectorAll('.tab-content').forEach(tab => {
@@ -448,6 +560,9 @@
       const activeBtn = document.getElementById('btn-' + tabId);
       activeBtn.className = "flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 shadow-md";
     }
+
+    // Default to Marathi
+    setLanguage('mr');
   </script>
 
 </body>
