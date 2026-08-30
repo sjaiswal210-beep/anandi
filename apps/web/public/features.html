@@ -26,52 +26,52 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased font-sans p-4 min-h-screen flex flex-col justify-between">
+<body class="bg-slate-950 text-slate-100 antialiased font-sans p-3 sm:p-6 min-h-screen flex flex-col justify-between">
 
   <!-- Header -->
-  <header class="text-center max-w-4xl mx-auto my-6">
-    <div class="inline-flex items-center gap-2 bg-emerald-950/40 border border-emerald-500/20 px-3 py-1.5 rounded-full text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-3">
+  <header class="text-center max-w-4xl mx-auto my-4 sm:my-6">
+    <div class="inline-flex items-center gap-2 bg-emerald-950/40 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] sm:text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-2">
       <span class="mr-text">✨ कल्पदेव डिजिटल्स एचआर आणि उपस्थिती सूट</span>
       <span class="en-text hidden">✨ Kalpdev Digitals HR & Attendance Suite</span>
     </div>
     
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-400 tracking-tight">
+    <h1 class="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-400 tracking-tight">
       <span class="mr-text">पोर्टल वैशिष्ट्ये आणि संपूर्ण माहिती</span>
       <span class="en-text hidden">Portal Features & Visual Guide</span>
     </h1>
     
-    <p class="mt-2 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
+    <p class="mt-1 sm:mt-2 text-xs sm:text-base text-slate-400 max-w-2xl mx-auto">
       <span class="mr-text">साईटवरील कामगार, एचआर (HR) आणि प्रकल्प व्यवस्थापकांसाठी खास तयार केलेले तीन सोपे डिजीटल पोर्टल्स. माहिती पाहण्यासाठी खालील टॅबवर क्लिक करा.</span>
       <span class="en-text hidden">Three purpose-built digital portals streamlined for site workers, HR, and project managers. Click the tabs below to view and screenshot details.</span>
     </p>
   </header>
 
   <!-- Language Switcher Selector -->
-  <div class="flex items-center justify-center gap-2 mb-6">
-    <button id="lang-mr" onclick="setLanguage('mr')" class="px-4 py-1.5 rounded-full font-black text-xs transition bg-emerald-500 text-slate-950 shadow-md">
+  <div class="flex items-center justify-center gap-1.5 mb-5">
+    <button id="lang-mr" onclick="setLanguage('mr')" class="px-3.5 py-1.5 rounded-full font-black text-[10px] sm:text-xs transition bg-emerald-500 text-slate-950 shadow-md">
       मराठी (Marathi)
     </button>
-    <button id="lang-en" onclick="setLanguage('en')" class="px-4 py-1.5 rounded-full font-bold text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40">
+    <button id="lang-en" onclick="setLanguage('en')" class="px-3.5 py-1.5 rounded-full font-bold text-[10px] sm:text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40">
       English
     </button>
   </div>
 
-  <!-- Interactive Navigation Tabs -->
-  <div class="max-w-5xl mx-auto w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl p-2 mb-8 flex flex-wrap gap-1 justify-center shadow-lg">
-    <button onclick="switchTab('tab1')" id="btn-tab1" class="flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 shadow-md">
+  <!-- Interactive Navigation Tabs - Responsive Side-by-side layout on mobile -->
+  <div class="max-w-5xl mx-auto w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl p-1 sm:p-2 mb-6 sm:mb-8 flex flex-row gap-1 justify-between shadow-lg">
+    <button onclick="switchTab('tab1')" id="btn-tab1" class="flex-1 text-center px-1.5 py-2 sm:px-4 sm:py-3 rounded-xl font-extrabold text-[10px] sm:text-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-emerald-500 text-slate-950 shadow-md">
       <span>📱</span> 
       <span class="mr-text">मोबाईल हजेरी</span>
       <span class="en-text hidden">Mobile Checkpoint</span>
     </button>
-    <button onclick="switchTab('tab2')" id="btn-tab2" class="flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
+    <button onclick="switchTab('tab2')" id="btn-tab2" class="flex-1 text-center px-1.5 py-2 sm:px-4 sm:py-3 rounded-xl font-extrabold text-[10px] sm:text-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
       <span>💼</span> 
       <span class="mr-text">कामगार पोर्टल</span>
-      <span class="en-text hidden">Mobile Worker Portal</span>
+      <span class="en-text hidden">Worker Portal</span>
     </button>
-    <button onclick="switchTab('tab3')" id="btn-tab3" class="flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
+    <button onclick="switchTab('tab3')" id="btn-tab3" class="flex-1 text-center px-1.5 py-2 sm:px-4 sm:py-3 rounded-xl font-extrabold text-[10px] sm:text-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
       <span>🖥️</span> 
-      <span class="mr-text">टर्मिनल आणि रिपोर्ट्स</span>
-      <span class="en-text hidden">Admin & Wall Terminal</span>
+      <span class="mr-text">टर्मिनल</span>
+      <span class="en-text hidden">Terminal</span>
     </button>
   </div>
 
@@ -84,7 +84,7 @@
       <!-- Graphic Mockup Container -->
       <div class="md:col-span-5 flex justify-center">
         <!-- Mock Phone Frame -->
-        <div class="relative w-[290px] h-[580px] bg-slate-900 border-4 border-slate-800 rounded-[40px] shadow-2xl overflow-hidden p-3 flex flex-col justify-between">
+        <div class="relative w-[280px] h-[550px] sm:w-[290px] sm:h-[580px] bg-slate-900 border-4 border-slate-800 rounded-[40px] shadow-2xl overflow-hidden p-3 flex flex-col justify-between">
           <!-- Dynamic Notch -->
           <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20 flex items-center justify-center">
             <div class="w-3 h-3 bg-slate-950 rounded-full border border-slate-800/40"></div>
@@ -104,9 +104,9 @@
             <div class="scan-line absolute left-0 right-0 z-10"></div>
             
             <!-- Selfie Ring UI -->
-            <div class="w-32 h-32 rounded-full border-4 border-emerald-500/80 flex items-center justify-center bg-slate-900 relative shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+            <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-emerald-500/80 flex items-center justify-center bg-slate-900 relative shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <!-- Inner Scanner Camera Feed Representation -->
-              <svg class="w-16 h-16 text-emerald-400/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-14 h-14 sm:w-16 sm:h-16 text-emerald-400/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <div class="absolute -bottom-2 bg-emerald-500 text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -130,11 +130,11 @@
 
           <!-- Action Buttons -->
           <div class="space-y-2 mb-2">
-            <button class="w-full bg-emerald-500 text-slate-950 font-black text-xs py-3 rounded-2xl shadow-lg hover:bg-emerald-400 transition uppercase tracking-wider">
+            <button class="w-full bg-emerald-500 text-slate-950 font-black text-xs py-2.5 sm:py-3 rounded-2xl shadow-lg hover:bg-emerald-400 transition uppercase tracking-wider">
               <span class="mr-text">🟢 चेक-इन (Check-In)</span>
               <span class="en-text hidden">🟢 Punch Check-In</span>
             </button>
-            <button class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs py-3 rounded-2xl transition uppercase tracking-wider">
+            <button class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs py-2.5 sm:py-3 rounded-2xl transition uppercase tracking-wider">
               <span class="mr-text">🔴 चेक-आउट (Check-Out)</span>
               <span class="en-text hidden">🔴 Punch Check-Out</span>
             </button>
@@ -226,7 +226,7 @@
       <!-- Graphic Mockup Container -->
       <div class="md:col-span-5 flex justify-center">
         <!-- Mock Phone Frame -->
-        <div class="relative w-[290px] h-[580px] bg-slate-900 border-4 border-slate-800 rounded-[40px] shadow-2xl overflow-hidden p-3 flex flex-col justify-between">
+        <div class="relative w-[280px] h-[550px] sm:w-[290px] sm:h-[580px] bg-slate-900 border-4 border-slate-800 rounded-[40px] shadow-2xl overflow-hidden p-3 flex flex-col justify-between">
           <!-- Dynamic Notch -->
           <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20 flex items-center justify-center">
             <div class="w-3 h-3 bg-slate-950 rounded-full border border-slate-800/40"></div>
@@ -287,7 +287,7 @@
                   <span class="mr-text">💵 मासिक पगार पत्रक</span>
                   <span class="en-text hidden">💵 Monthly Payroll Slip</span>
                 </span>
-                <span class="text-[8px] bg-emerald-950 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-black font-mono">Active</span>
+                <span class="text-[8px] bg-emerald-950 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-black font-mono font-black">Active</span>
               </div>
             </div>
           </div>
@@ -532,13 +532,13 @@
       if (lang === 'mr') {
         document.querySelectorAll('.mr-text').forEach(el => el.classList.remove('hidden'));
         document.querySelectorAll('.en-text').forEach(el => el.classList.add('hidden'));
-        document.getElementById('lang-mr').className = "px-4 py-1.5 rounded-full font-black text-xs transition bg-emerald-500 text-slate-950 shadow-md";
-        document.getElementById('lang-en').className = "px-4 py-1.5 rounded-full font-bold text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40";
+        document.getElementById('lang-mr').className = "px-3.5 py-1.5 rounded-full font-black text-[10px] sm:text-xs transition bg-emerald-500 text-slate-950 shadow-md";
+        document.getElementById('lang-en').className = "px-3.5 py-1.5 rounded-full font-bold text-[10px] sm:text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40";
       } else {
         document.querySelectorAll('.mr-text').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.en-text').forEach(el => el.classList.remove('hidden'));
-        document.getElementById('lang-mr').className = "px-4 py-1.5 rounded-full font-bold text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40";
-        document.getElementById('lang-en').className = "px-4 py-1.5 rounded-full font-black text-xs transition bg-emerald-500 text-slate-950 shadow-md";
+        document.getElementById('lang-mr').className = "px-3.5 py-1.5 rounded-full font-bold text-[10px] sm:text-xs transition text-slate-400 hover:text-white hover:bg-slate-900/40";
+        document.getElementById('lang-en').className = "px-3.5 py-1.5 rounded-full font-black text-[10px] sm:text-xs transition bg-emerald-500 text-slate-950 shadow-md";
       }
     }
 
@@ -553,12 +553,12 @@
       // Reset all button styles
       ['tab1', 'tab2', 'tab3'].forEach(id => {
         const btn = document.getElementById('btn-' + id);
-        btn.className = "flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50";
+        btn.className = "flex-1 text-center px-1.5 py-2 sm:px-4 sm:py-3 rounded-xl font-bold text-[10px] sm:text-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50";
       });
 
       // Apply active button styles
       const activeBtn = document.getElementById('btn-' + tabId);
-      activeBtn.className = "flex-1 min-w-[200px] text-center px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 shadow-md";
+      activeBtn.className = "flex-1 text-center px-1.5 py-2 sm:px-4 sm:py-3 rounded-xl font-extrabold text-[10px] sm:text-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-emerald-500 text-slate-950 shadow-md";
     }
 
     // Default to Marathi
