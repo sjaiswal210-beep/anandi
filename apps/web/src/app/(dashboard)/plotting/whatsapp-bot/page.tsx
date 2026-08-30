@@ -8,7 +8,18 @@ import { toast } from 'sonner';
 import api from '@/lib/api';
 import axios from 'axios';
 
-const VPS_API = (typeof window !== 'undefined' ? window.location.origin.replace(':3000', ':4000') : 'http://localhost:4000') + '/api/v1';
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname } = window.location;
+    if (hostname === 'anandipark.in' || hostname === 'www.anandipark.in') {
+      return 'https://api.anandipark.in/api/v1';
+    }
+    return `${protocol}//${hostname}:4000/api/v1`;
+  }
+  return 'http://localhost:4000/api/v1';
+};
+
+const VPS_API = getApiUrl();
 
 export default function WhatsAppBotPage() {
   const queryClient = useQueryClient();
