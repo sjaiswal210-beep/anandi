@@ -19,7 +19,8 @@ import {
   AlertCircle,
   Copy,
   ExternalLink,
-  Smartphone
+  Smartphone,
+  MessageSquare
 } from 'lucide-react';
 
 export default function HrDashboardPage() {
@@ -28,6 +29,26 @@ export default function HrDashboardPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [leaves, setLeaves] = useState<any[]>([]);
   const [payroll, setPayroll] = useState<any[]>([]);
+
+  // WhatsApp Report Trigger States
+  const [sendingReport, setSendingReport] = useState<string | null>(null);
+  const [reportSuccess, setReportSuccess] = useState<string | null>(null);
+
+  const handleTriggerReport = async (type: 'checkin' | 'checkout') => {
+    setSendingReport(type);
+    setReportSuccess(null);
+    try {
+      const endpoint = type === 'checkin' ? '/hr/attendance/trigger-checkin-report' : '/hr/attendance/trigger-checkout-report';
+      await api.post(endpoint);
+      setReportSuccess(`Report successfully sent to 7350785606!`);
+      setTimeout(() => setReportSuccess(null), 5000);
+    } catch (err) {
+      console.error('Failed to trigger report:', err);
+      alert('Failed to send WhatsApp report. Please verify WhatsApp credentials are correct.');
+    } finally {
+      setSendingReport(null);
+    }
+  };
   
   // Loading states
   const [loading, setLoading] = useState(false);
@@ -247,7 +268,7 @@ export default function HrDashboardPage() {
       </div>
 
       {/* Quick Access System Links */}
-      <div className="bg-slate-50 dark:bg-slate-900/30 border rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="bg-slate-50 dark:bg-slate-900/30 border rounded-2xl p-5 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
         <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
@@ -354,6 +375,42 @@ export default function HrDashboardPage() {
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </div>
+        </div>
+
+        <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <MessageSquare className="h-5 w-5 shrink-0 text-emerald-500" />
+              <h3 className="font-bold text-sm">WhatsApp Reports</h3>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-600 font-sans font-bold">Active</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Daily logs are pushed automatically to 7350785606 at 11:00 AM (Check-In) and 7:00 PM (Check-Out) IST.</p>
+          
+          {reportSuccess ? (
+            <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg text-center animate-pulse">
+              {reportSuccess}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 pt-1 text-[11px]">
+              <button 
+                type="button"
+                disabled={!!sendingReport}
+                onClick={() => handleTriggerReport('checkin')}
+                className="flex-1 border border-slate-200 hover:bg-slate-50 py-2 rounded-lg font-bold flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 transition-all text-slate-700 hover:text-emerald-600 active:scale-95"
+              >
+                {sendingReport === 'checkin' ? 'Sending...' : 'Test 11AM 📲'}
+              </button>
+              <button 
+                type="button"
+                disabled={!!sendingReport}
+                onClick={() => handleTriggerReport('checkout')}
+                className="flex-1 border border-slate-200 hover:bg-slate-50 py-2 rounded-lg font-bold flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 transition-all text-slate-700 hover:text-emerald-600 active:scale-95"
+              >
+                {sendingReport === 'checkout' ? 'Sending...' : 'Test 7PM 📲'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

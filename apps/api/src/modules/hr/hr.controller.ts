@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Body, Query, Param, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { HrService } from './hr.service';
+import { HrCronService } from './hr-cron.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
 import { WorkspaceId } from '../../common/decorators/workspace.decorator';
@@ -10,7 +11,10 @@ import { EmployeeStatus, LeaveType, LeaveStatus, SalaryType } from '@prisma/clie
 @ApiTags('HR & Attendance')
 @Controller('hr')
 export class HrController {
-  constructor(private readonly hrService: HrService) {}
+  constructor(
+    private readonly hrService: HrService,
+    private readonly hrCronService: HrCronService,
+  ) {}
 
   // =========================================================================
   // EMPLOYEE MANAGEMENT (SECURE)
@@ -104,6 +108,20 @@ export class HrController {
   ) {
     const resolvedWorkspaceId = workspaceId || 'anandi-park'; // safe fallback
     return this.hrService.scanQrToken(resolvedWorkspaceId, dto);
+  }
+
+  @Public() // Public to allow manually triggered checks from managers or scripts
+  @Post('attendance/trigger-checkin-report')
+  @ApiOperation({ summary: 'Manually trigger and send the 11 AM check-in WhatsApp report' })
+  async triggerCheckInReport() {
+    return this.hrCronService.sendCheckInReport();
+  }
+
+  @Public() // Public to allow manually triggered checks from managers or scripts
+  @Post('attendance/trigger-checkout-report')
+  @ApiOperation({ summary: 'Manually trigger and send the 7 PM check-out WhatsApp report' })
+  async triggerCheckOutReport() {
+    return this.hrCronService.sendCheckOutReport();
   }
 
   @ApiBearerAuth()
