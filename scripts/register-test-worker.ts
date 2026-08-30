@@ -2,12 +2,15 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  const workspaces = await prisma.workspace.findMany();
+  console.log('Workspaces found in database:', workspaces);
+
   const workspace = await prisma.workspace.findFirst({
     where: { slug: 'anandi-park' },
-  });
+  }) || workspaces[0]; // fallback to first workspace if not found
   
   if (!workspace) {
-    console.error('Error: Workspace with slug "anandi-park" not found.');
+    console.error('Error: No workspaces found in database.');
     return;
   }
   
