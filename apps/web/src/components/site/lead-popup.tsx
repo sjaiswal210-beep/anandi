@@ -23,7 +23,8 @@ export function LeadPopup() {
   const isExcluded = 
     pathname?.includes('/worker-portal') ||
     pathname?.includes('/attendance/scan') ||
-    pathname?.includes('/plotting/hr');
+    pathname?.includes('/plotting/hr') ||
+    pathname?.includes('/hr-portal');
 
   if (isExcluded) return null;
 

@@ -247,7 +247,7 @@ export default function HrDashboardPage() {
       </div>
 
       {/* Quick Access System Links */}
-      <div className="bg-slate-50 dark:bg-slate-900/30 border rounded-2xl p-5 grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="bg-slate-50 dark:bg-slate-900/30 border rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
@@ -321,6 +321,33 @@ export default function HrDashboardPage() {
             </button>
             <a 
               href="/worker-portal" 
+              target="_blank" 
+              className="px-3 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center cursor-pointer transition-colors text-slate-700"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </div>
+
+        <div className="bg-card border rounded-xl p-4 space-y-3 shadow-sm border-blue-100 dark:border-blue-900/30">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <Users className="h-5 w-5 shrink-0" />
+              <h3 className="font-bold text-sm">Standalone HR Portal</h3>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded text-blue-600 font-sans">Pass: richland2026</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Shareable dashboard page without the side menus. Password protected for managers.</p>
+          <div className="flex items-center gap-2 pt-1 text-xs">
+            <button 
+              onClick={() => handleCopyLink('https://anandipark.in/hr-portal', 'Standalone HR Portal')}
+              className="flex-1 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors text-blue-600 border-blue-200 bg-blue-50/10 hover:bg-blue-50/50"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy Link
+            </button>
+            <a 
+              href="/hr-portal" 
               target="_blank" 
               className="px-3 border hover:bg-slate-50 py-2 rounded-lg font-semibold flex items-center justify-center cursor-pointer transition-colors text-slate-700"
             >
