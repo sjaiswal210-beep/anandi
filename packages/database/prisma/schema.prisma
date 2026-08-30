@@ -1265,6 +1265,8 @@ model Attendance {
   checkOutLocation String?          // GPS Coordinates as "lat,lng"
   checkInIp        String?
   checkOutIp       String?
+  photoIn          String?          // Base64 compressed image captured during check-in
+  photoOut         String?          // Base64 compressed image captured during check-out
   
   notes            String?
   createdAt        DateTime         @default(now())

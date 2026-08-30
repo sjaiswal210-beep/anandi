@@ -136,6 +136,7 @@ export class HrService {
     latitude?: number;
     longitude?: number;
     ip?: string;
+    photo?: string;
   }) {
     // 1. Verify rolling token
     const tokenRecord = await this.prisma.attendanceToken.findUnique({
@@ -207,6 +208,7 @@ export class HrService {
           status,
           checkInLocation: locationString,
           checkInIp: dto.ip || '0.0.0.0',
+          photoIn: dto.photo,
         },
       });
 
@@ -229,6 +231,7 @@ export class HrService {
           checkOut: checkInTime,
           checkOutLocation: locationString,
           checkOutIp: dto.ip || '0.0.0.0',
+          photoOut: dto.photo,
         },
       });
 

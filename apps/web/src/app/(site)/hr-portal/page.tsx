@@ -628,10 +628,28 @@ export default function StandaloneHrPortal() {
                               {new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </td>
                             <td className="px-6 py-4 text-emerald-600 font-mono font-medium">
-                              {log.checkIn ? new Date(log.checkIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--'}
+                              <div className="flex items-center gap-2.5">
+                                {log.photoIn && (
+                                  <img 
+                                    src={log.photoIn} 
+                                    alt="In" 
+                                    className="w-8 h-8 rounded-md object-cover border border-emerald-500/20 bg-slate-100 dark:bg-slate-800 shrink-0" 
+                                  />
+                                )}
+                                <span>{log.checkIn ? new Date(log.checkIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--'}</span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 text-amber-600 font-mono font-medium">
-                              {log.checkOut ? new Date(log.checkOut).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--'}
+                              <div className="flex items-center gap-2.5">
+                                {log.photoOut && (
+                                  <img 
+                                    src={log.photoOut} 
+                                    alt="Out" 
+                                    className="w-8 h-8 rounded-md object-cover border border-amber-500/20 bg-slate-100 dark:bg-slate-800 shrink-0" 
+                                  />
+                                )}
+                                <span>{log.checkOut ? new Date(log.checkOut).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--'}</span>
+                              </div>
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 py-1 text-xs font-bold rounded-full ${

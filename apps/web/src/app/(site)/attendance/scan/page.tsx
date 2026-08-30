@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
-import { Shield, MapPin, AlertCircle, CheckCircle, Navigation, Phone, Clock } from 'lucide-react';
+import { Shield, MapPin, AlertCircle, CheckCircle, Navigation, Phone, Clock, Camera } from 'lucide-react';
 
 function MobileScanPageContent() {
   const searchParams = useSearchParams();
@@ -13,6 +13,11 @@ function MobileScanPageContent() {
   const [phone, setPhone] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   
+  // Webcam & Photo states
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [usingWebcam, setUsingWebcam] = useState(false);
+
   // Status states
   const [loadingLoc, setLoadingLoc] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -26,6 +31,45 @@ function MobileScanPageContent() {
 
     requestLocation();
   }, []);
+
+  // Control camera session based on GPS lock and punch status
+  useEffect(() => {
+    if (coords && !successCard) {
+      startCamera();
+    }
+    return () => {
+      stopCamera();
+    };
+  }, [coords, successCard]);
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 300 }, height: { ideal: 300 } },
+        audio: false
+      });
+      setStream(mediaStream);
+      setUsingWebcam(true);
+      // Timeout to ensure the video node is mounted in DOM
+      setTimeout(() => {
+        const el = document.getElementById('webcam-video') as HTMLVideoElement;
+        if (el) {
+          el.srcObject = mediaStream;
+          el.play().catch(e => console.warn('Play interrupted:', e));
+        }
+      }, 150);
+    } catch (err) {
+      console.warn('Inline webcam access failed, using file fallback:', err);
+      setUsingWebcam(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
@@ -64,6 +108,70 @@ function MobileScanPageContent() {
     );
   };
 
+  const compressAndSetPhoto = (imageSrc: string | File) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    const processSrc = (src: string) => {
+      img.onload = () => {
+        // High-performance light-weight square compression (160x160 pixels)
+        const size = 160;
+        canvas.width = size;
+        canvas.height = size;
+        
+        if (ctx) {
+          // Centered square cropping math
+          const minSide = Math.min(img.width, img.height);
+          const sx = (img.width - minSide) / 2;
+          const sy = (img.height - minSide) / 2;
+          
+          // Render to canvas
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+          
+          // Compress with 50% JPEG quality (producing ultra lightweight 5-10kb payloads)
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+          setPhoto(compressedBase64);
+          stopCamera();
+        }
+      };
+      img.src = src;
+    };
+
+    if (imageSrc instanceof File) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          processSrc(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(imageSrc);
+    } else {
+      processSrc(imageSrc);
+    }
+  };
+
+  const handleSnap = () => {
+    const el = document.getElementById('webcam-video') as HTMLVideoElement;
+    if (!el) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = el.videoWidth || 300;
+    canvas.height = el.videoHeight || 300;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(el, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      compressAndSetPhoto(dataUrl);
+    }
+  };
+
+  const handleFallbackCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      compressAndSetPhoto(file);
+    }
+  };
+
   const handlePunch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) {
@@ -78,18 +186,23 @@ function MobileScanPageContent() {
       setErrorErrorMsg('Please enter a valid 10-digit registered phone number.');
       return;
     }
+    if (!photo) {
+      setErrorErrorMsg('Facial verification photo is strictly required. Please take a selfie first.');
+      return;
+    }
 
     setSubmitting(true);
     setErrorErrorMsg('');
     setSuccessCard(null);
 
     try {
-      // Endpoint is fully public-facing
+      // Send payload with GPS coordinates and compressed selfie string
       const res: any = await api.post('/hr/attendance/scan?workspaceId=anandi-park', {
         token,
         phone,
         latitude: coords.lat,
-        longitude: coords.lng
+        longitude: coords.lng,
+        photo: photo
       });
 
       const responseData = res?.data || res;
@@ -132,7 +245,7 @@ function MobileScanPageContent() {
               <div>
                 <span>{errorMsg}</span>
                 {errorMsg.includes('permission') && (
-                  <button onClick={requestLocation} className="block mt-1.5 underline text-rose-900 cursor-pointer font-bold">
+                  <button type="button" onClick={requestLocation} className="block mt-1.5 underline text-rose-900 cursor-pointer font-bold">
                     Retry GPS Access
                   </button>
                 )}
@@ -142,12 +255,23 @@ function MobileScanPageContent() {
 
           {/* Success Card */}
           {successCard && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-5 rounded-xl text-center space-y-3">
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-5 rounded-xl text-center space-y-3 animate-fade-in">
               <CheckCircle className="h-10 w-10 text-emerald-600 mx-auto shrink-0" />
               <div>
                 <h3 className="font-extrabold text-base text-emerald-800">Punch Successful!</h3>
                 <p className="text-sm mt-0.5 font-bold">Good {successCard.action === 'check-in' ? 'Morning' : 'Evening'}, {successCard.employeeName}!</p>
-                <div className="flex items-center justify-center gap-1 text-xs text-emerald-700 font-semibold mt-3 bg-white border border-emerald-100 py-2 px-3 rounded-lg w-fit mx-auto shadow-sm">
+                
+                {photo && (
+                  <div className="mt-3.5 flex justify-center">
+                    <img 
+                      src={photo} 
+                      alt="Captured Verification" 
+                      className="w-20 h-24 rounded-xl object-cover border-2 border-emerald-400 shadow-sm"
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-center gap-1 text-xs text-emerald-700 font-semibold mt-3.5 bg-white border border-emerald-100 py-2 px-3 rounded-lg w-fit mx-auto shadow-sm">
                   <Clock className="h-3.5 w-3.5" />
                   <span>Recorded {successCard.action === 'check-in' ? 'Check-In' : 'Check-Out'} at <span className="font-bold">{successCard.time}</span></span>
                 </div>
@@ -172,7 +296,7 @@ function MobileScanPageContent() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder="Enter 10-digit mobile number"
-                  className="w-full border rounded-xl p-3 bg-background text-sm font-semibold tracking-wider placeholder:font-normal placeholder:tracking-normal"
+                  className="w-full border rounded-xl p-3 bg-background text-sm font-semibold tracking-wider placeholder:font-normal placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -198,13 +322,80 @@ function MobileScanPageContent() {
                 )}
               </div>
 
+              {/* Photo Verification Section */}
+              {coords && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                    <Camera className="h-3 w-3" />
+                    Facial Verification Photo
+                  </label>
+                  
+                  <div className="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-900/30 flex flex-col items-center justify-center p-4">
+                    {photo ? (
+                      <div className="relative flex flex-col items-center space-y-2 w-full animate-fade-in">
+                        <img 
+                          src={photo} 
+                          alt="Captured Selfie" 
+                          className="w-24 h-24 rounded-full object-cover border-2 border-emerald-500 shadow-md"
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => { setPhoto(null); startCamera(); }}
+                          className="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer"
+                        >
+                          Retake Photo 🤳
+                        </button>
+                      </div>
+                    ) : usingWebcam ? (
+                      <div className="relative flex flex-col items-center space-y-3 w-full">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-300 relative shadow-inner">
+                          <video 
+                            id="webcam-video"
+                            playsInline
+                            muted
+                            className="w-full h-full object-cover scale-x-[-1]"
+                          />
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={handleSnap}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Camera className="h-3.5 w-3.5" />
+                          Capture Selfie 📸
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative flex flex-col items-center justify-center py-2.5 w-full">
+                        <input 
+                          type="file"
+                          id="fallback-camera-input"
+                          accept="image/*"
+                          capture="user"
+                          onChange={handleFallbackCapture}
+                          className="hidden"
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => document.getElementById('fallback-camera-input')?.click()}
+                          className="w-24 h-24 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 hover:border-slate-400 cursor-pointer transition-colors"
+                        >
+                          <span className="text-2xl">🤳</span>
+                          <span className="text-[10px] font-black mt-1 uppercase tracking-wider text-center px-1 text-slate-500">Take Selfie</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Submit Punch */}
               <button 
                 type="submit" 
-                disabled={submitting || loadingLoc || !coords || !token}
+                disabled={submitting || loadingLoc || !coords || !token || !photo}
                 className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm tracking-wide transition-colors disabled:opacity-50 cursor-pointer shadow-sm flex items-center justify-center gap-2"
               >
-                {submitting ? 'Verifying Coordinates...' : loadingLoc ? 'Acquiring GPS Signal...' : 'Punch Daily Attendance'}
+                {submitting ? 'Processing Attendance...' : !photo ? 'Snap Selfie to Proceed' : 'Punch Daily Attendance'}
               </button>
             </form>
           )}

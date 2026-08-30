@@ -99,6 +99,7 @@ export class HrController {
       latitude?: number;
       longitude?: number;
       ip?: string;
+      photo?: string;
     },
   ) {
     const resolvedWorkspaceId = workspaceId || 'anandi-park'; // safe fallback
