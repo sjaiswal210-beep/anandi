@@ -24,7 +24,8 @@ export function LeadPopup() {
     pathname?.includes('/worker-portal') ||
     pathname?.includes('/attendance/scan') ||
     pathname?.includes('/plotting/hr') ||
-    pathname?.includes('/hr-portal');
+    pathname?.includes('/hr-portal') ||
+    pathname?.includes('/hr-terminal');
 
   if (isExcluded) return null;
 
