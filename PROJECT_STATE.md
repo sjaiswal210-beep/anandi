@@ -64,6 +64,16 @@ lives, and what's done vs pending. Written for the next agent.
 - Shows 2.5s after load, once per session, never again after a submit.
 - Submits to `POST /website/public/anandi-park/inquiry`.
 - Shared API/URL/phone helpers in `site-api.ts` (also used by `contact.tsx`).
+- **Resilient submit (added):** `submitLead()` retries 3× with backoff, then
+  queues the lead in `localStorage` (`anandi-lead-queue`) and resends via
+  `flushQueuedLeads()` (called on `LeadPopup` mount) on the next page load — so a
+  paid ad click that fills the form is never lost to a transient API blip. This
+  matters most for paid campaigns where every click costs money.
+- **SEO data fix (applied to prod):** the stored `Website` DB row had false
+  content (RERA claim, "NA plots", ₹15, dummy phone). Corrected via
+  `scripts/fix-website-seo.cjs` (idempotent). The rendered site was already
+  correct from `site-data.ts` + `(site)/layout.tsx` metadata; this only fixed the
+  raw `GET /website/public/anandi-park` API payload.
 
 ### Lead capture → WhatsApp — DONE (delivery pending session link)
 - `apps/api/src/modules/website/website.service.ts` `submitInquiry()` creates the
@@ -105,10 +115,18 @@ lives, and what's done vs pending. Written for the next agent.
   works with a non-expiring System User token.
 - Diagnostics: `GET /social-media/publish-diagnostics`.
 
-### Meta Lead Ads + comments — DONE (needs token + a lead form)
+### Meta Lead Ads + comments — DONE (needs token w/ leads_retrieval + a lead form)
 - `apps/api/src/modules/lead-ingestion/`. Polls lead forms (no webhook needed),
   dedups on `leadgen_id`. Also exchanges system-user → page token.
-- Diagnostics: `GET /meta/diagnostics`.
+- **Auto-poll cron (added):** `meta-leads-cron.service.ts` `MetaLeadsCronService`
+  runs `pollLeads` every 30 min into workspace `cmsai8kh50001rapl8ioxehxe`, so
+  native lead-form submissions sync automatically (previously manual only). It's
+  a safe no-op when no token/form exists; logs a warning if the token lacks
+  `leads_retrieval`.
+- Diagnostics: `GET /meta/diagnostics`; list forms: `GET /meta/forms`.
+- ⚠ The live token is currently MISSING `leads_retrieval` — until that scope is
+  granted AND a Lead Form exists, native lead forms capture nothing. Use the
+  website destination for now.
 
 ### Ads & Costs dashboard — DONE (Meta sync + ad CREATION now built)
 - `apps/api/src/modules/ads/`. Reuses the `Campaign` table. Meta spend sync via
@@ -133,9 +151,22 @@ lives, and what's done vs pending. Written for the next agent.
 - **Capability check:** `GET /ads/meta/capabilities` (public, read-only, spends
   nothing) — reports account status, funding, and granted token permissions.
   RUN THIS ON PRODUCTION before launching, to confirm `ads_management`.
+- **Native lead-form ads (added).** `createMetaCampaign` accepts `leadFormId`:
+  for `facebook`/`instagram` ads it builds a native instant-form ad (`SIGN_UP`
+  CTA carrying `lead_gen_form_id`) instead of a website link. Leads then sync via
+  the auto-poll cron (needs `leads_retrieval`). Leave `leadFormId` blank to use
+  the website destination (reliable today). Stored in `metadata.leadFormId` /
+  `content.destination`.
 - Dashboard: "Create Meta Ad" form with ad-type selector, AI "Generate" creative
-  (logo'd), preview, and a per-campaign Launch/Pause toggle that calls the real
+  (logo'd), a **"Use uploaded ad"** button, an optional lead-form-id field
+  (FB/IG), preview, and a per-campaign Launch/Pause toggle that calls the real
   Meta status API for Meta campaigns.
+- **Bundled creative:** the supplied designed ad lives at
+  `uploads/ads/anandi-park-ad.jpg` (un-ignored in `.gitignore` via `uploads/*` +
+  `!uploads/ads/`), served at
+  `https://api.anandipark.in/uploads/ads/anandi-park-ad.jpg`. It already has the
+  Rich-Land logo + WhatsApp QR + phone numbers baked in, so the logo overlay is
+  NOT applied to it (only AI-generated creatives get the overlay).
 - **Google Ads: still manual only.** No API integration — the Google Ads API
   needs a developer token (weeks of Google approval). Track Google spend via
   "Add Campaign / Cost". Everything else is launchable from the dashboard.
