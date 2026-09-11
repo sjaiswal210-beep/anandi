@@ -84,6 +84,17 @@ lives, and what's done vs pending. Written for the next agent.
 - `apps/api/src/modules/social-media/social-media.service.ts` (captions/hashtags
   via Gemini) + `social-image.service.ts` (ad images via `gemini-3.1-flash-image`,
   Pollinations fallback). ~23 posts already generated.
+- **Rich-Land logo overlay (added):** every generated ad image is composited
+  with the Rich-Land logo (bottom-right, ~18% width) via `sharp` in
+  `social-image.service.ts` `overlayLogo()`, applied in both the Gemini and
+  Pollinations paths. Logo asset bundled at
+  `apps/api/src/modules/social-media/assets/richland-logo.png` and copied into
+  `dist` via `nest-cli.json` assets. Never breaks generation (falls back to the
+  raw image on any error).
+- **Prompt targets Pune plot buyers/investors (updated):** `buildAdPrompt()`
+  now says "residential plots" (never "NA plots"), prices from ₹18 Lakh+, Pune
+  East, audience = Pune families & investors buying a plot for a home or
+  investment.
 
 ### Facebook + Instagram auto-publish — DONE (needs token in env)
 - `apps/api/src/modules/social-media/meta-publish.service.ts`.
@@ -99,15 +110,64 @@ lives, and what's done vs pending. Written for the next agent.
   dedups on `leadgen_id`. Also exchanges system-user → page token.
 - Diagnostics: `GET /meta/diagnostics`.
 
-### Ads & Costs dashboard — DONE (Meta sync needs token)
+### Ads & Costs dashboard — DONE (Meta sync + ad CREATION now built)
 - `apps/api/src/modules/ads/`. Reuses the `Campaign` table. Meta spend sync via
   Graph API; manual entry for Google/other. CPL/CTR/CPC computed.
-- Programmatic ad CREATION not built (needs Meta `ads_management` App Review).
+- **Programmatic Meta ad creation (added).** `createMetaCampaign()` builds the
+  full Marketing API chain Campaign → Ad Set → Ad Creative → Ad, **always
+  created PAUSED** (launch manually via the ▶ toggle → `setMetaStatus` ACTIVE).
+  Endpoint `POST /ads/meta/create` (DTO `create-meta-campaign.dto.ts`).
+- **Four ad types** via one `adType` param — each sets a different objective /
+  placement / destination / CTA (all through the same Meta API):
+  - `facebook` — lead ad, Facebook placement, LEAD_GENERATION
+  - `instagram` — lead ad, Instagram placement, LEAD_GENERATION
+  - `whatsapp` — Click-to-WhatsApp (OUTCOME_ENGAGEMENT, CONVERSATIONS,
+    `WHATSAPP_MESSAGE` CTA, `promoted_object.whatsapp_phone_number`)
+  - `website` — traffic to the site (OUTCOME_TRAFFIC, LANDING_PAGE_VIEWS)
+- **Targeting = Pune** (city key `2295423` + custom radius, default 30 km, min 24).
+  ⚠ Real-estate ads MUST set `special_ad_categories: ['HOUSING']` (mandatory;
+  Meta rejects otherwise). Housing FORBIDS age/gender/interest targeting — so the
+  "plot buyers / investors" audience is reached via geo + creative/copy +
+  lead-gen optimization, NOT interest filters. This is Meta policy, not a code
+  limit.
+- **Capability check:** `GET /ads/meta/capabilities` (public, read-only, spends
+  nothing) — reports account status, funding, and granted token permissions.
+  RUN THIS ON PRODUCTION before launching, to confirm `ads_management`.
+- Dashboard: "Create Meta Ad" form with ad-type selector, AI "Generate" creative
+  (logo'd), preview, and a per-campaign Launch/Pause toggle that calls the real
+  Meta status API for Meta campaigns.
+- **Google Ads: still manual only.** No API integration — the Google Ads API
+  needs a developer token (weeks of Google approval). Track Google spend via
+  "Add Campaign / Cost". Everything else is launchable from the dashboard.
+- Image note: `imageUrl` may be a full https URL or a relative `/uploads/...`
+  path (resolved against `API_PUBLIC_URL`). Meta fetches images server-side, so
+  it must be a PUBLIC https URL — localhost images won't work; production does.
 
 ### Voice calls (Vobiz + Sarvam TTS) — DONE
 - `apps/api/src/modules/ai-calling/`. `answer_url` must be GET; needs HTTPS
   (nginx). Ready scripts + custom text with Sarvam voice generation.
 - Pre-recorded audio files may still say "RERA registered" — use Custom Text.
+
+### Staff Attendance / HR — DONE (came from GitHub; runtime bits to verify)
+- API module `apps/api/src/modules/hr/` (`hr.controller.ts`, `hr.service.ts`,
+  `hr-cron.service.ts`). Routes under `/api/v1/hr/*`: employees CRUD,
+  attendance QR (`/attendance/qr`), scan/punch (`/attendance/scan`), logs,
+  WhatsApp report triggers (`/attendance/trigger-checkin-report`,
+  `/trigger-checkout-report`), leaves (+approve), payroll (calculate + pay),
+  worker-portal.
+- DB models in `packages/database/prisma/schema.prisma`: `Employee`,
+  `Attendance` (GPS `checkInLocation/checkOutLocation` "lat,lng", base64
+  `photoIn/photoOut`, `@@unique([employeeId,date])`), `Leave`, `Payroll`,
+  `AttendanceToken` (rotating wall-QR tokens). Tables already exist in Neon.
+- Web: dashboard admin at `/plotting/hr` (sidebar "Team & HR"); public site
+  routes `(site)/attendance/scan` (mobile GPS + selfie punch),
+  `(site)/worker-portal`, `(site)/hr-terminal` (wall QR). Spec/marketing page at
+  `apps/web/public/features.html`.
+- **Runtime items to verify on the VPS:**
+  - `puppeteer` (added dep) may need its Chromium downloaded
+    (`npx puppeteer browsers install chrome`) if QR/PDF generation errors.
+  - WhatsApp daily reports (11 AM check-in / 7 PM check-out to +91 73507 85606)
+    only deliver if the WhatsApp bridge session is QR-linked (see open item #1).
 
 ### Plot inventory map — IN PROGRESS
 - `apps/web/src/app/(dashboard)/plotting/inventory/page.tsx`. Engineering-drawing
