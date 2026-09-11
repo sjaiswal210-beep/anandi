@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, IndianRupee, Target, MousePointerClick, TrendingUp, Plus, RefreshCw, Trash2, Pause, Play, Loader2 } from 'lucide-react';
+import { BarChart3, IndianRupee, Target, MousePointerClick, TrendingUp, Plus, RefreshCw, Trash2, Pause, Play, Loader2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
@@ -133,6 +133,37 @@ export default function AdsPage() {
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Meta status failed'),
   });
 
+  // Generates a logo'd ad creative via the social image pipeline and drops the
+  // returned /uploads path into the Meta form's imageUrl.
+  const genCreativeMut = useMutation({
+    mutationFn: () =>
+      api.post('/social-media/generate-image', {
+        topic: metaForm.name || 'Anandi Park residential plots',
+        platform: 'FACEBOOK',
+        headline: metaForm.headline || undefined,
+        count: 1,
+      }),
+    onSuccess: (res: any) => {
+      const d = res?.data || res;
+      const url = d?.images?.[0]?.url;
+      if (url) {
+        setMetaForm((f: any) => ({ ...f, imageUrl: url }));
+        toast.success('Creative generated (with Rich-Land logo)');
+      } else {
+        toast.error(d?.errors?.[0] || 'Could not generate creative');
+      }
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Creative generation failed'),
+  });
+
+  // Builds an absolute preview URL for a possibly-relative /uploads path.
+  const previewUrl = (u: string) => {
+    if (!u) return '';
+    if (/^https?:\/\//i.test(u)) return u;
+    const base = (api.defaults?.baseURL || '').replace(/\/api\/v1\/?$/, '');
+    return base ? `${base}/${u.replace(/^\//, '')}` : u;
+  };
+
   // Chooses the right toggle: real Meta call for Meta campaigns, local for manual.
   const toggleCampaign = (c: any) => {
     const externalId = c?.metadata?.externalId;
@@ -201,7 +232,25 @@ export default function AdsPage() {
             <input value={metaForm.name} onChange={(e) => setMetaForm({ ...metaForm, name: e.target.value })} placeholder="Campaign name" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
             <input type="number" value={metaForm.dailyBudget} onChange={(e) => setMetaForm({ ...metaForm, dailyBudget: e.target.value })} placeholder="Daily budget ₹ (e.g. 500)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
             <input type="number" value={metaForm.radiusKm} onChange={(e) => setMetaForm({ ...metaForm, radiusKm: e.target.value })} placeholder="Target radius km (17–80)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
-            <input value={metaForm.imageUrl} onChange={(e) => setMetaForm({ ...metaForm, imageUrl: e.target.value })} placeholder="Public image URL (https://…)" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+            <div className="md:col-span-2 flex gap-2">
+              <input value={metaForm.imageUrl} onChange={(e) => setMetaForm({ ...metaForm, imageUrl: e.target.value })} placeholder="Image URL (https://…) or generate one →" className="flex-1 px-3 py-2 border rounded-lg text-sm bg-background" />
+              <button
+                type="button"
+                onClick={() => genCreativeMut.mutate()}
+                disabled={genCreativeMut.isPending}
+                className="shrink-0 flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium hover:bg-muted disabled:opacity-50"
+                title="Generate a logo'd ad creative with AI"
+              >
+                {genCreativeMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                Generate
+              </button>
+            </div>
+            {metaForm.imageUrl && (
+              <div className="md:col-span-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previewUrl(metaForm.imageUrl)} alt="Ad creative preview" className="h-40 rounded-lg border object-contain bg-muted/30" />
+              </div>
+            )}
             <input value={metaForm.headline} onChange={(e) => setMetaForm({ ...metaForm, headline: e.target.value })} placeholder="Headline (optional)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
             <input value={metaForm.link} onChange={(e) => setMetaForm({ ...metaForm, link: e.target.value })} placeholder="Landing URL" className="px-3 py-2 border rounded-lg text-sm bg-background" />
             <textarea value={metaForm.caption} onChange={(e) => setMetaForm({ ...metaForm, caption: e.target.value })} placeholder="Ad caption / primary text" rows={3} className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />

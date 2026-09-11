@@ -173,6 +173,25 @@ export class AdsService {
   }
 
   /**
+   * Turns a generated-image reference into a public https URL Meta can fetch.
+   * - full http(s) URL: returned as-is
+   * - relative /uploads/... path: joined to API_PUBLIC_URL (falls back to
+   *   API_URL). Meta fetches images server-side, so localhost never works.
+   */
+  private resolvePublicImageUrl(input?: string): string | undefined {
+    if (!input) return undefined;
+    const v = input.trim();
+    if (/^https?:\/\//i.test(v)) return v;
+    const base = (
+      this.configService.get<string>('API_PUBLIC_URL') ||
+      this.configService.get<string>('API_URL') ||
+      ''
+    ).replace(/\/$/, '');
+    if (!base) return undefined;
+    return `${base}/${v.replace(/^\//, '')}`;
+  }
+
+  /**
    * Pulls spend + insights from Meta Ads and upserts them as campaigns.
    * Needs META_AD_ACCOUNT_ID and a token with ads_read.
    */
@@ -279,8 +298,17 @@ export class AdsService {
     if (!pageId) {
       return { ok: false, message: 'META_PAGE_ID is required to create ads.' };
     }
-    if (!dto.imageUrl || !/^https?:\/\//i.test(dto.imageUrl)) {
-      return { ok: false, message: 'A public https imageUrl is required (Meta fetches the image).' };
+    // Accept either a full https URL or a relative /uploads/... path from the
+    // social image generator; resolve the latter against the public API base so
+    // Meta (which fetches the image server-side) can reach it.
+    const imageUrl = this.resolvePublicImageUrl(dto.imageUrl);
+    if (!imageUrl || !/^https:\/\//i.test(imageUrl)) {
+      return {
+        ok: false,
+        message:
+          'A public https image is required. Pass a full https URL, or generate a creative ' +
+          '(its /uploads path is resolved against API_PUBLIC_URL). Note: Meta cannot fetch localhost.',
+      };
     }
 
     const axios = (await import('axios')).default;
@@ -359,7 +387,7 @@ export class AdsService {
                 link,
                 message: dto.caption,
                 name: dto.headline || 'Anandi Park — Residential Plots',
-                picture: dto.imageUrl,
+                picture: imageUrl,
                 call_to_action: { type: 'LEARN_MORE', value: { link } },
               },
             }),
@@ -397,7 +425,7 @@ export class AdsService {
           status: 'PAUSED',
           budget: dto.dailyBudget,
           spent: 0,
-          content: { caption: dto.caption, headline: dto.headline, imageUrl: dto.imageUrl, link } as any,
+          content: { caption: dto.caption, headline: dto.headline, imageUrl, link } as any,
           metrics: {} as any,
           metadata: {
             source: 'meta_api',
