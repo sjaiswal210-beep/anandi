@@ -422,6 +422,10 @@ export class AdsService {
             objective: cfg.objective,
             status: 'PAUSED',
             special_ad_categories: JSON.stringify(['HOUSING']),
+            // Budget lives on the ad set (not campaign-level / CBO). Meta's newer
+            // API requires this flag to be set explicitly when there is no
+            // campaign budget. False = each ad set keeps its own budget.
+            is_adset_budget_sharing_enabled: false,
             access_token: token,
           },
           timeout: 30000,
