@@ -454,6 +454,10 @@ export class AdsService {
       } else if (useLeadForm) {
         adSetParams.promoted_object = JSON.stringify({ page_id: pageId });
       }
+      // HOUSING special category is country-scoped. Declare India so the Pune
+      // geo-targeting is accepted (else error #2909034: "locations outside the
+      // countries selected for your Special ad categories").
+      adSetParams.special_ad_category_country = JSON.stringify(['IN']);
       const adSetRes = await axios.post(
         `${GRAPH}/${acct}/adsets`,
         null,
