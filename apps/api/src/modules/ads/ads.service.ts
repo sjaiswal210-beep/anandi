@@ -349,10 +349,29 @@ export class AdsService {
         label: 'Website Traffic',
       },
     };
-    const cfg = typeConfig[adType];
-    if (!cfg) {
+    const baseCfg = typeConfig[adType];
+    if (!baseCfg) {
       return { ok: false, message: `Unknown adType "${adType}". Use facebook, instagram, whatsapp, or website.` };
     }
+
+    // Does this ad use a native Meta instant lead form?
+    const useLeadForm =
+      Boolean(dto.leadFormId) && (adType === 'facebook' || adType === 'instagram');
+
+    // Resolve the EFFECTIVE objective/optimization. Key correctness rule:
+    // a LEAD_GENERATION optimization is only valid with a native lead form (or a
+    // pixel + lead event). For facebook/instagram WITHOUT a lead form we drive
+    // website traffic instead (OUTCOME_TRAFFIC + LINK_CLICKS) — valid with no
+    // pixel — and the site's own form captures the lead. This avoids Meta's
+    // "Invalid parameter" on lead-gen ad sets that have no form.
+    const cfg =
+      (adType === 'facebook' || adType === 'instagram') && !useLeadForm
+        ? {
+            ...baseCfg,
+            objective: 'OUTCOME_TRAFFIC',
+            optimizationGoal: 'LINK_CLICKS',
+          }
+        : baseCfg;
 
     // WhatsApp ads need a destination number.
     const waNumber = (dto.whatsappNumber || '917558444117').replace(/\D/g, '');
@@ -410,26 +429,33 @@ export class AdsService {
       );
       created.campaignId = campRes.data.id;
 
-      // 2) Ad Set — PAUSED, daily budget, broad geo (housing rules), page leads.
+      // 2) Ad Set — PAUSED, daily budget, broad geo (housing rules).
+      // promoted_object is only valid/required for certain optimizations:
+      //  - WhatsApp (CONVERSATIONS): page + whatsapp number
+      //  - native lead form (LEAD_GENERATION): the page
+      //  - plain traffic (LINK_CLICKS/LANDING_PAGE_VIEWS): NONE — sending one
+      //    causes "Invalid parameter".
+      const adSetParams: Record<string, unknown> = {
+        name: `${dto.name} — Ad Set`,
+        campaign_id: created.campaignId,
+        status: 'PAUSED',
+        daily_budget: dailyBudgetMinor,
+        billing_event: 'IMPRESSIONS',
+        optimization_goal: cfg.optimizationGoal,
+        bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
+        access_token: token,
+      };
+      if (adType === 'whatsapp') {
+        adSetParams.promoted_object = JSON.stringify({ page_id: pageId, whatsapp_phone_number: waNumber });
+      } else if (useLeadForm) {
+        adSetParams.promoted_object = JSON.stringify({ page_id: pageId });
+      }
       const adSetRes = await axios.post(
         `${GRAPH}/${acct}/adsets`,
         null,
         {
           params: {
-            name: `${dto.name} — Ad Set`,
-            campaign_id: created.campaignId,
-            status: 'PAUSED',
-            daily_budget: dailyBudgetMinor,
-            billing_event: 'IMPRESSIONS',
-            optimization_goal: cfg.optimizationGoal,
-            bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
-            // WhatsApp ads promote the page's WhatsApp destination; others just
-            // promote the page.
-            promoted_object: JSON.stringify(
-              adType === 'whatsapp'
-                ? { page_id: pageId, whatsapp_phone_number: waNumber }
-                : { page_id: pageId },
-            ),
+            ...adSetParams,
             targeting: JSON.stringify({
               // Target Pune: the whole city (Meta city key 2295423 = Pune,
               // Maharashtra) plus a radius around the project in Pune East.
@@ -444,7 +470,6 @@ export class AdsService {
               },
               publisher_platforms: cfg.publisherPlatforms,
             }),
-            access_token: token,
           },
           timeout: 30000,
         },
@@ -457,9 +482,6 @@ export class AdsService {
       //    then synced by the poll cron — needs leads_retrieval on the token).
       //  - whatsapp: WHATSAPP_MESSAGE CTA that opens a chat.
       //  - otherwise: link to the website.
-      const useLeadForm =
-        Boolean(dto.leadFormId) && (adType === 'facebook' || adType === 'instagram');
-
       let callToAction: Record<string, unknown>;
       if (useLeadForm) {
         callToAction = {
@@ -568,11 +590,39 @@ export class AdsService {
         campaign: row,
       };
     } catch (e: any) {
-      const detail = e?.response?.data?.error?.message || e.message;
-      this.logger.error(`Meta ad creation failed at ${Object.keys(created).length} steps: ${detail}`);
+      const err = e?.response?.data?.error || {};
+      // Meta's useful detail is in error_user_msg / error_user_title, not the
+      // generic "Invalid parameter" message. Surface all of it.
+      const detail =
+        err.error_user_msg ||
+        [err.error_user_title, err.message].filter(Boolean).join(': ') ||
+        e.message;
+      // Which steps completed tells us where it broke (campaign/adset/creative/ad).
+      const stepsDone = Object.keys(created);
+      const failedAt =
+        stepsDone.length === 0
+          ? 'campaign'
+          : !created.adSetId
+            ? 'adSet'
+            : !created.creativeId
+              ? 'creative'
+              : !created.adId
+                ? 'ad'
+                : 'store';
+      this.logger.error(
+        `Meta ad creation failed at "${failedAt}" step (done: ${stepsDone.join(', ') || 'none'}): ` +
+          `${detail} [code ${err.code ?? '?'}/${err.error_subcode ?? '?'}]`,
+      );
       return {
         ok: false,
+        failedAt,
         message: detail,
+        metaError: {
+          code: err.code ?? null,
+          subcode: err.error_subcode ?? null,
+          title: err.error_user_title ?? null,
+          fbtrace: err.fbtrace_id ?? null,
+        },
         partial: created, // so a half-created campaign can be cleaned up in Ads Manager
       };
     }
