@@ -5,10 +5,11 @@ import { MetaLeadsController } from './meta-leads.controller';
 import { LeadIngestionService } from './lead-ingestion.service';
 import { MetaLeadsService } from './meta-leads.service';
 import { MetaCommentsService } from './meta-comments.service';
+import { MetaLeadsCronService } from './meta-leads-cron.service';
 
 @Module({
   controllers: [LeadIngestionController, MetaWebhookController, MetaLeadsController],
-  providers: [LeadIngestionService, MetaLeadsService, MetaCommentsService],
+  providers: [LeadIngestionService, MetaLeadsService, MetaCommentsService, MetaLeadsCronService],
   exports: [LeadIngestionService, MetaLeadsService, MetaCommentsService],
 })
 export class LeadIngestionModule {}

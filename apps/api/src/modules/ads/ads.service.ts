@@ -288,6 +288,7 @@ export class AdsService {
       headline?: string;
       link?: string; // landing URL; defaults to the site
       whatsappNumber?: string; // digits only, e.g. 917558444117 (for whatsapp ads)
+      leadFormId?: string; // Meta instant lead form id — native in-app form instead of website
       radiusKm?: number; // geo radius around the project
       lat?: number;
       lng?: number;
@@ -450,18 +451,29 @@ export class AdsService {
       );
       created.adSetId = adSetRes.data.id;
 
-      // 3) Ad Creative. WhatsApp ads use a WHATSAPP_MESSAGE CTA that opens a
-      // chat with the business number; the others link to the website.
-      const callToAction =
-        adType === 'whatsapp'
-          ? {
-              type: 'WHATSAPP_MESSAGE',
-              value: {
-                app_destination: 'WHATSAPP',
-                link: `https://wa.me/${waNumber}`,
-              },
-            }
-          : { type: cfg.cta, value: { link } };
+      // 3) Ad Creative. Destination depends on the ad:
+      //  - lead form (facebook/instagram + leadFormId): native instant form,
+      //    SIGN_UP CTA carrying the lead_gen_form_id (leads captured IN Meta,
+      //    then synced by the poll cron — needs leads_retrieval on the token).
+      //  - whatsapp: WHATSAPP_MESSAGE CTA that opens a chat.
+      //  - otherwise: link to the website.
+      const useLeadForm =
+        Boolean(dto.leadFormId) && (adType === 'facebook' || adType === 'instagram');
+
+      let callToAction: Record<string, unknown>;
+      if (useLeadForm) {
+        callToAction = {
+          type: 'SIGN_UP',
+          value: { lead_gen_form_id: dto.leadFormId, link },
+        };
+      } else if (adType === 'whatsapp') {
+        callToAction = {
+          type: 'WHATSAPP_MESSAGE',
+          value: { app_destination: 'WHATSAPP', link: `https://wa.me/${waNumber}` },
+        };
+      } else {
+        callToAction = { type: cfg.cta, value: { link } };
+      }
 
       const linkData: Record<string, unknown> = {
         message: dto.caption,
@@ -524,6 +536,8 @@ export class AdsService {
             adType,
             adTypeLabel: cfg.label,
             whatsappNumber: adType === 'whatsapp' ? waNumber : undefined,
+            leadFormId: useLeadForm ? dto.leadFormId : undefined,
+            destination: useLeadForm ? 'meta_lead_form' : adType === 'whatsapp' ? 'whatsapp' : 'website',
           } as any,
           metrics: {} as any,
           metadata: {
@@ -532,6 +546,8 @@ export class AdsService {
             adTypeLabel: cfg.label,
             objective: cfg.objective,
             publisherPlatforms: cfg.publisherPlatforms,
+            leadFormId: useLeadForm ? dto.leadFormId : null,
+            destination: useLeadForm ? 'meta_lead_form' : adType === 'whatsapp' ? 'whatsapp' : 'website',
             externalId: created.campaignId,
             adSetId: created.adSetId,
             creativeId: created.creativeId,

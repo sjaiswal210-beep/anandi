@@ -23,6 +23,15 @@ export class CreateMetaCampaignDto {
   @Matches(/^\d{10,15}$/, { message: 'whatsappNumber must be 10–15 digits, e.g. 917558444117' })
   whatsappNumber?: string;
 
+  /**
+   * Meta instant lead-form id. When set (facebook/instagram ads), the ad uses
+   * Meta's native in-app lead form instead of linking to the website. Leads are
+   * then synced by the poll cron (needs leads_retrieval on the token).
+   */
+  @IsOptional()
+  @IsString()
+  leadFormId?: string;
+
   /** Daily budget in account currency major units (e.g. 500 = ₹500/day). */
   @IsNumber()
   @Min(100)

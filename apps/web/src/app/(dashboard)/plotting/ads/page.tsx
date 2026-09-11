@@ -29,6 +29,7 @@ export default function AdsPage() {
     headline: 'Residential Plots in Pune East',
     link: 'https://anandipark.in',
     whatsappNumber: '917558444117',
+    leadFormId: '',
     radiusKm: '30',
   });
 
@@ -113,6 +114,7 @@ export default function AdsPage() {
         headline: metaForm.headline || undefined,
         link: metaForm.link || undefined,
         whatsappNumber: metaForm.adType === 'whatsapp' ? (metaForm.whatsappNumber || '').replace(/\D/g, '') : undefined,
+        leadFormId: (metaForm.adType === 'facebook' || metaForm.adType === 'instagram') && metaForm.leadFormId?.trim() ? metaForm.leadFormId.trim() : undefined,
         radiusKm: Number(metaForm.radiusKm) || undefined,
       }),
     onSuccess: (res: any) => {
@@ -277,7 +279,15 @@ export default function AdsPage() {
             <input type="number" value={metaForm.dailyBudget} onChange={(e) => setMetaForm({ ...metaForm, dailyBudget: e.target.value })} placeholder="Daily budget ₹ (e.g. 500)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
             <input type="number" value={metaForm.radiusKm} onChange={(e) => setMetaForm({ ...metaForm, radiusKm: e.target.value })} placeholder="Pune radius km (24–80)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
             <div className="md:col-span-2 flex gap-2">
-              <input value={metaForm.imageUrl} onChange={(e) => setMetaForm({ ...metaForm, imageUrl: e.target.value })} placeholder="Image URL (https://…) or generate one →" className="flex-1 px-3 py-2 border rounded-lg text-sm bg-background" />
+              <input value={metaForm.imageUrl} onChange={(e) => setMetaForm({ ...metaForm, imageUrl: e.target.value })} placeholder="Image URL (https://…), use uploaded ad, or generate →" className="flex-1 px-3 py-2 border rounded-lg text-sm bg-background" />
+              <button
+                type="button"
+                onClick={() => setMetaForm({ ...metaForm, imageUrl: '/uploads/ads/anandi-park-ad.jpg' })}
+                className="shrink-0 flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium hover:bg-muted"
+                title="Use the uploaded Anandi Park ad creative (Ad.jpg)"
+              >
+                <ImageIcon className="h-4 w-4" /> Use uploaded ad
+              </button>
               <button
                 type="button"
                 onClick={() => genCreativeMut.mutate()}
@@ -289,6 +299,9 @@ export default function AdsPage() {
                 Generate
               </button>
             </div>
+            {(metaForm.adType === 'facebook' || metaForm.adType === 'instagram') && (
+              <input value={metaForm.leadFormId} onChange={(e) => setMetaForm({ ...metaForm, leadFormId: e.target.value })} placeholder="Meta lead form ID (optional — native in-app form; needs leads_retrieval)" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+            )}
             {metaForm.imageUrl && (
               <div className="md:col-span-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

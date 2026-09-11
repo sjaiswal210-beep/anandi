@@ -47,8 +47,9 @@ docker-compose.override.yml
 prisma/migrations/*.sql
 
 # Uploads
-uploads/
+uploads/*
 !uploads/tts/
+!uploads/ads/
 tmp/
 
 # Certificates
