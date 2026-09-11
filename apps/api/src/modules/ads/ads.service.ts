@@ -248,6 +248,188 @@ export class AdsService {
     }
   }
 
+  /**
+   * Creates a complete Meta lead-gen ad, ALWAYS PAUSED, so nothing spends until
+   * a human launches it (via setMetaStatus -> ACTIVE). Real-estate ads must use
+   * the HOUSING special ad category, which Meta requires and which restricts
+   * targeting to broad geo (no age/gender/detailed targeting).
+   *
+   * Sequence: Campaign -> Ad Set -> Ad Creative -> Ad. Stores the result as a
+   * Campaign row (platform 'meta', metadata.externalId) so it shows in the
+   * dashboard and can be launched/paused.
+   */
+  async createMetaCampaign(
+    workspaceId: string,
+    dto: {
+      name: string;
+      dailyBudget: number; // in account currency major units, e.g. 500 (INR)
+      imageUrl: string; // publicly reachable image URL (Meta fetches it)
+      caption: string;
+      headline?: string;
+      link?: string; // landing URL; defaults to the site
+      radiusKm?: number; // geo radius around the project
+      lat?: number;
+      lng?: number;
+    },
+  ) {
+    if (!this.metaToken || !this.adAccountId) {
+      return { ok: false, message: 'Meta not connected (need META_AD_ACCOUNT_ID + token).' };
+    }
+    const pageId = this.configService.get<string>('META_PAGE_ID');
+    if (!pageId) {
+      return { ok: false, message: 'META_PAGE_ID is required to create ads.' };
+    }
+    if (!dto.imageUrl || !/^https?:\/\//i.test(dto.imageUrl)) {
+      return { ok: false, message: 'A public https imageUrl is required (Meta fetches the image).' };
+    }
+
+    const axios = (await import('axios')).default;
+    const token = this.metaToken;
+    const acct = this.adAccountId;
+    const created: Record<string, string> = {};
+
+    // Meta wants the budget in minor units (paise for INR).
+    const dailyBudgetMinor = Math.round((dto.dailyBudget || 0) * 100);
+    if (dailyBudgetMinor < 10000) {
+      // Meta enforces a per-account minimum; INR minimum is typically well above
+      // this. Guard against accidental sub-minimum spend.
+      return { ok: false, message: 'dailyBudget too low. Use at least the account minimum (e.g. ₹100+).' };
+    }
+
+    const link = dto.link || this.configService.get<string>('APP_URL') || 'https://anandipark.in';
+    const lat = dto.lat ?? 18.5789; // Wagholi/Bakori, Pune East (approx)
+    const lng = dto.lng ?? 73.9857;
+    const radiusKm = Math.min(80, Math.max(17, dto.radiusKm ?? 25)); // Meta housing: 15mi/~24km min in many regions
+
+    try {
+      // 1) Campaign — PAUSED, Housing special ad category, leads objective.
+      const campRes = await axios.post(
+        `${GRAPH}/${acct}/campaigns`,
+        null,
+        {
+          params: {
+            name: dto.name,
+            objective: 'OUTCOME_LEADS',
+            status: 'PAUSED',
+            special_ad_categories: JSON.stringify(['HOUSING']),
+            access_token: token,
+          },
+          timeout: 30000,
+        },
+      );
+      created.campaignId = campRes.data.id;
+
+      // 2) Ad Set — PAUSED, daily budget, broad geo (housing rules), page leads.
+      const adSetRes = await axios.post(
+        `${GRAPH}/${acct}/adsets`,
+        null,
+        {
+          params: {
+            name: `${dto.name} — Ad Set`,
+            campaign_id: created.campaignId,
+            status: 'PAUSED',
+            daily_budget: dailyBudgetMinor,
+            billing_event: 'IMPRESSIONS',
+            optimization_goal: 'LEAD_GENERATION',
+            bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
+            promoted_object: JSON.stringify({ page_id: pageId }),
+            targeting: JSON.stringify({
+              geo_locations: {
+                custom_locations: [{ latitude: lat, longitude: lng, radius: radiusKm, distance_unit: 'kilometer' }],
+              },
+              // Housing category forbids age/gender/detailed targeting narrowing.
+            }),
+            access_token: token,
+          },
+          timeout: 30000,
+        },
+      );
+      created.adSetId = adSetRes.data.id;
+
+      // 3) Ad Creative — link-form creative pointing at the site with the image.
+      const creativeRes = await axios.post(
+        `${GRAPH}/${acct}/adcreatives`,
+        null,
+        {
+          params: {
+            name: `${dto.name} — Creative`,
+            object_story_spec: JSON.stringify({
+              page_id: pageId,
+              link_data: {
+                link,
+                message: dto.caption,
+                name: dto.headline || 'Anandi Park — Residential Plots',
+                picture: dto.imageUrl,
+                call_to_action: { type: 'LEARN_MORE', value: { link } },
+              },
+            }),
+            access_token: token,
+          },
+          timeout: 30000,
+        },
+      );
+      created.creativeId = creativeRes.data.id;
+
+      // 4) Ad — PAUSED, ties creative to ad set.
+      const adRes = await axios.post(
+        `${GRAPH}/${acct}/ads`,
+        null,
+        {
+          params: {
+            name: `${dto.name} — Ad`,
+            adset_id: created.adSetId,
+            creative: JSON.stringify({ creative_id: created.creativeId }),
+            status: 'PAUSED',
+            access_token: token,
+          },
+          timeout: 30000,
+        },
+      );
+      created.adId = adRes.data.id;
+
+      // Store as a Campaign row so it shows in the dashboard, PAUSED.
+      const row = await this.prisma.campaign.create({
+        data: {
+          workspaceId,
+          name: dto.name,
+          type: 'lead_generation',
+          platform: 'meta',
+          status: 'PAUSED',
+          budget: dto.dailyBudget,
+          spent: 0,
+          content: { caption: dto.caption, headline: dto.headline, imageUrl: dto.imageUrl, link } as any,
+          metrics: {} as any,
+          metadata: {
+            source: 'meta_api',
+            externalId: created.campaignId,
+            adSetId: created.adSetId,
+            creativeId: created.creativeId,
+            adId: created.adId,
+            currency: 'INR',
+            createdPaused: true,
+          } as any,
+        },
+      });
+
+      this.logger.log(`Created PAUSED Meta campaign ${created.campaignId} for "${dto.name}"`);
+      return {
+        ok: true,
+        paused: true,
+        message: 'Campaign created PAUSED. Review it, then Launch to start spending.',
+        ids: created,
+        campaign: row,
+      };
+    } catch (e: any) {
+      const detail = e?.response?.data?.error?.message || e.message;
+      this.logger.error(`Meta ad creation failed at ${Object.keys(created).length} steps: ${detail}`);
+      return {
+        ok: false,
+        message: detail,
+        partial: created, // so a half-created campaign can be cleaned up in Ads Manager
+      };
+    }
+  }
+
   /** Pause or resume a Meta campaign via the Marketing API. */
   async setMetaStatus(campaignExternalId: string, status: 'ACTIVE' | 'PAUSED') {
     if (!this.metaToken) {
@@ -277,5 +459,91 @@ export class AdsService {
         'For Meta ad spend sync + create/pause, set META_AD_ACCOUNT_ID (act_XXXX) and a token with ' +
         'ads_read + ads_management. Google Ads and other costs can be tracked manually.',
     };
+  }
+
+  /**
+   * Read-only check of whether the configured token + ad account can actually
+   * create ads. Spends nothing. Reports account status, funding, capabilities,
+   * and the exact granted token permissions so we know if `ads_management` is
+   * present BEFORE attempting any ad-creation calls.
+   */
+  async metaCapabilities() {
+    if (!this.metaToken || !this.adAccountId) {
+      return {
+        ready: false,
+        message: 'Meta not connected. Set META_AD_ACCOUNT_ID (act_...) and META_PAGE_ACCESS_TOKEN.',
+      };
+    }
+
+    const axios = (await import('axios')).default;
+    const result: Record<string, unknown> = {
+      adAccountId: this.adAccountId,
+      pageId: this.configService.get<string>('META_PAGE_ID') ?? null,
+    };
+
+    // 1. Ad account status + funding + what the account can do.
+    try {
+      const acc = await axios.get(`${GRAPH}/${this.adAccountId}`, {
+        params: {
+          fields:
+            'name,account_status,disable_reason,currency,funding_source,' +
+            'capabilities,business{id,name}',
+          access_token: this.metaToken,
+        },
+        timeout: 20000,
+      });
+      const d = acc.data || {};
+      // account_status: 1 = ACTIVE, 2 = DISABLED, 3 = UNSETTLED, 101 = closed, etc.
+      result.account = {
+        name: d.name,
+        status: d.account_status,
+        statusLabel: d.account_status === 1 ? 'ACTIVE' : `NON-ACTIVE (${d.account_status})`,
+        disableReason: d.disable_reason ?? null,
+        currency: d.currency,
+        hasFundingSource: Boolean(d.funding_source),
+        business: d.business ?? null,
+        capabilities: d.capabilities ?? [],
+      };
+    } catch (e: any) {
+      result.account = { error: e?.response?.data?.error?.message || e.message };
+    }
+
+    // 2. Exact token permissions — is ads_management granted?
+    try {
+      const perms = await axios.get(`${GRAPH}/me/permissions`, {
+        params: { access_token: this.metaToken },
+        timeout: 20000,
+      });
+      const granted = (perms.data?.data || [])
+        .filter((p: any) => p.status === 'granted')
+        .map((p: any) => p.permission);
+      const needed = ['ads_management', 'ads_read', 'pages_manage_ads', 'leads_retrieval'];
+      result.permissions = {
+        granted,
+        adsManagement: granted.includes('ads_management'),
+        adsRead: granted.includes('ads_read'),
+        missing: needed.filter((n) => !granted.includes(n)),
+      };
+    } catch (e: any) {
+      // System-user tokens sometimes 404 on /me/permissions; note it, don't fail.
+      result.permissions = {
+        note: 'Could not read /me/permissions (common for system-user tokens).',
+        error: e?.response?.data?.error?.message || e.message,
+      };
+    }
+
+    const acc: any = result.account;
+    const perms: any = result.permissions;
+    const canCreate =
+      acc?.status === 1 &&
+      acc?.hasFundingSource === true &&
+      (perms?.adsManagement === true || perms?.note); // note = unknown but not denied
+
+    result.ready = canCreate;
+    result.verdict = canCreate
+      ? 'Account is active with funding; ad creation should work. Try a PAUSED test campaign.'
+      : 'Ad creation likely blocked — check account status, funding source, and ads_management permission above.';
+
+    return result;
   }
 }

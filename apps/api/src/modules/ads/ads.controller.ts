@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdsService } from './ads.service';
+import { CreateMetaCampaignDto } from './dto/create-meta-campaign.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
 import { WorkspaceId } from '../../common/decorators/workspace.decorator';
@@ -16,6 +17,13 @@ export class AdsController {
   @ApiOperation({ summary: 'Meta ads connection status' })
   connection() {
     return this.service.connectionInfo();
+  }
+
+  @Public()
+  @Get('meta/capabilities')
+  @ApiOperation({ summary: 'Read-only check: can the token create Meta ads? (spends nothing)' })
+  metaCapabilities() {
+    return this.service.metaCapabilities();
   }
 
   @ApiBearerAuth()
@@ -64,6 +72,14 @@ export class AdsController {
   @ApiOperation({ summary: 'Pull spend + insights from Meta Ads' })
   syncMeta(@WorkspaceId() workspaceId: string) {
     return this.service.syncMeta(workspaceId);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @Post('meta/create')
+  @ApiOperation({ summary: 'Create a Meta lead-gen ad (always PAUSED; launch manually)' })
+  createMeta(@WorkspaceId() workspaceId: string, @Body() dto: CreateMetaCampaignDto) {
+    return this.service.createMetaCampaign(workspaceId, dto);
   }
 
   @ApiBearerAuth()

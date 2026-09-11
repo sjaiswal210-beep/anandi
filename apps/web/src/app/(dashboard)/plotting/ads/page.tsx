@@ -16,6 +16,8 @@ export default function AdsPage() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<any>({ name: '', platform: 'meta', budget: '', spent: '', leads: '', impressions: '', clicks: '', status: 'ACTIVE' });
+  const [showMetaForm, setShowMetaForm] = useState(false);
+  const [metaForm, setMetaForm] = useState<any>({ name: '', dailyBudget: '', imageUrl: '', caption: '', headline: '', link: 'https://anandipark.in', radiusKm: '25' });
 
   const { data: summaryData } = useQuery({
     queryKey: ['ads-summary'],
@@ -86,6 +88,62 @@ export default function AdsPage() {
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Sync failed'),
   });
 
+  // Creates a real Meta lead-gen ad — ALWAYS created PAUSED on Meta.
+  const createMetaMut = useMutation({
+    mutationFn: () =>
+      api.post('/ads/meta/create', {
+        name: metaForm.name,
+        dailyBudget: Number(metaForm.dailyBudget) || 0,
+        imageUrl: metaForm.imageUrl,
+        caption: metaForm.caption,
+        headline: metaForm.headline || undefined,
+        link: metaForm.link || undefined,
+        radiusKm: Number(metaForm.radiusKm) || undefined,
+      }),
+    onSuccess: (res: any) => {
+      const d = res?.data || res;
+      if (d.ok) {
+        toast.success('Meta campaign created — PAUSED. Review it, then Launch to start spending.');
+        setShowMetaForm(false);
+        setMetaForm({ name: '', dailyBudget: '', imageUrl: '', caption: '', headline: '', link: 'https://anandipark.in', radiusKm: '25' });
+        qc.invalidateQueries({ queryKey: ['ads-campaigns'] });
+        qc.invalidateQueries({ queryKey: ['ads-summary'] });
+      } else {
+        toast.error(`Meta: ${d.message || 'creation failed'}`);
+      }
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Meta create failed'),
+  });
+
+  // Launch/pause a REAL Meta campaign (hits the Marketing API), then reflect it
+  // locally. Only used for campaigns that came from Meta (metadata.externalId).
+  const metaStatusMut = useMutation({
+    mutationFn: ({ externalId, status }: { externalId: string; status: 'ACTIVE' | 'PAUSED' }) =>
+      api.post(`/ads/meta/${externalId}/status`, { status }),
+    onSuccess: (res: any, vars) => {
+      const d = res?.data || res;
+      if (d.ok) {
+        toast.success(vars.status === 'ACTIVE' ? 'Campaign launched on Meta' : 'Campaign paused on Meta');
+        qc.invalidateQueries({ queryKey: ['ads-campaigns'] });
+        qc.invalidateQueries({ queryKey: ['ads-summary'] });
+      } else {
+        toast.error(`Meta: ${d.message || 'status change failed'}`);
+      }
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Meta status failed'),
+  });
+
+  // Chooses the right toggle: real Meta call for Meta campaigns, local for manual.
+  const toggleCampaign = (c: any) => {
+    const externalId = c?.metadata?.externalId;
+    const next = c.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    if (c.platform === 'meta' && externalId) {
+      metaStatusMut.mutate({ externalId, status: next });
+    } else {
+      toggleMut.mutate({ id: c.id, status: next });
+    }
+  };
+
   const cards = [
     { label: 'Total Spend', value: inr(totals.spent), icon: IndianRupee, color: 'text-red-600' },
     { label: 'Budget', value: inr(totals.budget), icon: BarChart3, color: 'text-blue-600' },
@@ -115,6 +173,12 @@ export default function AdsPage() {
             Sync Meta
           </button>
           <button
+            onClick={() => setShowMetaForm((s) => !s)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            <Target className="h-4 w-4" /> Create Meta Ad
+          </button>
+          <button
             onClick={() => setShowForm((s) => !s)}
             className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium"
           >
@@ -122,6 +186,35 @@ export default function AdsPage() {
           </button>
         </div>
       </div>
+
+      {/* Create real Meta ad (created PAUSED) */}
+      {showMetaForm && (
+        <div className="bg-card border border-blue-200 dark:border-blue-900 rounded-xl p-6 space-y-4">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2"><Target className="h-4 w-4 text-blue-600" /> Create Meta Lead Ad</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Creates a real campaign on Meta, <strong>always PAUSED</strong>. Nothing spends until you hit Launch (▶) in the table below.
+              Real-estate ads use Meta&apos;s Housing category, so targeting is broad geo only. The image URL must be public (https).
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input value={metaForm.name} onChange={(e) => setMetaForm({ ...metaForm, name: e.target.value })} placeholder="Campaign name" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+            <input type="number" value={metaForm.dailyBudget} onChange={(e) => setMetaForm({ ...metaForm, dailyBudget: e.target.value })} placeholder="Daily budget ₹ (e.g. 500)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
+            <input type="number" value={metaForm.radiusKm} onChange={(e) => setMetaForm({ ...metaForm, radiusKm: e.target.value })} placeholder="Target radius km (17–80)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
+            <input value={metaForm.imageUrl} onChange={(e) => setMetaForm({ ...metaForm, imageUrl: e.target.value })} placeholder="Public image URL (https://…)" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+            <input value={metaForm.headline} onChange={(e) => setMetaForm({ ...metaForm, headline: e.target.value })} placeholder="Headline (optional)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
+            <input value={metaForm.link} onChange={(e) => setMetaForm({ ...metaForm, link: e.target.value })} placeholder="Landing URL" className="px-3 py-2 border rounded-lg text-sm bg-background" />
+            <textarea value={metaForm.caption} onChange={(e) => setMetaForm({ ...metaForm, caption: e.target.value })} placeholder="Ad caption / primary text" rows={3} className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+          </div>
+          <button
+            onClick={() => createMetaMut.mutate()}
+            disabled={!metaForm.name.trim() || !metaForm.imageUrl.trim() || !metaForm.caption.trim() || !metaForm.dailyBudget || createMetaMut.isPending}
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+          >
+            {createMetaMut.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</> : 'Create (Paused)'}
+          </button>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -222,11 +315,15 @@ export default function AdsPage() {
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => toggleMut.mutate({ id: c.id, status: c.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE' })}
-                            className="p-1.5 hover:bg-accent rounded"
-                            aria-label="Toggle status"
+                            onClick={() => toggleCampaign(c)}
+                            disabled={metaStatusMut.isPending}
+                            className="p-1.5 hover:bg-accent rounded disabled:opacity-50"
+                            aria-label={c.status === 'ACTIVE' ? 'Pause campaign' : 'Launch campaign'}
+                            title={c.platform === 'meta' && c?.metadata?.externalId
+                              ? (c.status === 'ACTIVE' ? 'Pause on Meta' : 'Launch on Meta (starts spending)')
+                              : 'Toggle status'}
                           >
-                            {c.status === 'ACTIVE' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                            {c.status === 'ACTIVE' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 text-green-600" />}
                           </button>
                           <button onClick={() => delMut.mutate(c.id)} className="p-1.5 hover:bg-accent rounded text-destructive" aria-label="Delete">
                             <Trash2 className="h-4 w-4" />
