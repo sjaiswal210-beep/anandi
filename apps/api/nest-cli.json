@@ -1,8 +1,13 @@
 {
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
+  "entryFile": "apps/api/src/main",
   "compilerOptions": {
     "deleteOutDir": true,
-    "plugins": ["@nestjs/swagger"]
+    "plugins": ["@nestjs/swagger"],
+    "assets": [
+      { "include": "modules/social-media/assets/**/*", "outDir": "dist" }
+    ],
+    "watchAssets": true
   }
 }
