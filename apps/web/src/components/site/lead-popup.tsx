@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, CheckCircle2, X, Phone } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { PROJECT } from './site-data';
-import { normalisePhone, submitLead } from './site-api';
+import { normalisePhone, submitLead, flushQueuedLeads } from './site-api';
 
 // Shown once per browser session. A visitor who actually submits is never asked
 // again (localStorage); a visitor who dismisses is left alone for the rest of
@@ -18,6 +18,13 @@ type Status = 'idle' | 'sending' | 'done' | 'error';
 
 export function LeadPopup() {
   const pathname = usePathname();
+
+  // Resend any leads that failed to submit earlier (API blip / offline). Runs
+  // on every public page load, so a queued paid-ad lead is delivered as soon as
+  // the visitor loads any page again.
+  useEffect(() => {
+    void flushQueuedLeads();
+  }, []);
 
   // Exclude lead capture dialog on HR terminal, worker portal, and scanner pages
   const isExcluded = 
