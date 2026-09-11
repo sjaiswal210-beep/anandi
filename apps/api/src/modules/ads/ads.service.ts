@@ -422,6 +422,9 @@ export class AdsService {
             objective: cfg.objective,
             status: 'PAUSED',
             special_ad_categories: JSON.stringify(['HOUSING']),
+            // Housing is country-scoped; declare it at the CAMPAIGN level (paired
+            // with special_ad_categories) so the ad set geo is accepted (#2909034).
+            special_ad_category_country: JSON.stringify(['IN']),
             // Budget lives on the ad set (not campaign-level / CBO). Meta's newer
             // API requires this flag to be set explicitly when there is no
             // campaign budget. False = each ad set keeps its own budget.
@@ -454,10 +457,7 @@ export class AdsService {
       } else if (useLeadForm) {
         adSetParams.promoted_object = JSON.stringify({ page_id: pageId });
       }
-      // HOUSING special category is country-scoped. Declare India so the Pune
-      // geo-targeting is accepted (else error #2909034: "locations outside the
-      // countries selected for your Special ad categories").
-      adSetParams.special_ad_category_country = JSON.stringify(['IN']);
+
       const adSetRes = await axios.post(
         `${GRAPH}/${acct}/adsets`,
         null,
@@ -471,9 +471,12 @@ export class AdsService {
               // detailed interest targeting, so audience is geo + placement only.
               // "Plot buyers / investors" is reached via the creative copy +
               // lead-gen optimization, not interest filters (Meta policy).
+              // Housing: target the Pune city area only. A precise lat/lng
+              // custom_location conflicts with the country-scoped Housing
+              // category (#2909034), so we use the city key (Pune, Maharashtra),
+              // which is safely inside India. lat/lng/radius kept for reference.
               geo_locations: {
                 cities: [{ key: '2295423', radius: radiusKm, distance_unit: 'kilometer' }],
-                custom_locations: [{ latitude: lat, longitude: lng, radius: radiusKm, distance_unit: 'kilometer' }],
                 location_types: ['home', 'recent'],
               },
               publisher_platforms: cfg.publisherPlatforms,
