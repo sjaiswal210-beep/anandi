@@ -17,7 +17,20 @@ export default function AdsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<any>({ name: '', platform: 'meta', budget: '', spent: '', leads: '', impressions: '', clicks: '', status: 'ACTIVE' });
   const [showMetaForm, setShowMetaForm] = useState(false);
-  const [metaForm, setMetaForm] = useState<any>({ name: '', dailyBudget: '', imageUrl: '', caption: '', headline: '', link: 'https://anandipark.in', radiusKm: '25' });
+  const [metaForm, setMetaForm] = useState<any>({
+    name: '',
+    adType: 'facebook',
+    dailyBudget: '',
+    imageUrl: '',
+    caption:
+      'Own a premium residential plot in Pune East — Anandi Park, Bakori (Wagholi). ' +
+      'Clear titles, gated & planned layout, ready for construction. Plots from ₹18 Lakh. ' +
+      'Perfect for your dream home or a smart investment. Enquire now.',
+    headline: 'Residential Plots in Pune East',
+    link: 'https://anandipark.in',
+    whatsappNumber: '917558444117',
+    radiusKm: '30',
+  });
 
   const { data: summaryData } = useQuery({
     queryKey: ['ads-summary'],
@@ -93,11 +106,13 @@ export default function AdsPage() {
     mutationFn: () =>
       api.post('/ads/meta/create', {
         name: metaForm.name,
+        adType: metaForm.adType,
         dailyBudget: Number(metaForm.dailyBudget) || 0,
         imageUrl: metaForm.imageUrl,
         caption: metaForm.caption,
         headline: metaForm.headline || undefined,
         link: metaForm.link || undefined,
+        whatsappNumber: metaForm.adType === 'whatsapp' ? (metaForm.whatsappNumber || '').replace(/\D/g, '') : undefined,
         radiusKm: Number(metaForm.radiusKm) || undefined,
       }),
     onSuccess: (res: any) => {
@@ -138,8 +153,10 @@ export default function AdsPage() {
   const genCreativeMut = useMutation({
     mutationFn: () =>
       api.post('/social-media/generate-image', {
-        topic: metaForm.name || 'Anandi Park residential plots',
-        platform: 'FACEBOOK',
+        topic:
+          metaForm.name ||
+          'Anandi Park residential plots in Pune East for home buyers and investors',
+        platform: metaForm.adType === 'instagram' ? 'INSTAGRAM' : 'FACEBOOK',
         headline: metaForm.headline || undefined,
         count: 1,
       }),
@@ -222,16 +239,43 @@ export default function AdsPage() {
       {showMetaForm && (
         <div className="bg-card border border-blue-200 dark:border-blue-900 rounded-xl p-6 space-y-4">
           <div>
-            <h3 className="font-semibold flex items-center gap-2"><Target className="h-4 w-4 text-blue-600" /> Create Meta Lead Ad</h3>
+            <h3 className="font-semibold flex items-center gap-2"><Target className="h-4 w-4 text-blue-600" /> Create Meta Ad</h3>
             <p className="text-xs text-muted-foreground mt-1">
               Creates a real campaign on Meta, <strong>always PAUSED</strong>. Nothing spends until you hit Launch (▶) in the table below.
-              Real-estate ads use Meta&apos;s Housing category, so targeting is broad geo only. The image URL must be public (https).
             </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              <strong>Targeting:</strong> Pune (city + ~30 km around the project). Real-estate ads run under Meta&apos;s Housing
+              category, which <strong>forbids age/gender/interest targeting</strong> — so we reach plot buyers &amp; investors through the
+              creative &amp; copy, not filters. The image must resolve to a public https URL.
+            </p>
+          </div>
+          {/* Ad type selector */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { k: 'facebook', label: 'Facebook Ad' },
+              { k: 'instagram', label: 'Instagram Ad' },
+              { k: 'whatsapp', label: 'WhatsApp (Click-to-Chat)' },
+              { k: 'website', label: 'Website Traffic' },
+            ].map((t) => (
+              <button
+                key={t.k}
+                type="button"
+                onClick={() => setMetaForm({ ...metaForm, adType: t.k })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  metaForm.adType === t.k ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-muted'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input value={metaForm.name} onChange={(e) => setMetaForm({ ...metaForm, name: e.target.value })} placeholder="Campaign name" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+            {metaForm.adType === 'whatsapp' && (
+              <input value={metaForm.whatsappNumber} onChange={(e) => setMetaForm({ ...metaForm, whatsappNumber: e.target.value })} placeholder="WhatsApp number (digits, e.g. 917558444117)" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+            )}
             <input type="number" value={metaForm.dailyBudget} onChange={(e) => setMetaForm({ ...metaForm, dailyBudget: e.target.value })} placeholder="Daily budget ₹ (e.g. 500)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
-            <input type="number" value={metaForm.radiusKm} onChange={(e) => setMetaForm({ ...metaForm, radiusKm: e.target.value })} placeholder="Target radius km (17–80)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
+            <input type="number" value={metaForm.radiusKm} onChange={(e) => setMetaForm({ ...metaForm, radiusKm: e.target.value })} placeholder="Pune radius km (24–80)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
             <div className="md:col-span-2 flex gap-2">
               <input value={metaForm.imageUrl} onChange={(e) => setMetaForm({ ...metaForm, imageUrl: e.target.value })} placeholder="Image URL (https://…) or generate one →" className="flex-1 px-3 py-2 border rounded-lg text-sm bg-background" />
               <button
@@ -390,11 +434,23 @@ export default function AdsPage() {
 
       {!summary.metaConnected && (
         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-xl p-4 text-sm text-amber-800 dark:text-amber-300">
-          <strong>Auto-sync not connected.</strong> To pull Meta ad spend automatically, set
-          <code className="mx-1 font-mono">META_AD_ACCOUNT_ID</code> and a token with ads_read in the server .env.
-          Google Ads and other costs can be tracked manually with &quot;Add Campaign / Cost&quot; above.
+          <strong>Meta auto-sync not connected.</strong> To create ads and pull spend automatically, set
+          <code className="mx-1 font-mono">META_AD_ACCOUNT_ID</code> and a token with ads_management in the server .env.
         </div>
       )}
+
+      {/* Platform automation status */}
+      <div className="bg-card border rounded-xl p-5 text-sm">
+        <h3 className="font-semibold mb-3">What can be launched from here</h3>
+        <ul className="space-y-1.5 text-muted-foreground">
+          <li>✅ <strong className="text-foreground">Facebook ads</strong> — created &amp; launched via &quot;Create Meta Ad&quot; (Facebook placement).</li>
+          <li>✅ <strong className="text-foreground">Instagram ads</strong> — same flow, Instagram placement.</li>
+          <li>✅ <strong className="text-foreground">WhatsApp ads</strong> — Click-to-WhatsApp ads that open a chat with the business number.</li>
+          <li>✅ <strong className="text-foreground">Website traffic ads</strong> — drive Pune visitors to anandipark.in.</li>
+          <li>⏳ <strong className="text-foreground">Google Ads</strong> — <em>manual only for now.</em> The Google Ads API needs a developer token that takes weeks of Google approval. Track Google spend with &quot;Add Campaign / Cost&quot; until then.</li>
+        </ul>
+        <p className="mt-3 text-xs">All Meta ads are created <strong>PAUSED</strong> and target <strong>Pune</strong>. Hit ▶ to launch. Housing rules mean audience is geo + creative, not interest filters.</p>
+      </div>
     </div>
   );
 }

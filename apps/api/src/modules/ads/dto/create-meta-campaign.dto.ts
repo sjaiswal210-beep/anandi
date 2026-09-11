@@ -1,10 +1,27 @@
-import { IsNumber, IsOptional, IsString, IsUrl, Max, Min, MinLength } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, IsUrl, Matches, Max, Min, MinLength } from 'class-validator';
 // IsUrl retained for the optional `link` field below.
 
 export class CreateMetaCampaignDto {
   @IsString()
   @MinLength(3)
   name: string;
+
+  /**
+   * Which kind of Meta ad to create. All run through the Marketing API; they
+   * differ in objective, placement, and destination/CTA:
+   *  - facebook : lead ad, Facebook placement
+   *  - instagram: lead ad, Instagram placement
+   *  - whatsapp : Click-to-WhatsApp (opens a chat with the business number)
+   *  - website  : traffic ad to the website
+   */
+  @IsOptional()
+  @IsIn(['facebook', 'instagram', 'whatsapp', 'website'])
+  adType?: 'facebook' | 'instagram' | 'whatsapp' | 'website';
+
+  /** WhatsApp destination number (digits only) — required for adType=whatsapp. */
+  @IsOptional()
+  @Matches(/^\d{10,15}$/, { message: 'whatsappNumber must be 10–15 digits, e.g. 917558444117' })
+  whatsappNumber?: string;
 
   /** Daily budget in account currency major units (e.g. 500 = ₹500/day). */
   @IsNumber()
@@ -34,7 +51,7 @@ export class CreateMetaCampaignDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(17)
+  @Min(24)
   @Max(80)
   radiusKm?: number;
 

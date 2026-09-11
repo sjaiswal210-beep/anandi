@@ -2,6 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import sharp from 'sharp';
 
 /**
  * Generates advertising images for the plotting project using Gemini's
@@ -50,6 +51,89 @@ export class SocialImageService {
   }
 
   /**
+   * Rich-Land Developers logo, composited onto every generated ad image so the
+   * brand is always present. Resolved from candidate locations so it works both
+   * in dev (running from src via nest start) and in prod (running from dist,
+   * where nest-cli copies the asset). Cached after the first successful read.
+   */
+  private logoBufferCache: Buffer | null = null;
+
+  private async loadLogo(): Promise<Buffer | null> {
+    if (this.logoBufferCache) return this.logoBufferCache;
+
+    const cwd = process.cwd();
+    const appRoot = cwd.includes(`apps${path.sep}api`)
+      ? cwd.replace(/[/\\]apps[/\\]api.*/, '')
+      : cwd.replace(/[/\\]dist.*/, '');
+
+    const candidates = [
+      // dev: running from apps/api with ts source present
+      path.join(appRoot, 'apps', 'api', 'src', 'modules', 'social-media', 'assets', 'richland-logo.png'),
+      // prod: nest-cli copies assets under dist/... (nested layout on the VPS)
+      path.join(appRoot, 'apps', 'api', 'dist', 'apps', 'api', 'src', 'modules', 'social-media', 'assets', 'richland-logo.png'),
+      path.join(appRoot, 'apps', 'api', 'dist', 'modules', 'social-media', 'assets', 'richland-logo.png'),
+      path.join(__dirname, 'assets', 'richland-logo.png'),
+      // shared web asset fallback
+      path.join(appRoot, 'apps', 'web', 'public', 'brand', 'richland-transparent.png'),
+    ];
+
+    for (const p of candidates) {
+      try {
+        const buf = await fs.readFile(p);
+        this.logoBufferCache = buf;
+        this.logger.log(`Loaded Rich-Land logo for overlay from ${p}`);
+        return buf;
+      } catch {
+        // try next candidate
+      }
+    }
+
+    this.logger.warn(
+      'Rich-Land logo not found in any known location; images will be saved without a logo overlay.',
+    );
+    return null;
+  }
+
+  /**
+   * Composites the Rich-Land Developers logo onto the bottom-right of a
+   * generated image with a subtle padding. Falls back to the original image if
+   * the logo is missing or sharp fails, so image generation never breaks.
+   */
+  private async overlayLogo(imageBuffer: Buffer): Promise<Buffer> {
+    try {
+      const logo = await this.loadLogo();
+      if (!logo) return imageBuffer;
+
+      const base = sharp(imageBuffer);
+      const meta = await base.metadata();
+      const width = meta.width ?? 1080;
+      const height = meta.height ?? 1080;
+
+      // Logo width ~18% of the image width, with sane bounds.
+      const logoWidth = Math.max(120, Math.min(360, Math.round(width * 0.18)));
+      const padding = Math.round(width * 0.03);
+
+      const resizedLogo = await sharp(logo)
+        .resize({ width: logoWidth, withoutEnlargement: true })
+        .png()
+        .toBuffer();
+      const logoMeta = await sharp(resizedLogo).metadata();
+      const logoHeight = logoMeta.height ?? logoWidth;
+
+      const left = Math.max(0, width - logoWidth - padding);
+      const top = Math.max(0, height - logoHeight - padding);
+
+      return await base
+        .composite([{ input: resizedLogo, left, top }])
+        .png()
+        .toBuffer();
+    } catch (e: any) {
+      this.logger.warn(`Logo overlay failed, using original image: ${e?.message || e}`);
+      return imageBuffer;
+    }
+  }
+
+  /**
    * Builds an ad-style prompt anchored to the real project details so the
    * output is usable marketing material rather than generic stock imagery.
    */
@@ -64,11 +148,14 @@ export class SocialImageService {
     return [
       'Create a photorealistic real estate advertisement image.',
       '',
-      'PROJECT: Anandi Park — premium NA residential plots (land plotting project)',
-      'DEVELOPER: Yuvraj Gade & Rajan Kute Developers',
-      'LOCATION: Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune, Maharashtra, India',
-      'SELLING POINTS: clear titles, gated layout, wide internal roads,',
-      'ready for construction, prices from Rs 15 Lakh',
+      'PROJECT: Anandi Park — premium residential plots (planned plotting project)',
+      'DEVELOPER: Rich-Land Developers (Yuvraj Gade & Rajan Kute)',
+      'LOCATION: Bakori, Wagholi-Bakori Road, Pune East, Maharashtra, India',
+      'AUDIENCE: Pune families & investors looking to BUY a residential plot / land /',
+      'property for their own home or for investment. Aspirational but trustworthy.',
+      'SELLING POINTS: clear titles, gated & planned layout, wide internal roads,',
+      'ready for construction, strong appreciation in fast-growing Pune East,',
+      'plots 1000–4510 sq.ft, prices from Rs 18 Lakh onward',
       '',
       `AD FOCUS: ${input.topic}`,
       input.headline ? `HEADLINE TEXT TO RENDER: "${input.headline}"` : '',
@@ -78,15 +165,19 @@ export class SocialImageService {
       '- Demarcated empty residential plots with paved internal roads and boundary markers',
       '- Lush green surroundings, clear blue sky, warm golden-hour light',
       '- A few modern under-construction Indian homes at the edges for aspiration',
-      '- Clean, premium, trustworthy brochure aesthetic',
+      '- Optionally a happy Indian family or couple envisioning their future home/investment',
+      '- Clean, premium, trustworthy brochure aesthetic that appeals to Pune buyers',
       `- ${square ? 'Square 1:1 composition for Instagram' : 'Landscape 16:9 composition for Facebook'}`,
       `- Style: ${input.style || 'bright, premium, professional real estate marketing'}`,
       '',
       'RULES:',
       '- Photorealistic, not illustration or cartoon',
       '- Any text must be spelled correctly in English and kept minimal',
-      '- Do not invent a logo, and do not add any RERA number or NA text',
+      '- Do not invent a logo, and do not add any RERA number or "NA" text',
+      '- Never write "NA plots" — these are "residential plots"',
       '- No watermarks, no stock-photo branding, no distorted text',
+      '- Keep the bottom-right corner relatively clean/uncluttered (a real brand',
+      '  logo is composited there afterwards)',
     ]
       .filter(Boolean)
       .join('\n');
@@ -152,15 +243,16 @@ export class SocialImageService {
           continue;
         }
 
-        const mime: string = inline.mimeType || inline.mime_type || 'image/png';
-        const ext = mime.includes('jpeg') ? 'jpg' : 'png';
+        // Overlay the Rich-Land logo. overlayLogo() always returns PNG, so the
+        // file is written as .png regardless of the source mime type.
+        const branded = await this.overlayLogo(Buffer.from(inline.data, 'base64'));
         const fileName = `ad-${Date.now().toString(36)}-${Math.random()
           .toString(36)
-          .slice(2, 7)}.${ext}`;
+          .slice(2, 7)}.png`;
 
         await fs.mkdir(this.uploadDir, { recursive: true });
         const filePath = path.join(this.uploadDir, fileName);
-        await fs.writeFile(filePath, Buffer.from(inline.data, 'base64'));
+        await fs.writeFile(filePath, branded);
 
         this.workingModel = model;
         this.workingTransport = transport;
@@ -219,10 +311,12 @@ export class SocialImageService {
     const buf = Buffer.from(res.data);
     if (buf.length < 3000) throw new Error(`image too small (${buf.length} bytes)`);
 
-    const fileName = `ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+    // Overlay the Rich-Land logo; overlayLogo() returns PNG.
+    const branded = await this.overlayLogo(buf);
+    const fileName = `ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}.png`;
     await fs.mkdir(this.uploadDir, { recursive: true });
     const filePath = path.join(this.uploadDir, fileName);
-    await fs.writeFile(filePath, buf);
+    await fs.writeFile(filePath, branded);
 
     this.logger.log(`Generated ad image via Pollinations: ${fileName}`);
     return { url: `/uploads/social/${fileName}`, filePath, model: 'pollinations/flux', prompt };

@@ -281,11 +281,13 @@ export class AdsService {
     workspaceId: string,
     dto: {
       name: string;
+      adType?: 'facebook' | 'instagram' | 'whatsapp' | 'website'; // default facebook
       dailyBudget: number; // in account currency major units, e.g. 500 (INR)
       imageUrl: string; // publicly reachable image URL (Meta fetches it)
       caption: string;
       headline?: string;
       link?: string; // landing URL; defaults to the site
+      whatsappNumber?: string; // digits only, e.g. 917558444117 (for whatsapp ads)
       radiusKm?: number; // geo radius around the project
       lat?: number;
       lng?: number;
@@ -297,6 +299,64 @@ export class AdsService {
     const pageId = this.configService.get<string>('META_PAGE_ID');
     if (!pageId) {
       return { ok: false, message: 'META_PAGE_ID is required to create ads.' };
+    }
+
+    const adType = dto.adType || 'facebook';
+
+    // Per-type Meta configuration: objective, placement, optimization + how the
+    // creative's destination/CTA is built. All four run through the same
+    // Marketing API — they differ only in these parameters.
+    const typeConfig: Record<
+      string,
+      {
+        objective: string;
+        optimizationGoal: string;
+        publisherPlatforms: string[];
+        cta: string;
+        label: string;
+      }
+    > = {
+      facebook: {
+        objective: 'OUTCOME_LEADS',
+        optimizationGoal: 'LEAD_GENERATION',
+        publisherPlatforms: ['facebook'],
+        cta: 'LEARN_MORE',
+        label: 'Facebook',
+      },
+      instagram: {
+        objective: 'OUTCOME_LEADS',
+        optimizationGoal: 'LEAD_GENERATION',
+        publisherPlatforms: ['instagram'],
+        cta: 'LEARN_MORE',
+        label: 'Instagram',
+      },
+      whatsapp: {
+        // Click-to-WhatsApp: engagement objective, optimizes for conversations,
+        // CTA opens a WhatsApp chat with the business number.
+        objective: 'OUTCOME_ENGAGEMENT',
+        optimizationGoal: 'CONVERSATIONS',
+        publisherPlatforms: ['facebook', 'instagram'],
+        cta: 'WHATSAPP_MESSAGE',
+        label: 'WhatsApp (Click-to-Chat)',
+      },
+      website: {
+        // Drive traffic to the site.
+        objective: 'OUTCOME_TRAFFIC',
+        optimizationGoal: 'LANDING_PAGE_VIEWS',
+        publisherPlatforms: ['facebook', 'instagram'],
+        cta: 'LEARN_MORE',
+        label: 'Website Traffic',
+      },
+    };
+    const cfg = typeConfig[adType];
+    if (!cfg) {
+      return { ok: false, message: `Unknown adType "${adType}". Use facebook, instagram, whatsapp, or website.` };
+    }
+
+    // WhatsApp ads need a destination number.
+    const waNumber = (dto.whatsappNumber || '917558444117').replace(/\D/g, '');
+    if (adType === 'whatsapp' && !waNumber) {
+      return { ok: false, message: 'whatsappNumber is required for WhatsApp ads.' };
     }
     // Accept either a full https URL or a relative /uploads/... path from the
     // social image generator; resolve the latter against the public API base so
@@ -327,7 +387,9 @@ export class AdsService {
     const link = dto.link || this.configService.get<string>('APP_URL') || 'https://anandipark.in';
     const lat = dto.lat ?? 18.5789; // Wagholi/Bakori, Pune East (approx)
     const lng = dto.lng ?? 73.9857;
-    const radiusKm = Math.min(80, Math.max(17, dto.radiusKm ?? 25)); // Meta housing: 15mi/~24km min in many regions
+    // Housing category enforces a minimum radius (~15 mi / 24 km). Default wide
+    // enough to cover greater Pune; the project sits in Pune East.
+    const radiusKm = Math.min(80, Math.max(24, dto.radiusKm ?? 30));
 
     try {
       // 1) Campaign — PAUSED, Housing special ad category, leads objective.
@@ -337,7 +399,7 @@ export class AdsService {
         {
           params: {
             name: dto.name,
-            objective: 'OUTCOME_LEADS',
+            objective: cfg.objective,
             status: 'PAUSED',
             special_ad_categories: JSON.stringify(['HOUSING']),
             access_token: token,
@@ -358,14 +420,28 @@ export class AdsService {
             status: 'PAUSED',
             daily_budget: dailyBudgetMinor,
             billing_event: 'IMPRESSIONS',
-            optimization_goal: 'LEAD_GENERATION',
+            optimization_goal: cfg.optimizationGoal,
             bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
-            promoted_object: JSON.stringify({ page_id: pageId }),
+            // WhatsApp ads promote the page's WhatsApp destination; others just
+            // promote the page.
+            promoted_object: JSON.stringify(
+              adType === 'whatsapp'
+                ? { page_id: pageId, whatsapp_phone_number: waNumber }
+                : { page_id: pageId },
+            ),
             targeting: JSON.stringify({
+              // Target Pune: the whole city (Meta city key 2295423 = Pune,
+              // Maharashtra) plus a radius around the project in Pune East.
+              // Under the HOUSING special category Meta forbids age/gender and
+              // detailed interest targeting, so audience is geo + placement only.
+              // "Plot buyers / investors" is reached via the creative copy +
+              // lead-gen optimization, not interest filters (Meta policy).
               geo_locations: {
+                cities: [{ key: '2295423', radius: radiusKm, distance_unit: 'kilometer' }],
                 custom_locations: [{ latitude: lat, longitude: lng, radius: radiusKm, distance_unit: 'kilometer' }],
+                location_types: ['home', 'recent'],
               },
-              // Housing category forbids age/gender/detailed targeting narrowing.
+              publisher_platforms: cfg.publisherPlatforms,
             }),
             access_token: token,
           },
@@ -374,7 +450,28 @@ export class AdsService {
       );
       created.adSetId = adSetRes.data.id;
 
-      // 3) Ad Creative — link-form creative pointing at the site with the image.
+      // 3) Ad Creative. WhatsApp ads use a WHATSAPP_MESSAGE CTA that opens a
+      // chat with the business number; the others link to the website.
+      const callToAction =
+        adType === 'whatsapp'
+          ? {
+              type: 'WHATSAPP_MESSAGE',
+              value: {
+                app_destination: 'WHATSAPP',
+                link: `https://wa.me/${waNumber}`,
+              },
+            }
+          : { type: cfg.cta, value: { link } };
+
+      const linkData: Record<string, unknown> = {
+        message: dto.caption,
+        name: dto.headline || 'Anandi Park — Residential Plots',
+        picture: imageUrl,
+        call_to_action: callToAction,
+        // WhatsApp click-to-chat still needs a link field; use the wa.me link.
+        link: adType === 'whatsapp' ? `https://wa.me/${waNumber}` : link,
+      };
+
       const creativeRes = await axios.post(
         `${GRAPH}/${acct}/adcreatives`,
         null,
@@ -383,13 +480,7 @@ export class AdsService {
             name: `${dto.name} — Creative`,
             object_story_spec: JSON.stringify({
               page_id: pageId,
-              link_data: {
-                link,
-                message: dto.caption,
-                name: dto.headline || 'Anandi Park — Residential Plots',
-                picture: imageUrl,
-                call_to_action: { type: 'LEARN_MORE', value: { link } },
-              },
+              link_data: linkData,
             }),
             access_token: token,
           },
@@ -420,15 +511,27 @@ export class AdsService {
         data: {
           workspaceId,
           name: dto.name,
-          type: 'lead_generation',
+          type: cfg.objective,
           platform: 'meta',
           status: 'PAUSED',
           budget: dto.dailyBudget,
           spent: 0,
-          content: { caption: dto.caption, headline: dto.headline, imageUrl, link } as any,
+          content: {
+            caption: dto.caption,
+            headline: dto.headline,
+            imageUrl,
+            link,
+            adType,
+            adTypeLabel: cfg.label,
+            whatsappNumber: adType === 'whatsapp' ? waNumber : undefined,
+          } as any,
           metrics: {} as any,
           metadata: {
             source: 'meta_api',
+            adType,
+            adTypeLabel: cfg.label,
+            objective: cfg.objective,
+            publisherPlatforms: cfg.publisherPlatforms,
             externalId: created.campaignId,
             adSetId: created.adSetId,
             creativeId: created.creativeId,
@@ -439,11 +542,12 @@ export class AdsService {
         },
       });
 
-      this.logger.log(`Created PAUSED Meta campaign ${created.campaignId} for "${dto.name}"`);
+      this.logger.log(`Created PAUSED Meta ${cfg.label} campaign ${created.campaignId} for "${dto.name}"`);
       return {
         ok: true,
         paused: true,
-        message: 'Campaign created PAUSED. Review it, then Launch to start spending.',
+        adType,
+        message: `${cfg.label} campaign created PAUSED. Review it, then Launch to start spending.`,
         ids: created,
         campaign: row,
       };
