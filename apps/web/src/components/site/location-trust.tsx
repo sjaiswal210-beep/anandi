@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Clock, Quote, ChevronDown, Star } from 'lucide-react';
-import { NEARBY, CONNECTIVITY, TESTIMONIALS, FAQS, PROJECT, img } from './site-data';
+import { NEARBY, CONNECTIVITY, TESTIMONIALS, FAQS, PROJECT } from './site-data';
 import { useLanguage } from './language-context';
 
 export function SiteLocation() {
@@ -153,12 +153,14 @@ export function SiteTestimonials() {
                   ))}
                 </div>
                 <figcaption className="mt-5 flex items-center gap-3 border-t border-slate-200 pt-5 dark:border-slate-800">
-                  <img
-                    src={img(te.seed, 96, 96)}
-                    alt=""
+                  {/* Initial-letter avatar — no image request (lighter + no
+                      external CDN). */}
+                  <span
                     aria-hidden="true"
-                    className="h-10 w-10 rounded-full bg-slate-200 object-cover border border-slate-300 dark:border-slate-700"
-                  />
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-300 bg-amber-100 text-sm font-bold text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400"
+                  >
+                    {te.name.trim().charAt(0)}
+                  </span>
                   <div>
                     <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{te.name}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-none font-medium">{te.role}</p>

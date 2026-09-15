@@ -266,6 +266,11 @@ const LOCAL_IMAGES: Record<string, string> = {
   'ap-insta-4': '/site/sample-villa.jpg',
   'ap-insta-5': '/site/green-belt.jpg',
   'ap-insta-6': '/site/entry-gate.jpg',
+  // testimonial avatars — map to local assets so nothing hits the external
+  // picsum.photos CDN (removes the only third-party image calls on the site).
+  'ap-t1': '/site/entry-gate.jpg',
+  'ap-t2': '/site/green-belt.jpg',
+  'ap-t3': '/site/sample-villa.jpg',
 };
 
 export const img = (seed: string, w: number, h: number) =>

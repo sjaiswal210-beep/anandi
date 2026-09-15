@@ -37,6 +37,8 @@ export function SiteAmenities() {
         src={img('ap-amenity-bg-green', 1920, 1000)}
         alt=""
         aria-hidden="true"
+        loading="lazy"
+        decoding="async"
         className="absolute inset-0 h-full w-full object-cover opacity-20"
       />
       <div className="absolute inset-0 bg-slate-950/70" />
@@ -110,6 +112,8 @@ export function SiteGallery() {
               <img
                 src={img(g.seed, 800, 600)}
                 alt={g.caption}
+                loading="lazy"
+                decoding="async"
                 className="h-64 w-full bg-slate-100 object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-4 text-left text-xs sm:text-sm font-semibold text-white leading-snug">

@@ -45,6 +45,8 @@ export function SiteBlog() {
                   <img
                     src={img(post.seed, 800, 500)}
                     alt={post.title}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full bg-slate-100 object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <span className="absolute left-4 top-4 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-slate-950">
@@ -150,6 +152,8 @@ export function SiteSocial() {
               <img
                 src={img(post.seed, 500, 500)}
                 alt={post.caption}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full bg-slate-200 object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-slate-950/80 via-transparent to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">

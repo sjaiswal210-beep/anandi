@@ -21,6 +21,8 @@ export function SiteHero() {
       <img
         src={img('ap-hero-land-aerial', 1920, 1200)}
         alt="Aerial view of Anandi Park residential plots"
+        fetchPriority="high"
+        decoding="async"
         className="absolute inset-0 h-full w-full object-cover opacity-40"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/50" />

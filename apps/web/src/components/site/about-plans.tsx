@@ -74,17 +74,23 @@ export function SiteAbout() {
           <img
             src={img('ap-about-land', 700, 900)}
             alt="Anandi Park plotted layout with internal roads"
+            loading="lazy"
+            decoding="async"
             className="col-span-1 h-full rounded-2xl object-cover shadow-lg"
           />
           <div className="space-y-4">
             <img
               src={img('ap-about-green', 700, 500)}
               alt="Landscaped central garden"
+              loading="lazy"
+              decoding="async"
               className="rounded-2xl object-cover shadow-lg"
             />
             <img
               src={img('ap-about-gate', 700, 500)}
               alt="Project entry gate"
+              loading="lazy"
+              decoding="async"
               className="rounded-2xl object-cover shadow-lg"
             />
           </div>
@@ -164,6 +170,8 @@ export function SitePlans() {
                 <img
                   src={img(c.seed, 800, 560)}
                   alt={`${c.type}`}
+                  loading="lazy"
+                  decoding="async"
                   className="h-44 w-full bg-slate-100 object-cover"
                 />
                 {c.featured && (
