@@ -273,5 +273,10 @@ const LOCAL_IMAGES: Record<string, string> = {
   'ap-t3': '/site/sample-villa.jpg',
 };
 
-export const img = (seed: string, w: number, h: number) =>
-  LOCAL_IMAGES[seed] || `https://picsum.photos/seed/${seed}/${w}/${h}`;
+// Serve the WebP variant of local images (25–35% smaller than JPEG, supported
+// by all modern mobile browsers). The .jpg still exists as a fallback/original.
+export const img = (seed: string, w: number, h: number) => {
+  const local = LOCAL_IMAGES[seed];
+  if (local) return local.replace(/\.jpe?g$/i, '.webp');
+  return `https://picsum.photos/seed/${seed}/${w}/${h}`;
+};

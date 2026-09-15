@@ -12,7 +12,8 @@ import { normalisePhone, submitLead, flushQueuedLeads } from './site-api';
 // the session but will see it on their next visit.
 const SUBMITTED_KEY = 'anandi-lead-captured';
 const DISMISSED_KEY = 'anandi-lead-dismissed';
-const OPEN_DELAY_MS = 2500;
+// Short delay so the lead form reaches mobile visitors quickly (they may bounce).
+const OPEN_DELAY_MS = 1200;
 
 type Status = 'idle' | 'sending' | 'done' | 'error';
 
