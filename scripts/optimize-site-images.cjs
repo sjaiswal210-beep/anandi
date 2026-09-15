@@ -16,12 +16,15 @@ const sharp = require('sharp');
 
 const DIR = path.join(__dirname, '..', 'apps', 'web', 'public', 'site');
 
-// Max width per image role. Hero/aerial can be wide; cards/blog smaller.
+// Mobile-first widths. Most visitors are on phones (~360–430 CSS px, up to ~2–3x
+// DPR), so even the hero rarely needs more than ~1200px. Cards/thumbs are shown
+// small, so cap them tight. This roughly halves bytes again vs the wide version.
 const WIDTH_BY_HINT = [
-  { match: /hero|aerial|layout-plan|green-belt|og-cover/, width: 1600 },
-  { match: /about|blog|villa|entry|road|gate/, width: 1200 },
+  { match: /hero|aerial|layout-plan|og-cover/, width: 1200 },
+  { match: /green-belt|about-green|about-land|about-gate|villa|entry|road/, width: 900 },
+  { match: /blog/, width: 800 },
 ];
-const defaultWidth = 1280;
+const defaultWidth = 900;
 
 function targetWidth(name) {
   for (const r of WIDTH_BY_HINT) if (r.match.test(name)) return r.width;
@@ -53,14 +56,16 @@ function targetWidth(name) {
     const jpgBuf = await sharp(srcBuf)
       .rotate()
       .resize({ width: resizeW, withoutEnlargement: true })
-      .jpeg({ quality: 72, mozjpeg: true })
+      .jpeg({ quality: 68, mozjpeg: true })
       .toBuffer();
     fs.writeFileSync(full, jpgBuf);
 
-    // WebP sibling.
+    // WebP sibling — the format actually served to visitors.
     const webpPath = full.replace(/\.jpe?g$/i, '.webp');
-    const webpBuf = await sharp(jpgBuf)
-      .webp({ quality: 70 })
+    const webpBuf = await sharp(srcBuf)
+      .rotate()
+      .resize({ width: resizeW, withoutEnlargement: true })
+      .webp({ quality: 62 })
       .toBuffer();
     fs.writeFileSync(webpPath, webpBuf);
 
