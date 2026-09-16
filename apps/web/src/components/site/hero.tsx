@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MapPin, ShieldCheck, CalendarClock, ArrowRight } from 'lucide-react';
+import { MapPin, ShieldCheck, CalendarClock, ArrowRight, Gift } from 'lucide-react';
 import { PROJECT, img } from './site-data';
 import { useLanguage } from './language-context';
 
@@ -81,6 +81,12 @@ export function SiteHero() {
           <p className="mt-8 text-sm text-slate-400">
             {t('hero.price')}
           </p>
+
+          {/* Limited-period offer — strong lead hook from the campaign flyer. */}
+          <div className="mt-5 inline-flex items-center gap-2.5 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300">
+            <Gift className="h-5 w-5 shrink-0 text-emerald-400" aria-hidden="true" />
+            {PROJECT.offer}
+          </div>
         </motion.div>
 
         {/* Stats strip */}

@@ -19,17 +19,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 export function SiteAmenities() {
   const { t } = useLanguage();
 
-  const amens = AMENITIES.map((a, i) => {
-    const keys = [
-      'amen.road', 'amen.gate', 'amen.water', 'amen.elect',
-      'amen.drain', 'amen.garden', 'amen.kids', 'amen.security',
-      'amen.wall', 'amen.lights', 'amen.trees', 'amen.open'
-    ];
-    return {
-      ...a,
-      name: t(keys[i]) || a.name
-    };
-  });
+  // Amenity names come straight from site-data (kept in sync with the campaign
+  // flyer). The old index-based translation override was removed because it
+  // mismatched after the amenity list changed.
+  const amens = AMENITIES;
 
   return (
     <section id="amenities" className="relative overflow-hidden bg-slate-950 py-24">

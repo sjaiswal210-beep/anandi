@@ -4,10 +4,16 @@
 export const PROJECT = {
   name: 'Anandi Park',
   tagline: 'Premium Residential Plots at Bakori, Wagholi — Pune East',
+  taglineMr: 'स्वप्न तुमची... निर्मिती आमची',
   builder: 'Rich-Land Developers',
   partners: 'Yuvraj Gade & Rajan Kute',
   priceFrom: '₹18 Lakh',
   priceNote: 'all inclusive',
+  // 1 to 11 guntha open bungalow & commercial plots; proposed R-Zone.
+  plotScope: '1 to 11 Guntha open bungalow & commercial plots (proposed R-Zone)',
+  // Limited-period buyer offer from the campaign flyer.
+  offer: 'Free TVS Jupiter with every plot booking',
+  offerMr: 'प्रत्येक प्लॉटवर TVS Jupiter फ्री!',
   possession: 'Ready for Registration',
   location: 'GAT No. 279, Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune',
   shortLocation: 'Bakori, Wagholi, Pune',
@@ -92,17 +98,17 @@ export const WHY = [
 ];
 
 export const AMENITIES = [
-  { name: '30 & 40 ft Internal Roads', icon: 'road' },
-  { name: 'Landscaped Entry Gate', icon: 'building' },
-  { name: '24x7 Water Supply Line', icon: 'waves' },
-  { name: 'Underground Electricity', icon: 'zap' },
-  { name: 'Storm Water Drainage', icon: 'waves' },
+  { name: 'Within Municipal (Mahanagarpalika) Limits', icon: 'building' },
+  { name: 'Plots Facing PMPL Bus Stand', icon: 'road' },
+  { name: 'Hospital & Market Nearby', icon: 'shield' },
+  { name: '30 ft Cement Concrete Roads', icon: 'road' },
+  { name: '24-Hour Electricity', icon: 'zap' },
+  { name: 'Drainage Line', icon: 'waves' },
+  { name: 'Independent Transformer', icon: 'plug' },
+  { name: 'Street Lights', icon: 'zap' },
   { name: 'Central Garden', icon: 'trees' },
   { name: "Children's Play Zone", icon: 'baby' },
-  { name: 'Security Cabin & CCTV', icon: 'shield' },
-  { name: 'Compound Wall', icon: 'building' },
-  { name: 'Street Lights', icon: 'zap' },
-  { name: 'Avenue Tree Plantation', icon: 'trees' },
+  { name: 'Compound Wall & Security', icon: 'shield' },
   { name: 'Open Amenity Space', icon: 'footprints' },
 ];
 
@@ -118,24 +124,24 @@ export const GALLERY = [
 // Real, useful connectivity for Bakori / Wagholi, Pune East.
 // Drive times are approximate off-peak estimates by road.
 export const NEARBY = [
+  { place: 'Pune Ring Road', time: '500 m', note: 'Right next to the project' },
+  { place: 'Ramchandra College', time: '2 min', note: 'Reputed college' },
+  { place: 'Eminence School', time: '2 min', note: 'Nearby school' },
+  { place: 'JSPM Univercity & BJS College', time: '5 min', note: 'Education hub' },
   { place: 'Wagheshwar Temple, Wagholi', time: '10 min', note: 'Landmark temple' },
-  { place: 'Reputed Schools', time: '10 min', note: 'Orchid, Wisdom World, Podar' },
-  { place: 'Pune-Nagar Highway (NH-753)', time: '8 min', note: 'City connectivity' },
   { place: 'Kharadi IT Hub — EON, WTC', time: '25 min', note: 'Major employment' },
-  { place: 'Proposed Pune Ring Road', time: '10 min', note: 'Future appreciation' },
-  { place: 'Lohegaon Airport', time: '30 min', note: 'Air travel' },
   { place: 'Columbia Asia Hospital, Kharadi', time: '25 min', note: 'Healthcare' },
+  { place: 'Lohegaon Airport', time: '30 min', note: 'Air travel' },
   { place: 'Phoenix Marketcity, Viman Nagar', time: '30 min', note: 'Shopping & leisure' },
-  { place: 'Ranjangaon MIDC', time: '30 min', note: 'Industrial belt' },
   { place: 'Pune Railway Station', time: '40 min', note: 'Rail connectivity' },
 ];
 
 // Punchy connectivity highlights used across the site and in ad content.
 export const CONNECTIVITY = [
-  { time: '10 min', place: 'Wagheshwar Temple' },
-  { time: '10 min', place: 'Schools & Colleges' },
+  { time: '500 m', place: 'Pune Ring Road' },
+  { time: '2 min', place: 'College & School' },
+  { time: '5 min', place: 'JSPM Univercity' },
   { time: '25 min', place: 'Kharadi IT Park' },
-  { time: '30 min', place: 'Pune Airport' },
 ];
 
 export const BLOG_POSTS = [
