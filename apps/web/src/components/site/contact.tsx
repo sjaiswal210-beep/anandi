@@ -167,7 +167,7 @@ export function SiteContact() {
                 >
                   {CONFIGURATIONS.map((c) => (
                     <option key={c.type} value={c.type} className="bg-slate-900 text-white font-semibold">
-                      {c.type} — {c.carpet} — {c.price}
+                      {c.type} — {c.carpet}
                     </option>
                   ))}
                 </select>

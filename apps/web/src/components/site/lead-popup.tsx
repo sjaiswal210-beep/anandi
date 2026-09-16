@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Loader2, CheckCircle2, X, Phone } from 'lucide-react';
+import { Loader2, CheckCircle2, X, Phone, Gift } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { PROJECT } from './site-data';
 import { normalisePhone, submitLead, flushQueuedLeads } from './site-api';
@@ -193,23 +193,27 @@ function LeadPopupContent() {
                   id="lead-popup-desc"
                   className="mt-3 text-slate-600 dark:text-slate-400"
                 >
-                  We have sent the plot details and pricing to your WhatsApp. Our
-                  team will call you shortly.
+                  You&apos;re in! Our team will call you shortly with plot details
+                  and your Free TVS Jupiter offer. 🛵
                 </p>
               </div>
             ) : (
               <>
                 <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 px-7 py-6 text-white">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-emerald-100">
-                    Anandi Park &middot; Wagholi, Pune
+                  <p className="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-900">
+                    <Gift className="h-3.5 w-3.5" aria-hidden="true" />
+                    Limited seats only
                   </p>
-                  <h2 id="lead-popup-title" className="mt-2 text-2xl font-bold leading-snug">
-                    Get plot prices on WhatsApp
+                  <h2 id="lead-popup-title" className="mt-3 text-[1.6rem] font-extrabold leading-tight">
+                    Get a FREE TVS Jupiter
+                    <span className="block text-lg font-semibold text-emerald-50">
+                      with your plot at Anandi Park
+                    </span>
                   </h2>
                   <p id="lead-popup-desc" className="mt-2 text-sm text-emerald-50">
-                    84 residential plots from {PROJECT.priceFrom}. Clear titles,
-                    gated layout. Share your number and we will send the full price
-                    list right away.
+                    Open bungalow &amp; commercial plots at Wagholi, Pune East —
+                    Ring Road just 500 m away. Enter your details to grab this
+                    limited-period offer. 🛵
                   </p>
                 </div>
 
@@ -283,7 +287,7 @@ function LeadPopupContent() {
                         Sending&hellip;
                       </>
                     ) : (
-                      'Send me the price list'
+                      'Claim my Free TVS Jupiter offer'
                     )}
                   </button>
 

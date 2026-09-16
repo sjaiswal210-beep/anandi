@@ -79,7 +79,7 @@ export function SiteHero() {
           </div>
 
           <p className="mt-8 text-sm text-slate-400">
-            {t('hero.price')}
+            {PROJECT.plotScope}
           </p>
 
           {/* Limited-period offer — strong lead hook from the campaign flyer. */}

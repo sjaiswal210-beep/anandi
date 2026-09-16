@@ -7,8 +7,6 @@ export const PROJECT = {
   taglineMr: 'स्वप्न तुमची... निर्मिती आमची',
   builder: 'Rich-Land Developers',
   partners: 'Yuvraj Gade & Rajan Kute',
-  priceFrom: '₹18 Lakh',
-  priceNote: 'all inclusive',
   // 1 to 11 guntha open bungalow & commercial plots; proposed R-Zone.
   plotScope: '1 to 11 Guntha open bungalow & commercial plots (proposed R-Zone)',
   // Limited-period buyer offer from the campaign flyer.
@@ -37,12 +35,12 @@ export const HIGHLIGHTS = [
   { value: '100%', unit: 'Clear', label: 'Titles' },
 ];
 
-// Plot configurations, priced from ₹18 Lakh upwards.
+// Plot configurations. Pricing is intentionally NOT shown on the site — we
+// capture the lead first and share prices personally on WhatsApp/call.
 export const CONFIGURATIONS = [
   {
     type: '1000 Sq.ft Plot',
     carpet: '1,000 sq.ft.',
-    price: '₹18 Lakh onwards',
     ideal: 'First home / investment entry',
     seed: 'ap-plot-1k',
     available: 18,
@@ -50,7 +48,6 @@ export const CONFIGURATIONS = [
   {
     type: '1500 Sq.ft Plot',
     carpet: '1,500 sq.ft.',
-    price: '₹27 Lakh onwards',
     ideal: 'Independent bungalow',
     seed: 'ap-plot-15k',
     available: 22,
@@ -59,7 +56,6 @@ export const CONFIGURATIONS = [
   {
     type: '2000 Sq.ft Plot',
     carpet: '2,000 sq.ft.',
-    price: '₹36 Lakh onwards',
     ideal: 'Premium villa plot',
     seed: 'ap-plot-2k',
     available: 15,
@@ -67,7 +63,6 @@ export const CONFIGURATIONS = [
   {
     type: '3000+ Sq.ft Plot',
     carpet: '3,000–4,510 sq.ft.',
-    price: '₹54 Lakh onwards',
     ideal: 'Corner & road-facing premium',
     seed: 'ap-plot-3k',
     available: 7,
@@ -217,8 +212,8 @@ export const FAQS = [
     a: 'Yes. Every plot comes with a clean, clear title and complete documentation. Our team walks you through all papers before booking.',
   },
   {
-    q: 'What is the starting price?',
-    a: `Plots start from ${PROJECT.priceFrom} (${PROJECT.priceNote}) for a 1000 sq.ft. plot. Larger and corner plots are priced accordingly.`,
+    q: 'How do I get the price and plot details?',
+    a: 'Share your name and number and our team will send you the latest availability, plot layout and the best offer personally on WhatsApp or a quick call. Every buyer also gets a Free TVS Jupiter with their plot booking (limited period).',
   },
   {
     q: 'What is the payment plan?',

@@ -132,7 +132,6 @@ export function SitePlans() {
   const configs = CONFIGURATIONS.map((c, i) => ({
     ...c,
     type: t(`config.type.${i}`),
-    price: t(`config.price.${i}`),
     ideal: t(`config.ideal.${i}`),
   }));
 
@@ -186,7 +185,7 @@ export function SitePlans() {
 
               <div className="p-5">
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white truncate">{c.type}</h3>
-                <p className="mt-1 text-base font-semibold text-amber-600 dark:text-amber-400">{c.price}</p>
+                <p className="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">Best price on request</p>
                 <div className="h-px bg-slate-100 dark:bg-slate-850 my-3" />
 
                 <div className="space-y-2.5">
