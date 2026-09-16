@@ -5,9 +5,12 @@ import { SocialImageService } from './social-image.service';
 import { MetaPublishService } from './meta-publish.service';
 
 const PROJECT_BLURB =
-  'Anandi Park - Premium residential plots by Rich-Land Developers (Yuvraj Gade & Rajan Kute), ' +
-  'starting ₹18 Lakh, Bakori, Wagholi, Pune. Contact +91 75584 44117. ' +
-  'Clear titles, ready for registration. Do not mention RERA or NA.';
+  'Anandi Park - Premium residential, bungalow & commercial plots by Rich-Land Developers ' +
+  '(Yuvraj Gade & Rajan Kute) at Bakori, Wagholi, Pune East. Ring Road just 500m. ' +
+  'Clear titles, gated layout, ready for registration. Contact +91 75584 44117. ' +
+  'LIMITED-PERIOD OFFER: Free TVS Jupiter with every plot booking — feature this prominently. ' +
+  'STRICT RULES: NEVER mention any price, cost, rupee amount, "₹", "Lakh", "starting from" or ' +
+  'budget figures anywhere. NEVER mention RERA or NA. Drive people to enquire/DM/WhatsApp for details.';
 
 @Injectable()
 export class SocialMediaService {
@@ -61,7 +64,7 @@ Return a JSON object with:
         if (jsonMatch) content = JSON.parse(jsonMatch[0]);
         else content.caption = text;
       } catch (e: any) {
-        content.caption = `🏡 ${dto.topic}\n\nAnandi Park - Premium residential plots by Yuvraj Gade & Rajan Kute Developers\n💰 Starting ₹18 Lakh\n📍 Bakori, Wagholi, Pune\n✅ Clear titles | Ready for registration\n\nBook your site visit today!\n📞 Call now`;
+        content.caption = `🏡 ${dto.topic}\n\nAnandi Park - Premium residential, bungalow & commercial plots by Rich-Land Developers\n🛵 FREE TVS Jupiter with every plot (limited period!)\n📍 Bakori, Wagholi, Pune East — Ring Road just 500m\n✅ Clear titles | Gated layout | Ready for registration\n\nDM or WhatsApp us for details & site visit!\n📞 +91 75584 44117`;
         content.hashtags = ['#AnandiPark', '#ResidentialPlots', '#PuneRealEstate', '#PlotForSale', '#Investment', '#WagholiPlots', '#LandForSale', '#DreamPlot', '#PunePlots', '#PuneEast'];
       }
     }

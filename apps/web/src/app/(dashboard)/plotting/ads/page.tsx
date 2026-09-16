@@ -23,10 +23,10 @@ export default function AdsPage() {
     dailyBudget: '',
     imageUrl: '',
     caption:
-      'Own a premium residential plot in Pune East — Anandi Park, Bakori (Wagholi). ' +
-      'Clear titles, gated & planned layout, ready for construction. Plots from ₹18 Lakh. ' +
-      'Perfect for your dream home or a smart investment. Enquire now.',
-    headline: 'Residential Plots in Pune East',
+      '🛵 FREE TVS Jupiter with every plot at Anandi Park, Bakori (Wagholi), Pune East! ' +
+      'Open bungalow & commercial plots — clear titles, gated layout, Ring Road just 500m. ' +
+      'Limited-period offer. Perfect for your dream home or investment. Enquire now for details.',
+    headline: 'Free TVS Jupiter With Your Plot',
     link: 'https://anandipark.in',
     whatsappNumber: '917558444117',
     leadFormId: '',
