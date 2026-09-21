@@ -120,10 +120,28 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
   }
 
   async handleIncomingMessage(from: string, message: string, workspaceId?: string) {
-    let resolvedWorkspaceId = workspaceId;
+    // Resolve to a REAL workspace row. The VPS bridge passes its biz id
+    // (VPS_WHATSAPP_BIZ_ID = "anandi-park"), which is NOT a workspace id — using
+    // it caused every inbound lead to be silently dropped (owner lookup found no
+    // user, so the create was skipped). So: only trust workspaceId if a matching
+    // Workspace actually exists; otherwise fall back to the first workspace.
+    let resolvedWorkspaceId: string | undefined;
+    if (workspaceId) {
+      const exists = await this.prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { id: true },
+      });
+      resolvedWorkspaceId = exists?.id;
+    }
     if (!resolvedWorkspaceId) {
       const firstWorkspace = await this.prisma.workspace.findFirst();
       resolvedWorkspaceId = firstWorkspace?.id;
+      if (workspaceId && workspaceId !== resolvedWorkspaceId) {
+        this.logger.warn(
+          `Inbound WhatsApp workspaceId "${workspaceId}" is not a real workspace; ` +
+            `falling back to "${resolvedWorkspaceId}".`,
+        );
+      }
     }
 
     // Persist the incoming message first so conversation context builds up.
@@ -173,10 +191,19 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
               },
             },
           })
-          .catch(() => null);
+          .catch((e: any) => {
+            // Don't crash the reply flow, but DO log — a dropped lead was
+            // previously invisible.
+            this.logger.error(`Failed to create WhatsApp lead for ${phone}: ${e?.message || e}`);
+            return null;
+          });
         if (lead) {
           this.logger.log(`New WhatsApp lead captured: ${phone} (${referral ? 'CTWA ad' : 'organic'})`);
         }
+      } else {
+        this.logger.error(
+          `No user found for workspace "${resolvedWorkspaceId}" — cannot attribute WhatsApp lead ${phone}.`,
+        );
       }
     }
     const chatHistory = history

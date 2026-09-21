@@ -225,15 +225,14 @@ export class AdsService {
         const leadAction = (ins.actions || []).find((a: any) =>
           String(a.action_type).includes('lead'),
         );
+        const spent = Number(ins.spend || 0);
         const metrics: Metrics = {
-          spend: undefined,
+          spend: spent, // keep metrics.spend in sync with the spent column
           impressions: Number(ins.impressions || 0),
           clicks: Number(ins.clicks || 0),
           reach: Number(ins.reach || 0),
           leads: leadAction ? Number(leadAction.value) : 0,
         } as any;
-
-        const spent = Number(ins.spend || 0);
 
         const existing = await this.prisma.campaign.findFirst({
           where: { workspaceId, metadata: { path: ['externalId'], equals: row.id } },
