@@ -206,9 +206,9 @@ export class WebsiteService {
   }
 
   /**
-   * Opening WhatsApp message from Priya. Keeps the same persona and the same
-   * hard rules as the bot prompt: Hinglish, no RERA claim, plots described as
-   * residential, price from Rs 18 Lakh, proactive about loan/EMI.
+   * Opening WhatsApp message from Priya. Keeps the same persona and hard rules
+   * as the bot prompt: Hinglish, no RERA claim, plots described as residential,
+   * NO price, NO loan/EMI details, leads with the Free TVS Jupiter offer.
    */
   private buildWelcomeMessage(name: string, isRepeat: boolean): string {
     const firstName = name.trim().split(/\s+/)[0] || 'ji';
@@ -217,19 +217,19 @@ export class WebsiteService {
       return (
         `Namaste ${firstName} ji 🙂 Priya again, Anandi Park se.\n\n` +
         `Aapki dobara inquiry mili hai — dhanyawad! Batayiye aapko kitne size ka plot ` +
-        `dekhna hai, main aaj hi availability aur EMI detail bhej deti hoon.\n\n` +
+        `dekhna hai, main aaj hi availability bhej deti hoon.\n\n` +
+        `Aur ek khaas baat — har plot booking par ek TVS Jupiter FREE (limited period)! 🛵\n` +
         `Site visit free hai, weekend bhi — pickup bhi arrange kar dete hain 🏡`
       );
     }
 
     return (
       `Namaste ${firstName} ji 🙂 Main Priya bol rahi hoon Anandi Park se — ` +
-      `Bakori, Wagholi-Bakori Road (Pune East). Aapki website inquiry mil gayi, dhanyawad!\n\n` +
-      `Yahan 84 residential plots hain, 1000 se 4510 sq.ft tak. Price Rs 18 Lakh se ` +
-      `(all inclusive), clear title, gated layout aur 30-40 feet wide roads.\n\n` +
-      `Aur ek achhi baat — poora paisa ek saath dene ki zaroorat nahi. Booking sirf 10% ` +
-      `mein ho jati hai, aur hum SBI, HDFC, ICICI, Axis se loan bhi arrange kar dete hain.\n\n` +
-      `Aapko kitne size ka plot chahiye? Main aapke liye best option aur EMI detail bhej deti hoon 🏡`
+      `Bakori, Wagholi-Bakori Road (Pune East). Aapki inquiry mil gayi, dhanyawad!\n\n` +
+      `Yahan open bungalow aur commercial plots hain (1 se 11 guntha), clear title, ` +
+      `gated layout, 30 feet road, aur Ring Road sirf 500m door.\n\n` +
+      `Khaas offer — har plot booking par ek TVS Jupiter FREE (limited period)! 🛵\n\n` +
+      `Aapko kitne size ka plot chahiye? Main aapke liye best option bhej deti hoon 🏡`
     );
   }
 
