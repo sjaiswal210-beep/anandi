@@ -358,6 +358,38 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     } catch (e: any) { return { error: e.message }; }
   }
 
+  /**
+   * Logs out / resets the current WhatsApp session on the bridge so a NEW number
+   * can be scanned. Tries the common bridge routes (logout, then session
+   * DELETE) — whichever the bridge supports. After this, call startVpsSession()
+   * to get a fresh QR.
+   */
+  async logoutVpsSession() {
+    const headers = { 'X-Wa-Secret': this.vpsSecret };
+    const attempts = [
+      () => axios.post(`${this.vpsUrl}/session/${this.vpsBizId}/logout`, {}, { headers, timeout: 15000 }),
+      () => axios.delete(`${this.vpsUrl}/session/${this.vpsBizId}`, { headers, timeout: 15000 }),
+      () => axios.post(`${this.vpsUrl}/session/${this.vpsBizId}/reset`, {}, { headers, timeout: 15000 }),
+    ];
+    const errors: string[] = [];
+    for (const attempt of attempts) {
+      try {
+        const res = await attempt();
+        this.logger.log('WhatsApp session logged out on the bridge.');
+        return { ok: true, data: res.data };
+      } catch (e: any) {
+        errors.push(e?.response?.status ? `${e.response.status}` : e.message);
+      }
+    }
+    return {
+      ok: false,
+      message:
+        'Could not log out via the bridge API (tried /logout, DELETE, /reset). ' +
+        'The bridge may need a manual restart with session data cleared on the VPS.',
+      tried: errors,
+    };
+  }
+
   async sendViaVps(to: string, message: string) {
     try {
       const phone = to.replace(/[^0-9]/g, '');

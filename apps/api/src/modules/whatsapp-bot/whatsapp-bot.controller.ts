@@ -57,6 +57,20 @@ export class WhatsAppBotController {
   }
 
   @Public()
+  @Get('vps/logout')
+  @ApiOperation({ summary: 'Log out / reset the WhatsApp session (GET for easy trigger)' })
+  async vpsLogoutGet() {
+    return this.service.logoutVpsSession();
+  }
+
+  @Public()
+  @Post('vps/logout')
+  @ApiOperation({ summary: 'Log out / reset the WhatsApp session so a new number can scan' })
+  async vpsLogout() {
+    return this.service.logoutVpsSession();
+  }
+
+  @Public()
   @Post('vps/send')
   @ApiOperation({ summary: 'Send message via VPS WhatsApp bot' })
   async vpsSend(@Body() body: { to: string; message: string }) {
