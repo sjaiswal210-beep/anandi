@@ -20,9 +20,9 @@ export const PROJECT = {
   email: 'sales@anandipark.in',
   subdomain: 'anandi-park',
   mapEmbed:
-    'https://www.google.com/maps?q=18.595755,74.042230&output=embed',
+    'https://www.google.com/maps?q=18.595755,74.04223&output=embed',
   mapSearch:
-    'https://www.google.com/maps?q=18.595755,74.042230',
+    'https://maps.google.com/?q=18.595755,74.04223',
   instagram: 'https://instagram.com/anandipark',
   facebook: 'https://facebook.com/anandipark',
   youtube: 'https://youtube.com/@anandipark',
@@ -101,7 +101,6 @@ export const AMENITIES = [
   { name: 'Drainage Line', icon: 'waves' },
   { name: 'Independent Transformer', icon: 'plug' },
   { name: 'Street Lights', icon: 'zap' },
-  { name: 'Central Garden', icon: 'trees' },
   { name: "Children's Play Zone", icon: 'baby' },
   { name: 'Compound Wall & Security', icon: 'shield' },
   { name: 'Open Amenity Space', icon: 'footprints' },
