@@ -49,7 +49,18 @@ export default function WhatsAppBotPage() {
   const { data: convsData } = useQuery({
     queryKey: ['bot-conversations'],
     queryFn: () => api.get('/whatsapp-bot/conversations'),
+    refetchInterval: 10000,
   });
+
+  // Open chat thread (click a conversation to read the full back-and-forth).
+  const [openChat, setOpenChat] = useState<string | null>(null);
+  const { data: chatData, isFetching: chatLoading } = useQuery({
+    queryKey: ['bot-chat', openChat],
+    queryFn: () => api.get(`/whatsapp-bot/conversations/${encodeURIComponent(openChat as string)}`),
+    enabled: !!openChat,
+    refetchInterval: openChat ? 5000 : false,
+  });
+  const chatMessages: any[] = (chatData as any)?.data || [];
 
   // Auto-start session if not connected
   useEffect(() => {
@@ -203,19 +214,24 @@ export default function WhatsAppBotPage() {
               {conversations.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No conversations yet. Connect WhatsApp and start receiving messages.</p>
               ) : conversations.map((conv: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                  <div>
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setOpenChat(conv.phone)}
+                  className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 text-left transition-colors"
+                >
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">{conv.phone}</p>
                     <p className="text-xs text-muted-foreground truncate max-w-64">{conv.lastMessage}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0 ml-3">
                     <p className="text-xs text-muted-foreground">{conv.messages} msgs</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       conv.intent === 'HOT' ? 'bg-red-100 text-red-700' :
                       conv.intent === 'WARM' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
                     }`}>{conv.intent}</span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -376,6 +392,68 @@ PRICING RULES:
               >
                 <Save className="h-4 w-4" /> Save Training Data
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full chat thread modal */}
+      {openChat && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
+          onClick={() => setOpenChat(null)}
+        >
+          <div
+            className="w-full sm:max-w-lg h-[85vh] sm:h-[70vh] flex flex-col bg-card rounded-t-2xl sm:rounded-2xl border shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b bg-emerald-600 text-white">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                <div>
+                  <p className="text-sm font-semibold">{openChat}</p>
+                  <p className="text-[11px] text-emerald-100">{chatMessages.length} messages</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://wa.me/${openChat.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-md"
+                >
+                  Open in WhatsApp
+                </a>
+                <button onClick={() => setOpenChat(null)} className="p-1 hover:bg-white/20 rounded" aria-label="Close">✕</button>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-muted/30">
+              {chatLoading && chatMessages.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">Loading chat…</p>
+              ) : chatMessages.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">No messages yet.</p>
+              ) : (
+                chatMessages.map((m) => (
+                  <div key={m.id} className={`flex ${m.direction === 'outgoing' ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words ${
+                        m.direction === 'outgoing'
+                          ? 'bg-emerald-600 text-white rounded-br-sm'
+                          : 'bg-white dark:bg-slate-800 border rounded-bl-sm'
+                      }`}
+                    >
+                      {m.text}
+                      <div className={`mt-1 text-[10px] ${m.direction === 'outgoing' ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                        {m.direction === 'outgoing' ? 'Priya' : 'Customer'} ·{' '}
+                        {new Date(m.at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

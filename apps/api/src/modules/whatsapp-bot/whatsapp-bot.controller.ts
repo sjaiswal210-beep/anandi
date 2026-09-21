@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WhatsAppBotService } from './whatsapp-bot.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -24,6 +24,14 @@ export class WhatsAppBotController {
   @ApiOperation({ summary: 'Get bot conversations summary' })
   async getConversations(@WorkspaceId() workspaceId: string) {
     return this.service.getConversations(workspaceId);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @Get('conversations/:phone')
+  @ApiOperation({ summary: 'Get the full message thread for one contact' })
+  async getConversationMessages(@WorkspaceId() workspaceId: string, @Param('phone') phone: string) {
+    return this.service.getConversationMessages(workspaceId, phone);
   }
 
   @ApiBearerAuth()

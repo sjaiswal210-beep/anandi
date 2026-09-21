@@ -312,14 +312,35 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
   }
 
   async getConversations(workspaceId: string) {
-    const messages = await this.prisma.whatsAppMessage.findMany({ where: { workspaceId }, orderBy: { createdAt: 'desc' }, take: 200 });
+    const messages = await this.prisma.whatsAppMessage.findMany({ where: { workspaceId }, orderBy: { createdAt: 'desc' }, take: 500 });
     const contactMap = new Map<string, any>();
     messages.forEach((m: any) => {
       const contact = m.direction === 'incoming' ? m.from : m.to;
+      if (contact === this.businessNumber) return; // skip our own number as a "contact"
       if (!contactMap.has(contact)) contactMap.set(contact, { messages: 0, lastMessage: (m.content as any)?.text?.body?.slice(0, 60) || '', lastTime: m.createdAt, intent: 'WARM' });
       contactMap.get(contact)!.messages++;
     });
     return Array.from(contactMap.entries()).map(([phone, data]) => ({ phone, ...data }));
+  }
+
+  /** Full message thread for one contact (both directions), oldest first. */
+  async getConversationMessages(workspaceId: string, phone: string) {
+    const digits = (phone || '').replace(/[^0-9]/g, '');
+    const messages = await this.prisma.whatsAppMessage.findMany({
+      where: {
+        workspaceId,
+        OR: [{ from: phone }, { to: phone }, { from: digits }, { to: digits }],
+      },
+      orderBy: { createdAt: 'asc' },
+      take: 500,
+    });
+    return messages.map((m: any) => ({
+      id: m.id,
+      direction: m.direction, // 'incoming' (customer) | 'outgoing' (Priya/bot)
+      text: (m.content as any)?.text?.body || '',
+      status: m.status,
+      at: m.createdAt,
+    }));
   }
 
   async getBotMetrics(workspaceId: string) {
