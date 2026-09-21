@@ -27,13 +27,15 @@ export function LeadPopup() {
     void flushQueuedLeads();
   }, []);
 
-  // Exclude lead capture dialog on HR terminal, worker portal, and scanner pages
+  // Exclude lead capture dialog on HR terminal, worker portal, scanner pages,
+  // and the dedicated ad landing page (which is already a form).
   const isExcluded = 
     pathname?.includes('/worker-portal') ||
     pathname?.includes('/attendance/scan') ||
     pathname?.includes('/plotting/hr') ||
     pathname?.includes('/hr-portal') ||
-    pathname?.includes('/hr-terminal');
+    pathname?.includes('/hr-terminal') ||
+    pathname?.includes('/offer');
 
   if (isExcluded) return null;
 
