@@ -28,7 +28,7 @@ export default function AdsPage() {
       'Limited-period offer. Perfect for your dream home or investment. Enquire now for details.',
     headline: 'Free TVS Jupiter With Your Plot',
     link: 'https://anandipark.in',
-    whatsappNumber: '917558444117',
+    whatsappNumber: '918007107799',
     leadFormId: '',
     radiusKm: '30',
   });
@@ -274,7 +274,7 @@ export default function AdsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input value={metaForm.name} onChange={(e) => setMetaForm({ ...metaForm, name: e.target.value })} placeholder="Campaign name" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
             {metaForm.adType === 'whatsapp' && (
-              <input value={metaForm.whatsappNumber} onChange={(e) => setMetaForm({ ...metaForm, whatsappNumber: e.target.value })} placeholder="WhatsApp number (digits, e.g. 917558444117)" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
+              <input value={metaForm.whatsappNumber} onChange={(e) => setMetaForm({ ...metaForm, whatsappNumber: e.target.value })} placeholder="WhatsApp number (digits, e.g. 918007107799)" className="px-3 py-2 border rounded-lg text-sm bg-background md:col-span-2" />
             )}
             <input type="number" value={metaForm.dailyBudget} onChange={(e) => setMetaForm({ ...metaForm, dailyBudget: e.target.value })} placeholder="Daily budget ₹ (e.g. 500)" className="px-3 py-2 border rounded-lg text-sm bg-background" />
             <input type="number" value={metaForm.radiusKm} onChange={(e) => setMetaForm({ ...metaForm, radiusKm: e.target.value })} placeholder="Pune radius km (24–80)" className="px-3 py-2 border rounded-lg text-sm bg-background" />

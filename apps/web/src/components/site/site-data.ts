@@ -15,8 +15,8 @@ export const PROJECT = {
   possession: 'Ready for Registration',
   location: 'GAT No. 279, Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune',
   shortLocation: 'Bakori, Wagholi, Pune',
-  phone: '+91 75584 44117',
-  whatsapp: '917558444117',
+  phone: '+91 80071 07799',
+  whatsapp: '918007107799',
   email: 'sales@anandipark.in',
   subdomain: 'anandi-park',
   mapEmbed:

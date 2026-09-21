@@ -198,7 +198,7 @@ export default function DashboardPage() {
               { label: 'Project', value: 'Anandi Park' },
               { label: 'Developer', value: 'Rich-Land Developers' },
               { label: 'Partners', value: 'Yuvraj Gade & Rajan Kute' },
-              { label: 'Contact', value: '+91 75584 44117' },
+              { label: 'Contact', value: '+91 80071 07799' },
               { label: 'Location', value: 'GAT No. 279, Bakori, Taluka Haveli, Pune' },
               { label: 'Road', value: 'Wagholi-Bakori Wide Road' },
               { label: 'Total Plots', value: '84 (1000–4510 sqft)' },

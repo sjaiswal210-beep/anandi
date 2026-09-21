@@ -92,8 +92,7 @@ const jsonLd = {
     latitude: '18.5918',
     longitude: '73.9900',
   },
-  telephone: '+917558444117',
-  priceRange: '₹18 Lakh - ₹83 Lakh',
+  telephone: '+918007107799',
   openingHours: 'Mo-Su 10:00-19:00',
   founder: {
     '@type': 'Organization',

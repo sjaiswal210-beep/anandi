@@ -10,6 +10,9 @@ export class WhatsAppBotService {
   private readonly vpsUrl: string;
   private readonly vpsSecret: string;
   private readonly vpsBizId: string;
+  // The business WhatsApp number the bridge is scanned into. Env-driven so it
+  // can be swapped without a code change. Defaults to the WhatsApp-ads number.
+  readonly businessNumber: string;
 
   private readonly projectContext = `Tumhara naam Priya hai aur tum Anandi Park (Rich-Land Developers) ki sales executive ho — ek polite, warm, experienced ladki jo customers ko WhatsApp par plots ke baare mein guide karti hai.
 
@@ -34,7 +37,7 @@ export class WhatsAppBotService {
 # ANANDI PARK — PROJECT DETAILS (yahi se jawab dena)
 - Project: Anandi Park — premium RESIDENTIAL plots with clear, marketable titles.
 - Developer: Rich-Land Developers (partners Yuvraj Gade & Rajan Kute) — Pune ke trusted developers.
-- Contact number: +91 75584 44117.
+- Contact number: +91 80071 07799.
 - Location: GAT No. 279, Bakori, Wagholi-Bakori Road, Taluka Haveli, Pune (East Pune).
 - Total 84 residential plots, sizes 1000 sq.ft se 4510 sq.ft tak.
 - PRICE: Starting Rs 18 Lakh (all inclusive). 
@@ -105,6 +108,11 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     this.vpsUrl = this.configService.get<string>('VPS_WHATSAPP_URL', 'http://147.93.169.183:8300');
     this.vpsSecret = this.configService.get<string>('VPS_WHATSAPP_SECRET', '');
     this.vpsBizId = this.configService.get<string>('VPS_WHATSAPP_BIZ_ID', 'anandi-park');
+    // Number the WhatsApp bridge is logged in as (the WhatsApp-ads number).
+    // Override on the VPS with WHATSAPP_BUSINESS_NUMBER=91XXXXXXXXXX if it changes.
+    this.businessNumber = this.configService
+      .get<string>('WHATSAPP_BUSINESS_NUMBER', '918007107799')
+      .replace(/[^0-9]/g, '');
     this.initGemini();
   }
 
@@ -148,7 +156,7 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     if (resolvedWorkspaceId) {
       await this.prisma.whatsAppMessage.create({
         data: {
-          workspaceId: resolvedWorkspaceId, from, to: '917558444117', type: 'text',
+          workspaceId: resolvedWorkspaceId, from, to: this.businessNumber, type: 'text',
           content: { text: { body: message } } as any,
           direction: 'incoming', status: 'received',
         },
@@ -270,7 +278,7 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
       await this.prisma.lead.update({ where: { id: lead.id }, data: { score: Math.min(100, (lead.score || 0) + 20), tags: { push: 'hot-lead' } } });
     }
     if (resolvedWorkspaceId) {
-      await this.prisma.whatsAppMessage.create({ data: { workspaceId: resolvedWorkspaceId, from: '917558444117', to: from, type: 'text', content: { text: { body: reply } } as any, direction: 'outgoing', status: 'sent' } });
+      await this.prisma.whatsAppMessage.create({ data: { workspaceId: resolvedWorkspaceId, from: this.businessNumber, to: from, type: 'text', content: { text: { body: reply } } as any, direction: 'outgoing', status: 'sent' } });
     }
     return { reply, intent };
   }

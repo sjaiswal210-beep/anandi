@@ -34,7 +34,7 @@ export class AICallingService {
     const prompt = `Generate a natural, humanized phone call script for a real estate sales call.
 Lead: ${lead.name}, Budget: ₹${lead.budget || 'not specified'}, Interested in: ${lead.preferredPropertyType || 'plots'}
 Objective: ${objective}
-Project: Anandi Park - Premium residential plots by Rich-Land Developers (Yuvraj Gade & Rajan Kute), starting ₹18 Lakh, Bakori Wagholi Pune. Contact +91 75584 44117. Clear titles, ready for registration. (Do not claim RERA or NA.)
+Project: Anandi Park - Premium residential, bungalow & commercial plots by Rich-Land Developers (Yuvraj Gade & Rajan Kute), Bakori Wagholi Pune East, Ring Road just 500m. Free TVS Jupiter with every plot (limited period). Contact +91 80071 07799. Clear titles, ready for registration. (Never mention price/cost/₹/Lakh. Do not claim RERA or NA.)
 
 Write a conversational script in Indian English (Hindi words are OK). Include:
 - Greeting
