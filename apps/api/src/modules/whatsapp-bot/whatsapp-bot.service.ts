@@ -126,14 +126,13 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     // Workspace actually exists; otherwise fall back to the first workspace.
     let resolvedWorkspaceId: string | undefined;
     if (workspaceId) {
-      const exists = await this.prisma.workspace.findUnique({
-        where: { id: workspaceId },
-        select: { id: true },
-      });
+      const exists = await this.prisma.workspace
+        .findUnique({ where: { id: workspaceId }, select: { id: true } })
+        .catch(() => null);
       resolvedWorkspaceId = exists?.id;
     }
     if (!resolvedWorkspaceId) {
-      const firstWorkspace = await this.prisma.workspace.findFirst();
+      const firstWorkspace = await this.prisma.workspace.findFirst().catch(() => null);
       resolvedWorkspaceId = firstWorkspace?.id;
       if (workspaceId && workspaceId !== resolvedWorkspaceId) {
         this.logger.warn(
@@ -141,6 +140,13 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
             `falling back to "${resolvedWorkspaceId}".`,
         );
       }
+    }
+    // If the DB is momentarily unreachable (Neon auto-suspend / 57P01), fall
+    // back to the hardcoded workspace so we can STILL generate + send a reply.
+    // The bot must never go silent just because a DB read blipped.
+    if (!resolvedWorkspaceId) {
+      resolvedWorkspaceId = 'cmsai8kh50001rapl8ioxehxe';
+      this.logger.warn('Workspace lookup failed (DB blip?); using fallback workspace id for reply.');
     }
 
     // Persist the incoming message first so conversation context builds up.
@@ -156,11 +162,11 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
 
     const history = await this.prisma.whatsAppMessage.findMany({
       where: { OR: [{ from }, { to: from }] }, orderBy: { createdAt: 'asc' }, take: 20,
-    });
+    }).catch(() => [] as any[]);
     const phone = from.startsWith('91') ? from.slice(2) : from;
     let lead = await this.prisma.lead.findFirst({
       where: { OR: [{ phone }, { phone: from }, { phone: `+91${phone}` }] },
-    });
+    }).catch(() => null);
 
     // Capture the lead if this number is new. This is what makes Click-to-WhatsApp
     // ads actually generate CRM leads: the ad opens a chat, the first message
@@ -171,7 +177,7 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
       const owner = await this.prisma.user.findFirst({
         where: { workspaces: { some: { workspaceId: resolvedWorkspaceId } } },
         select: { id: true },
-      });
+      }).catch(() => null);
       if (owner) {
         lead = await this.prisma.lead
           .create({
@@ -266,10 +272,10 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     }
     const intent = this.detectIntent(message);
     if (intent === 'HOT' && lead) {
-      await this.prisma.lead.update({ where: { id: lead.id }, data: { score: Math.min(100, (lead.score || 0) + 20), tags: { push: 'hot-lead' } } });
+      await this.prisma.lead.update({ where: { id: lead.id }, data: { score: Math.min(100, (lead.score || 0) + 20), tags: { push: 'hot-lead' } } }).catch(() => undefined);
     }
     if (resolvedWorkspaceId) {
-      await this.prisma.whatsAppMessage.create({ data: { workspaceId: resolvedWorkspaceId, from: this.businessNumber, to: from, type: 'text', content: { text: { body: reply } } as any, direction: 'outgoing', status: 'sent' } });
+      await this.prisma.whatsAppMessage.create({ data: { workspaceId: resolvedWorkspaceId, from: this.businessNumber, to: from, type: 'text', content: { text: { body: reply } } as any, direction: 'outgoing', status: 'sent' } }).catch(() => undefined);
     }
     return { reply, intent };
   }
