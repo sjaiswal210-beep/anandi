@@ -150,6 +150,29 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     return { phone: digits, isLid: false };
   }
 
+  /**
+   * Tries to pull an Indian mobile number out of free-text a customer typed,
+   * e.g. "mera number 98765 43210 hai" or "+91 9876543210". Returns the clean
+   * 10-digit national number, or null if none found. Used to backfill the
+   * phone for privacy-masked (@lid) leads whose real number WhatsApp hides —
+   * the number the person types in chat IS a real, reachable number.
+   */
+  extractIndianPhone(text: string): string | null {
+    if (!text) return null;
+    // Collapse spaces/dashes/dots between digits so "98765 43210" is seen as one run.
+    const squashed = text.replace(/(?<=\d)[\s().-]+(?=\d)/g, '');
+    // Find digit runs; accept an optional 91/0 prefix on a 10-digit mobile.
+    const matches = squashed.match(/(?:\+?91|0)?[6-9]\d{9}/g);
+    if (!matches || matches.length === 0) return null;
+    for (const m of matches) {
+      const d = m.replace(/[^0-9]/g, '');
+      const national = d.length > 10 ? d.slice(-10) : d;
+      // Valid Indian mobile: 10 digits starting 6-9.
+      if (/^[6-9]\d{9}$/.test(national)) return national;
+    }
+    return null;
+  }
+
   async handleIncomingMessage(from: string, message: string, workspaceId?: string) {
     // Resolve to a REAL workspace row. The VPS bridge passes its biz id
     // (VPS_WHATSAPP_BIZ_ID = "anandi-park"), which is NOT a workspace id — using
@@ -270,6 +293,35 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
         );
       }
     }
+
+    // Number backfill: WhatsApp hides the real phone of @lid senders, but the
+    // moment the customer types a number in chat we capture it. This turns a
+    // "number hidden" lead into a reachable one with no bridge changes.
+    if (lead && (!lead.phone || /@/.test(lead.phone))) {
+      const typed = this.extractIndianPhone(message);
+      if (typed) {
+        const existingCf = (lead.customFields as any) || {};
+        const updated = await this.prisma.lead
+          .update({
+            where: { id: lead.id },
+            data: {
+              phone: typed,
+              // Drop the "number-hidden" tag now that we have a real number.
+              tags: Array.from(new Set([...(lead.tags || []).filter((t: string) => t !== 'number-hidden'), 'number-captured'])),
+              customFields: { ...existingCf, numberHidden: false, phoneCapturedFromChat: true, phoneCapturedAt: new Date().toISOString() },
+            },
+          })
+          .catch((e: any) => {
+            this.logger.error(`Failed to backfill phone for lead ${lead!.id}: ${e?.message || e}`);
+            return null;
+          });
+        if (updated) {
+          lead = updated;
+          this.logger.log(`Captured phone ${typed} from chat for lead ${lead.id} (was number-hidden).`);
+        }
+      }
+    }
+
     const chatHistory = history
       .map((m: any) => ({
         role: m.direction === 'incoming' ? 'user' : 'model',
@@ -289,13 +341,19 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
       chatHistory.shift();
     }
     // What we already know about this customer, so Priya doesn't re-ask.
+    const numberStillHidden = Boolean(lead) && (!lead!.phone || /@/.test(lead!.phone));
     const leadNote = lead
       ? `\n\n# IS CUSTOMER KE BAARE MEIN (pehle se maloom)\nNaam: ${lead.name || 'unknown'}` +
         (lead.budget ? `\nBudget: Rs ${lead.budget}` : '') +
         (lead.preferredPropertyType ? `\nInterest: ${lead.preferredPropertyType}` : '') +
         `\nStatus: ${lead.status}` +
         ((lead.customFields as any)?.message ? `\nPehle bataya: ${(lead.customFields as any).message}` : '') +
-        `\nInhe naam se address karo aur jo pehle discuss ho chuka hai woh dobara mat poochho.`
+        `\nInhe naam se address karo aur jo pehle discuss ho chuka hai woh dobara mat poochho.` +
+        // WhatsApp hid this contact's number — get a callback number politely so
+        // our team can reach them. Once they type it, we capture it automatically.
+        (numberStillHidden
+          ? `\n\n# IMPORTANT: Is customer ka phone number abhi hamare paas nahi hai. Baat-cheet ke beech mein ek baar politely unka contact/callback number maang lo (jaise: "Humari team aapko call karke saari details de — aapka contact number bata dijiye?"). Pushy mat bano, ek hi baar maango.`
+          : '')
       : '';
 
     const isFirstMessage = chatHistory.filter((h) => h.role === 'user').length <= 1;
