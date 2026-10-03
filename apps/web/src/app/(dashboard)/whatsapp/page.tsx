@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Send, Search, Phone, Video, MoreVertical, Check, CheckCheck, Paperclip, Smile, Bot, Users, Clock } from 'lucide-react';
+import { Send, Search, Phone, Video, MoreVertical, Check, CheckCheck, Paperclip, Smile, Bot, Users, Clock, MessageSquare, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+import BulkSenderPanel from './BulkSenderPanel';
 
 interface Message {
   id: string;
@@ -30,6 +31,7 @@ export default function WhatsAppPage() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [view, setView] = useState<'chats' | 'bulk'>('chats');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: conversationsData } = useQuery({
@@ -107,7 +109,31 @@ export default function WhatsAppPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex border rounded-xl overflow-hidden bg-card">
+    <div className="space-y-3">
+      {/* View toggle: Chats vs Bulk Sender */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setView('chats')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
+            view === 'chats' ? 'bg-[#008069] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" /> Chats
+        </button>
+        <button
+          onClick={() => setView('bulk')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
+            view === 'bulk' ? 'bg-[#008069] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+          }`}
+        >
+          <Megaphone className="h-4 w-4" /> Bulk Sender
+        </button>
+      </div>
+
+      {view === 'bulk' ? (
+        <BulkSenderPanel />
+      ) : (
+    <div className="h-[calc(100vh-180px)] flex border rounded-xl overflow-hidden bg-card">
       {/* Left Sidebar - Contact List */}
       <div className="w-96 border-r flex flex-col bg-background">
         {/* Header */}
@@ -278,6 +304,8 @@ export default function WhatsAppPage() {
           </div>
         )}
       </div>
+    </div>
+      )}
     </div>
   );
 }
