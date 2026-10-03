@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, CheckCircle2, X, Phone, Gift } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { PROJECT } from './site-data';
-import { normalisePhone, submitLead, flushQueuedLeads } from './site-api';
+import { normalisePhone, submitLead, flushQueuedLeads, markLeadCaptured } from './site-api';
 
 // Shown once per browser session. A visitor who actually submits is never asked
 // again (localStorage); a visitor who dismisses is left alone for the rest of
@@ -133,6 +133,7 @@ function LeadPopupContent() {
         message: 'Requested details via website popup.',
       });
       localStorage.setItem(SUBMITTED_KEY, 'yes');
+      markLeadCaptured();
       setStatus('done');
       setTimeout(() => setOpen(false), 4000);
     } catch {

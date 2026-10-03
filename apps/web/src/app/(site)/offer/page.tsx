@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PROJECT } from '@/components/site/site-data';
-import { normalisePhone, submitLead } from '@/components/site/site-api';
+import { normalisePhone, submitLead, markLeadCaptured } from '@/components/site/site-api';
 
 /**
  * Dedicated, ultra-light ad landing page.
@@ -45,6 +45,9 @@ export default function OfferLandingPage() {
     } catch {
       // submitLead already queues on failure; never block the visitor.
     }
+    // Mark this browser so the root route sends them straight to /project
+    // next time, skipping the offer page entirely.
+    markLeadCaptured();
     setStatus('done');
     // Redirect to the full site so they get the detailed info while we have
     // their lead captured. Small delay so they see the confirmation.

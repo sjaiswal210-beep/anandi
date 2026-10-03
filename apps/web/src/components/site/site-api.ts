@@ -42,6 +42,32 @@ export function normalisePhone(input: string): string | null {
 const QUEUE_KEY = 'anandi-lead-queue';
 const INQUIRY_PATH = () => `${resolveApiUrl()}/website/public/${PROJECT.subdomain}/inquiry`;
 
+/**
+ * Shared "this browser already submitted a lead" flag.
+ *
+ * It's a COOKIE (not just localStorage) because the root route (/) decides
+ * server-side whether to send a visitor to /offer or straight to /project —
+ * server components can't read localStorage, only cookies. One year expiry,
+ * readable on every path.
+ */
+export const LEAD_CAPTURED_COOKIE = 'anandi_lead_captured';
+
+/** Marks this browser as having submitted a lead (cookie + legacy localStorage key). */
+export function markLeadCaptured(): void {
+  if (typeof document === 'undefined') return;
+  try {
+    const oneYear = 60 * 60 * 24 * 365;
+    document.cookie = `${LEAD_CAPTURED_COOKIE}=yes; path=/; max-age=${oneYear}; SameSite=Lax`;
+  } catch {
+    /* cookies blocked — localStorage flag below still prevents the popup */
+  }
+  try {
+    localStorage.setItem('anandi-lead-captured', 'yes');
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 /** One raw POST attempt. Throws on any non-2xx / network error. */
 async function postLead(payload: LeadPayload): Promise<void> {
   await axios.post(INQUIRY_PATH(), payload, { timeout: 15000 });

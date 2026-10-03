@@ -1,15 +1,20 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { LEAD_CAPTURED_COOKIE } from '@/components/site/site-api';
 
 /**
  * Root router for the main domain.
  *
- * - Ad clicks (Meta appends fbclid / utm_* / gclid) → the lightweight /offer
- *   landing page for fast lead capture.
- * - Everyone else (organic, direct, SEO) → the full /project site.
+ * - Every NEW visitor (no "already submitted a lead" cookie) → the lightweight
+ *   /offer landing page for fast lead capture, regardless of how they arrived
+ *   (ad click, organic, direct).
+ * - A visitor whose browser already has the lead-captured cookie (they filled
+ *   the offer/popup form before) → straight to the full /project site, no
+ *   detour through /offer again.
  *
- * This keeps SEO intact (Google indexes /project) while sending paid traffic
- * straight to the high-converting offer form, even if the ad points at the bare
- * domain instead of /offer.
+ * /project itself stays directly reachable (deep links, SEO crawlers hitting
+ * that URL specifically still see the full site) — this gate only applies to
+ * the bare domain "/".
  *
  * Next.js 15: searchParams is a Promise and must be awaited.
  */
@@ -18,13 +23,17 @@ export default async function HomePage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // Keep forwarding ad/query params onto /offer so attribution isn't lost.
   const params = (await searchParams) || {};
-  const isAdClick =
-    'fbclid' in params ||
-    'gclid' in params ||
-    'utm_source' in params ||
-    'utm_campaign' in params ||
-    'ad' in params;
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === 'string') query.set(key, value);
+    else if (Array.isArray(value) && value[0]) query.set(key, value[0]);
+  }
+  const suffix = query.toString() ? `?${query.toString()}` : '';
 
-  redirect(isAdClick ? '/offer' : '/project');
+  const cookieStore = await cookies();
+  const alreadyCaptured = cookieStore.get(LEAD_CAPTURED_COOKIE)?.value === 'yes';
+
+  redirect(alreadyCaptured ? '/project' : `/offer${suffix}`);
 }
