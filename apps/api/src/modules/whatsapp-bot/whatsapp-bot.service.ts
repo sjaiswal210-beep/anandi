@@ -118,6 +118,38 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     } catch (e) { this.logger.error('Gemini init failed'); }
   }
 
+  /**
+   * Normalizes a raw WhatsApp sender id into something usable for CRM.
+   *
+   * The bridge can hand us several JID shapes:
+   *   - "919876543210@s.whatsapp.net" / "919876543210@c.us"  → a real phone
+   *   - "24004639338554@lid"                                 → a privacy-masked
+   *     "linked id" (Meta's anti-enumeration identifier). This is NOT a phone
+   *     number and the real MSISDN is intentionally hidden; it cannot be
+   *     reversed on our side. Previously we stored this whole "...@lid" string
+   *     in Lead.phone, which is why the dashboard showed garbage like
+   *     "24004639338554@lid".
+   *   - "...@g.us"                                           → a group id
+   *
+   * Returns a clean phone (digits, no country-code assumption stripped yet),
+   * the lid when the sender is privacy-masked, and whether it is a lid.
+   */
+  normalizeWhatsAppId(raw: string): { phone: string; lid?: string; isLid: boolean } {
+    const value = (raw || '').trim();
+    const atIdx = value.indexOf('@');
+    const local = atIdx >= 0 ? value.slice(0, atIdx) : value;
+    const domain = atIdx >= 0 ? value.slice(atIdx + 1).toLowerCase() : '';
+
+    // A privacy-masked linked id — no real phone is recoverable here.
+    if (domain === 'lid') {
+      return { phone: '', lid: local.replace(/[^0-9]/g, ''), isLid: true };
+    }
+
+    // Normal phone-bearing JID (or already-bare digits): keep digits only.
+    const digits = local.replace(/[^0-9]/g, '');
+    return { phone: digits, isLid: false };
+  }
+
   async handleIncomingMessage(from: string, message: string, workspaceId?: string) {
     // Resolve to a REAL workspace row. The VPS bridge passes its biz id
     // (VPS_WHATSAPP_BIZ_ID = "anandi-park"), which is NOT a workspace id — using
@@ -163,10 +195,21 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     const history = await this.prisma.whatsAppMessage.findMany({
       where: { OR: [{ from }, { to: from }] }, orderBy: { createdAt: 'asc' }, take: 20,
     }).catch(() => [] as any[]);
-    const phone = from.startsWith('91') ? from.slice(2) : from;
-    let lead = await this.prisma.lead.findFirst({
-      where: { OR: [{ phone }, { phone: from }, { phone: `+91${phone}` }] },
-    }).catch(() => null);
+
+    // Figure out who this is. A "@lid" sender is privacy-masked — there is no
+    // real phone to store, so we track it by its lid instead and never write a
+    // "...@lid" string into Lead.phone.
+    const sender = this.normalizeWhatsAppId(from);
+    // National phone (strip leading 91 country code) for display + matching.
+    const nationalPhone = sender.phone.startsWith('91') ? sender.phone.slice(2) : sender.phone;
+
+    let lead = sender.isLid
+      ? await this.prisma.lead
+          .findFirst({ where: { customFields: { path: ['waLid'], equals: sender.lid } } })
+          .catch(() => null)
+      : await this.prisma.lead
+          .findFirst({ where: { OR: [{ phone: nationalPhone }, { phone: sender.phone }, { phone: `+91${nationalPhone}` }] } })
+          .catch(() => null);
 
     // Capture the lead if this number is new. This is what makes Click-to-WhatsApp
     // ads actually generate CRM leads: the ad opens a chat, the first message
@@ -179,35 +222,51 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
         select: { id: true },
       }).catch(() => null);
       if (owner) {
+        // For a privacy-masked (@lid) sender we have no real phone, so we leave
+        // Lead.phone empty and track them by waLid in customFields. The display
+        // name is a stable short tag off the lid so the dashboard doesn't show
+        // a confusing "...@lid" string. For normal senders, store the number.
+        const displayName = sender.isLid
+          ? `WhatsApp contact ${(sender.lid || '').slice(-4)}`
+          : `WhatsApp ${nationalPhone.slice(-4)}`;
+        const logId = sender.isLid ? `lid:${sender.lid}` : nationalPhone;
+
         lead = await this.prisma.lead
           .create({
             data: {
               workspaceId: resolvedWorkspaceId,
               createdById: owner.id,
-              name: `WhatsApp ${phone.slice(-4)}`,
-              phone,
+              name: displayName,
+              // Only a real phone goes into phone; @lid leads have none (number
+              // hidden by WhatsApp — ask the customer for it in chat).
+              phone: sender.isLid ? '' : nationalPhone,
               source: 'WHATSAPP',
               status: 'NEW',
-              tags: referral ? ['whatsapp', 'ctwa-ad'] : ['whatsapp', 'whatsapp-inbound'],
+              tags: referral
+                ? ['whatsapp', 'ctwa-ad', ...(sender.isLid ? ['number-hidden'] : [])]
+                : ['whatsapp', 'whatsapp-inbound', ...(sender.isLid ? ['number-hidden'] : [])],
               customFields: {
                 firstMessage: message,
                 capturedVia: referral ? 'click_to_whatsapp_ad' : 'whatsapp_inbound',
                 capturedAt: new Date().toISOString(),
+                // Raw routing id so replies still reach them and we can dedup.
+                waId: from,
+                ...(sender.isLid ? { waLid: sender.lid, numberHidden: true } : {}),
               },
             },
           })
           .catch((e: any) => {
             // Don't crash the reply flow, but DO log — a dropped lead was
             // previously invisible.
-            this.logger.error(`Failed to create WhatsApp lead for ${phone}: ${e?.message || e}`);
+            this.logger.error(`Failed to create WhatsApp lead for ${logId}: ${e?.message || e}`);
             return null;
           });
         if (lead) {
-          this.logger.log(`New WhatsApp lead captured: ${phone} (${referral ? 'CTWA ad' : 'organic'})`);
+          this.logger.log(`New WhatsApp lead captured: ${logId} (${referral ? 'CTWA ad' : 'organic'})`);
         }
       } else {
         this.logger.error(
-          `No user found for workspace "${resolvedWorkspaceId}" — cannot attribute WhatsApp lead ${phone}.`,
+          `No user found for workspace "${resolvedWorkspaceId}" — cannot attribute WhatsApp lead ${sender.isLid ? `lid:${sender.lid}` : nationalPhone}.`,
         );
       }
     }

@@ -20,6 +20,20 @@ import api from '@/lib/api';
 import { getLeadStatusColor, formatDate } from '@/lib/utils';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 
+/**
+ * WhatsApp sometimes identifies a sender by a privacy-masked "@lid" linked id
+ * instead of their phone number — the real number is hidden by WhatsApp and
+ * cannot be recovered. New leads store an empty phone for these, but older rows
+ * may still hold a raw "...@lid" string. Render both cleanly.
+ */
+function displayPhone(phone?: string | null): { text: string; hidden: boolean } {
+  const value = (phone || '').trim();
+  if (!value || /@lid$/i.test(value) || /@/.test(value)) {
+    return { text: 'Number hidden (WhatsApp)', hidden: true };
+  }
+  return { text: value, hidden: false };
+}
+
 export default function LeadsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -200,7 +214,14 @@ export default function LeadsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Phone className="h-3 w-3 text-muted-foreground" />
-                        <span>{lead.phone}</span>
+                        {(() => {
+                          const p = displayPhone(lead.phone);
+                          return (
+                            <span className={p.hidden ? 'text-muted-foreground italic text-xs' : ''}>
+                              {p.text}
+                            </span>
+                          );
+                        })()}
                       </div>
                       {lead.email && (
                         <div className="flex items-center gap-2 mt-1">
