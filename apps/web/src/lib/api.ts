@@ -62,6 +62,13 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   // Always set workspace ID
   config.headers['X-Workspace-Id'] = WORKSPACE_ID;
 
+  // The instance defaults to 'Content-Type: application/json', which breaks
+  // multipart file uploads (axios/the browser needs to set its own boundary
+  // for FormData bodies). Drop the override so that happens correctly.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+
   // Try to get token from localStorage if available
   if (typeof window !== 'undefined') {
     try {

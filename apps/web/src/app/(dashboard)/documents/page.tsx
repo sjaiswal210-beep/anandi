@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Upload, Search, FileText, Image, File, Download, Share2, Map, Shield } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Upload, Search, FileText, Image, File, Download, Share2, Map, Shield, X, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import api, { mediaUrl } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
@@ -28,9 +29,19 @@ const typeIcons: Record<string, any> = {
   PRICE_LIST: FileText, SITE_PHOTOS: Image, OTHER: File,
 };
 
+const UPLOAD_TYPES = CATEGORIES.filter((c) => c.id !== '');
+
 export default function DocumentsPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Upload modal state: holds the picked file until the user confirms the
+  // category/name, since a File alone has no "which category" info.
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploadType, setUploadType] = useState('BROCHURE');
+  const [uploadName, setUploadName] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['documents', { search, type: typeFilter }],
@@ -38,6 +49,51 @@ export default function DocumentsPage() {
   });
 
   const documents: any[] = (data as any)?.data?.data || (data as any)?.data || [];
+
+  const uploadMutation = useMutation({
+    mutationFn: (vars: { file: File; type: string; name: string }) => {
+      const form = new FormData();
+      form.append('file', vars.file);
+      form.append('type', vars.type);
+      form.append('name', vars.name || vars.file.name);
+      return api.post('/documents', form);
+    },
+    onSuccess: () => {
+      toast.success('Document uploaded');
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      closeUploadModal();
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || 'Upload failed';
+      toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+    },
+  });
+
+  const openFilePicker = () => fileInputRef.current?.click();
+
+  const onFilePicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error('File is larger than 25 MB — please use a smaller file.');
+      e.target.value = '';
+      return;
+    }
+    setPendingFile(file);
+    setUploadName(file.name.replace(/\.[^/.]+$/, ''));
+    setUploadType(typeFilter || 'BROCHURE');
+  };
+
+  const closeUploadModal = () => {
+    setPendingFile(null);
+    setUploadName('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const confirmUpload = () => {
+    if (!pendingFile) return;
+    uploadMutation.mutate({ file: pendingFile, type: uploadType, name: uploadName });
+  };
 
   return (
     <div className="space-y-6">
@@ -50,10 +106,77 @@ export default function DocumentsPage() {
             Anandi Park project documents — brochure, layout, RERA, pricing. Shared via WhatsApp bot on request.
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
-          <Upload className="h-4 w-4" /> Upload Document
-        </button>
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+            className="hidden"
+            onChange={onFilePicked}
+          />
+          <button
+            onClick={openFilePicker}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+          >
+            <Upload className="h-4 w-4" /> Upload Document
+          </button>
+        </div>
       </div>
+
+      {/* Upload confirm modal — appears after a file is picked */}
+      {pendingFile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card border rounded-xl p-5 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Upload document</h3>
+              <button onClick={closeUploadModal} className="p-1 hover:bg-muted rounded" aria-label="Close">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground truncate">
+              {pendingFile.name} · {(pendingFile.size / 1024).toFixed(0)} KB
+            </p>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Category</label>
+              <select
+                value={uploadType}
+                onChange={(e) => setUploadType(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+              >
+                {UPLOAD_TYPES.map((c) => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Name</label>
+              <input
+                type="text"
+                value={uploadName}
+                onChange={(e) => setUploadName(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                onClick={closeUploadModal}
+                disabled={uploadMutation.isPending}
+                className="px-4 py-2 text-sm rounded-lg border hover:bg-muted transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmUpload}
+                disabled={uploadMutation.isPending}
+                className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {uploadMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {uploadMutation.isPending ? 'Uploading…' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Info banner */}
       <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-xl p-4">
