@@ -183,10 +183,14 @@ The web app MUST be rebuilt (`npx next build`) after any frontend change — a
 
 ## 7. Known open items (hand these to the next agent)
 
-1. **WhatsApp session not linked.** The bridge at `VPS_WHATSAPP_URL` is running
-   but no WhatsApp number is scanned in. Until the QR is scanned, inbound-lead
-   auto-replies and the website-popup WhatsApp greeting are composed and stored
-   but NOT delivered. Start/scan via the bridge's `/session/anandi-park/start`.
+1. **WhatsApp bot — now LINKED to +91 8007107799 and replying.** The recurring
+   "connected but no replies" outage was traced to the **VPS disk filling to ~99%**
+   (mostly `/tmp` Chromium temp junk), which starves Chromium so the bridge reaps
+   the `anandi-park` session. ⚠️ **If the bot ever goes silent again, read
+   `WHATSAPP_TROUBLESHOOTING.md`** — it has the exact root cause, step-by-step fix
+   (free disk → restart bridge → if needed reset+re-scan the anandi-park session),
+   a one-liner recovery, and the prevention crons. Keep-alive + DB-fault-tolerance
+   are deployed in code; still add the auto-cleanup cron (see that doc §3).
 2. **Neon DB password** was published in the old `deploy.sh` in the public repo
    and has NOT been rotated. Rotate it in the Neon console and update
    `DATABASE_URL` on the VPS.
