@@ -173,7 +173,12 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     return null;
   }
 
-  async handleIncomingMessage(from: string, message: string, workspaceId?: string) {
+  async handleIncomingMessage(
+    from: string,
+    message: string,
+    workspaceId?: string,
+    opts?: { senderPn?: string },
+  ) {
     // Resolve to a REAL workspace row. The VPS bridge passes its biz id
     // (VPS_WHATSAPP_BIZ_ID = "anandi-park"), which is NOT a workspace id — using
     // it caused every inbound lead to be silently dropped (owner lookup found no
@@ -220,19 +225,36 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     }).catch(() => [] as any[]);
 
     // Figure out who this is. A "@lid" sender is privacy-masked — there is no
-    // real phone to store, so we track it by its lid instead and never write a
-    // "...@lid" string into Lead.phone.
+    // real phone in the id itself. But if the bridge resolved the real number
+    // (senderPn / lid->pn mapping) and passed it along, use that so the lead
+    // gets a real, reachable phone from message one.
     const sender = this.normalizeWhatsAppId(from);
-    // National phone (strip leading 91 country code) for display + matching.
-    const nationalPhone = sender.phone.startsWith('91') ? sender.phone.slice(2) : sender.phone;
+    const resolved = opts?.senderPn ? this.normalizeWhatsAppId(opts.senderPn) : null;
 
-    let lead = sender.isLid
-      ? await this.prisma.lead
-          .findFirst({ where: { customFields: { path: ['waLid'], equals: sender.lid } } })
-          .catch(() => null)
-      : await this.prisma.lead
-          .findFirst({ where: { OR: [{ phone: nationalPhone }, { phone: sender.phone }, { phone: `+91${nationalPhone}` }] } })
-          .catch(() => null);
+    // The lid (if any) is always remembered for dedup, even once we know the
+    // real number.
+    const knownLid = sender.isLid ? sender.lid : undefined;
+    // Effective phone: prefer a bridge-resolved real number over the @lid.
+    const effectivePhone = sender.isLid
+      ? (resolved && !resolved.isLid ? resolved.phone : '')
+      : sender.phone;
+    const haveRealPhone = Boolean(effectivePhone);
+    // National phone (strip leading 91 country code) for display + matching.
+    const nationalPhone = effectivePhone.startsWith('91') ? effectivePhone.slice(2) : effectivePhone;
+
+    // Match an existing lead by lid first (stable across privacy mode), then by
+    // phone when we have one.
+    let lead =
+      (knownLid
+        ? await this.prisma.lead
+            .findFirst({ where: { customFields: { path: ['waLid'], equals: knownLid } } })
+            .catch(() => null)
+        : null) ||
+      (haveRealPhone
+        ? await this.prisma.lead
+            .findFirst({ where: { OR: [{ phone: nationalPhone }, { phone: effectivePhone }, { phone: `+91${nationalPhone}` }] } })
+            .catch(() => null)
+        : null);
 
     // Capture the lead if this number is new. This is what makes Click-to-WhatsApp
     // ads actually generate CRM leads: the ad opens a chat, the first message
@@ -245,14 +267,15 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
         select: { id: true },
       }).catch(() => null);
       if (owner) {
-        // For a privacy-masked (@lid) sender we have no real phone, so we leave
-        // Lead.phone empty and track them by waLid in customFields. The display
-        // name is a stable short tag off the lid so the dashboard doesn't show
-        // a confusing "...@lid" string. For normal senders, store the number.
-        const displayName = sender.isLid
-          ? `WhatsApp contact ${(sender.lid || '').slice(-4)}`
-          : `WhatsApp ${nationalPhone.slice(-4)}`;
-        const logId = sender.isLid ? `lid:${sender.lid}` : nationalPhone;
+        // We store a real phone when we have one (bridge-resolved or normal
+        // sender). If the sender is @lid and the bridge did NOT resolve a
+        // number, phone stays empty and we track them by waLid + mark
+        // "number-hidden" so the dashboard shows a clean label, not "...@lid".
+        const numberHidden = !haveRealPhone;
+        const displayName = haveRealPhone
+          ? `WhatsApp ${nationalPhone.slice(-4)}`
+          : `WhatsApp contact ${(knownLid || '').slice(-4)}`;
+        const logId = haveRealPhone ? nationalPhone : `lid:${knownLid}`;
 
         lead = await this.prisma.lead
           .create({
@@ -260,21 +283,23 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
               workspaceId: resolvedWorkspaceId,
               createdById: owner.id,
               name: displayName,
-              // Only a real phone goes into phone; @lid leads have none (number
-              // hidden by WhatsApp — ask the customer for it in chat).
-              phone: sender.isLid ? '' : nationalPhone,
+              phone: haveRealPhone ? nationalPhone : '',
               source: 'WHATSAPP',
               status: 'NEW',
-              tags: referral
-                ? ['whatsapp', 'ctwa-ad', ...(sender.isLid ? ['number-hidden'] : [])]
-                : ['whatsapp', 'whatsapp-inbound', ...(sender.isLid ? ['number-hidden'] : [])],
+              tags: [
+                'whatsapp',
+                referral ? 'ctwa-ad' : 'whatsapp-inbound',
+                ...(numberHidden ? ['number-hidden'] : []),
+              ],
               customFields: {
                 firstMessage: message,
                 capturedVia: referral ? 'click_to_whatsapp_ad' : 'whatsapp_inbound',
                 capturedAt: new Date().toISOString(),
                 // Raw routing id so replies still reach them and we can dedup.
                 waId: from,
-                ...(sender.isLid ? { waLid: sender.lid, numberHidden: true } : {}),
+                // Always remember the lid for dedup, even once the number is known.
+                ...(knownLid ? { waLid: knownLid } : {}),
+                ...(numberHidden ? { numberHidden: true } : {}),
               },
             },
           })
@@ -289,8 +314,32 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
         }
       } else {
         this.logger.error(
-          `No user found for workspace "${resolvedWorkspaceId}" — cannot attribute WhatsApp lead ${sender.isLid ? `lid:${sender.lid}` : nationalPhone}.`,
+          `No user found for workspace "${resolvedWorkspaceId}" — cannot attribute WhatsApp lead ${haveRealPhone ? nationalPhone : `lid:${knownLid}`}.`,
         );
+      }
+    }
+
+    // If the bridge resolved the real number for an existing lid-only lead that
+    // was previously "number hidden", backfill it now.
+    if (lead && haveRealPhone && (!lead.phone || /@/.test(lead.phone))) {
+      const existingCf = (lead.customFields as any) || {};
+      const updated = await this.prisma.lead
+        .update({
+          where: { id: lead.id },
+          data: {
+            phone: nationalPhone,
+            name: lead.name?.startsWith('WhatsApp contact ') ? `WhatsApp ${nationalPhone.slice(-4)}` : lead.name,
+            tags: Array.from(new Set([...(lead.tags || []).filter((t: string) => t !== 'number-hidden'), 'number-captured'])),
+            customFields: { ...existingCf, numberHidden: false, phoneResolvedFromBridge: true, phoneResolvedAt: new Date().toISOString() },
+          },
+        })
+        .catch((e: any) => {
+          this.logger.error(`Failed to backfill bridge-resolved phone for lead ${lead!.id}: ${e?.message || e}`);
+          return null;
+        });
+      if (updated) {
+        lead = updated;
+        this.logger.log(`Backfilled bridge-resolved phone ${nationalPhone} for lead ${lead.id}.`);
       }
     }
 

@@ -14,8 +14,22 @@ export class WhatsAppBotController {
   @Public()
   @Post('incoming')
   @ApiOperation({ summary: 'Handle incoming WhatsApp message (AI auto-reply)' })
-  async handleIncoming(@Body() body: { from: string; message: string; workspaceId?: string }) {
-    return this.service.handleIncomingMessage(body.from, body.message, body.workspaceId);
+  async handleIncoming(
+    @Body()
+    body: {
+      from: string;
+      message: string;
+      workspaceId?: string;
+      // Optional: the sender's REAL phone JID/number resolved by the bridge
+      // from an @lid (Baileys senderPn / lid->pn mapping). When present we store
+      // the real number instead of leaving the lead "number hidden".
+      senderPn?: string;
+      realPhone?: string;
+    },
+  ) {
+    return this.service.handleIncomingMessage(body.from, body.message, body.workspaceId, {
+      senderPn: body.senderPn || body.realPhone,
+    });
   }
 
   @ApiBearerAuth()
