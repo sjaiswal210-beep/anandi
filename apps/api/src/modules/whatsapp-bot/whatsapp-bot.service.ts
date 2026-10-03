@@ -425,6 +425,54 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     } catch (e: any) { this.logger.error(`VPS broadcast failed: ${e.message}`); return { error: e.message }; }
   }
 
+  /**
+   * Sends ONE message with optional media (image + document) to a single number.
+   * Tries the bridge's media endpoint if mediaUrls are given; if the bridge has
+   * no media route (or it fails), falls back to a text message that includes the
+   * public links so the content still reaches the customer. Returns { sent, via }.
+   */
+  async sendMessageWithMedia(
+    to: string,
+    message: string,
+    media?: { imageUrl?: string; documentUrl?: string },
+  ): Promise<{ sent: boolean; via: 'media' | 'text'; error?: string }> {
+    const phone = to.replace(/[^0-9]/g, '');
+    const headers = { 'X-Wa-Secret': this.vpsSecret };
+    const hasMedia = Boolean(media?.imageUrl || media?.documentUrl);
+
+    if (hasMedia) {
+      // Attempt a media send against common bridge route shapes. If the bridge
+      // doesn't support any of them, we fall through to text+links below.
+      const attachments = [media?.imageUrl, media?.documentUrl].filter(Boolean) as string[];
+      const payloads = [
+        { url: `${this.vpsUrl}/session/${this.vpsBizId}/send-media`, body: { to: phone, message, media: attachments } },
+        { url: `${this.vpsUrl}/session/${this.vpsBizId}/sendMedia`, body: { to: phone, caption: message, urls: attachments } },
+        { url: `${this.vpsUrl}/session/${this.vpsBizId}/send`, body: { to: phone, message, mediaUrl: media?.imageUrl, documentUrl: media?.documentUrl } },
+      ];
+      for (const p of payloads) {
+        try {
+          const res = await axios.post(p.url, p.body, { headers, timeout: 45000 });
+          if (res.data && !res.data.error) {
+            return { sent: true, via: 'media' };
+          }
+        } catch {
+          // try next shape
+        }
+      }
+      // Bridge has no working media route — fall back to text + links.
+      const links = [
+        media?.imageUrl ? `📷 Photo: ${media.imageUrl}` : '',
+        media?.documentUrl ? `📄 Details: ${media.documentUrl}` : '',
+      ].filter(Boolean).join('\n');
+      const textWithLinks = `${message}\n\n${links}`.trim();
+      const r: any = await this.sendViaVps(phone, textWithLinks);
+      return { sent: Boolean(r?.sent) || !r?.error, via: 'text', error: r?.error };
+    }
+
+    const r: any = await this.sendViaVps(phone, message);
+    return { sent: Boolean(r?.sent) || !r?.error, via: 'text', error: r?.error };
+  }
+
   async getVpsHealth() {
     try { const res = await axios.get(`${this.vpsUrl}/health`, { timeout: 5000 }); return res.data; }
     catch (e: any) { return { status: 'offline', error: e.message }; }

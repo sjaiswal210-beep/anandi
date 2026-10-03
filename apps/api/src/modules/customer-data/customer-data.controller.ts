@@ -41,4 +41,46 @@ export class CustomerDataController {
   async getBroadcasts(@WorkspaceId() workspaceId: string) {
     return this.service.getBroadcasts(workspaceId);
   }
+
+  // --- Throttled WhatsApp drip campaign (ban-safe bulk sender) ---
+
+  @Post('drip/start')
+  @ApiOperation({ summary: 'Start a throttled WhatsApp drip campaign (message + photo/PDF links)' })
+  async startDrip(
+    @WorkspaceId() workspaceId: string,
+    @Body()
+    dto: {
+      name: string;
+      message: string;
+      imageUrl?: string;
+      documentUrl?: string;
+      dailyCap?: number;
+      batchSize?: number;
+      minDelaySec?: number;
+      maxDelaySec?: number;
+      startHour?: number;
+      endHour?: number;
+      targetTags?: string[];
+    },
+  ) {
+    return this.service.startDripCampaign(workspaceId, dto);
+  }
+
+  @Post('drip/:id/pause')
+  @ApiOperation({ summary: 'Pause a drip campaign' })
+  async pauseDrip(@Param('id') id: string) {
+    return this.service.pauseDripCampaign(id);
+  }
+
+  @Post('drip/:id/resume')
+  @ApiOperation({ summary: 'Resume a paused drip campaign' })
+  async resumeDrip(@Param('id') id: string) {
+    return this.service.resumeDripCampaign(id);
+  }
+
+  @Get('drip/:id/status')
+  @ApiOperation({ summary: 'Get live progress + ETA for a drip campaign' })
+  async dripStatus(@WorkspaceId() workspaceId: string, @Param('id') id: string) {
+    return this.service.getDripStatus(workspaceId, id);
+  }
 }
