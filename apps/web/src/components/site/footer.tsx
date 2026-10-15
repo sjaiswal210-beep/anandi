@@ -59,7 +59,15 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between font-medium">
+        {/* Legal / info pages — linked so they're discoverable (SEO + AdSense). */}
+        <nav aria-label="Legal" className="mt-10 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-7 text-sm font-semibold text-slate-400">
+          <a href="/about" className="hover:text-amber-400">About Us</a>
+          <a href="/contact" className="hover:text-amber-400">Contact Us</a>
+          <a href="/privacy" className="hover:text-amber-400">Privacy Policy</a>
+          <a href="/terms" className="hover:text-amber-400">Terms &amp; Conditions</a>
+        </nav>
+
+        <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between font-medium">
           <p>© {new Date().getFullYear()} {PROJECT.builder} ({PROJECT.partners}). {t('foot.rights')}</p>
           <p>{t('foot.impress')}</p>
         </div>
