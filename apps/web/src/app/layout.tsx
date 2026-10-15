@@ -15,6 +15,10 @@ export const metadata: Metadata = {
     ],
     apple: '/brand/apple-touch-icon.png',
   },
+  // Google AdSense account ownership verification meta tag (site-wide).
+  other: {
+    'google-adsense-account': 'ca-pub-3038930416209198',
+  },
 };
 
 export default function RootLayout({
