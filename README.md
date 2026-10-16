@@ -1,4 +1,18 @@
-# RealtyOS AI
+# RealtyOS AI → customised as **Anandi Park**
+
+> ⚠️ **New agent / new laptop: read `HANDOFF.md` first, then `PROJECT_STATE.md`.**
+> Those two files are the real, current source of truth. This README is the
+> ORIGINAL generic "RealtyOS AI" boilerplate and is largely out of date for this
+> project — the app was heavily customised into a single-project system for
+> **Anandi Park** (Rich-Land Developers). In particular, ignore the parts below
+> about Docker-compose deploy, local Postgres, AWS S3, and the seed credentials:
+> - DB is **Neon cloud** (no local Postgres/Docker needed).
+> - Deploy is **laptop → GitHub → VPS `bash deploy-latest.sh`** (PM2, not compose).
+> - WhatsApp runs via a separate **whatsapp-web.js** bridge container on the VPS.
+> - Business number: **+91 8007107799**. Workspace id: `cmsai8kh50001rapl8ioxehxe`.
+> - Also see `WHATSAPP_TROUBLESHOOTING.md` for the bot runbook.
+
+---
 
 > AI Powered Business Operating System for Real Estate Agents, Brokers and Builders
 

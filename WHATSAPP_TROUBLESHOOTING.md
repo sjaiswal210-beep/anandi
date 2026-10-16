@@ -18,10 +18,12 @@ Customer sends WhatsApp to 8007107799
 ```
 
 Key facts:
-- **Bridge** = a SHARED, multi-tenant Baileys/whatsapp-web.js container (`citymaps-wabot`).
-  It runs ~8 WhatsApp sessions, each a headless **Chromium**. Session cap is 8 (`slots: max 8`).
-  Our session id (`VPS_WHATSAPP_BIZ_ID`) is **`anandi-park`**. Session data lives in the Docker
-  volume `citymaps-wabot_wabot_sessions` → `/var/lib/docker/volumes/citymaps-wabot_wabot_sessions/_data/session-anandi-park`.
+- **Bridge** = a SHARED, multi-tenant **whatsapp-web.js** container (`citymaps-wabot`,
+  confirmed via its `package.json`: `whatsapp-web.js ^1.26.0` + puppeteer; the app
+  is a single `/app/server.js`). NOT Baileys. It runs ~8 WhatsApp sessions, each a
+  headless **Chromium**. Session cap is 8. Our session id (`VPS_WHATSAPP_BIZ_ID`)
+  is **`anandi-park`**. Session data lives in the Docker volume
+  `citymaps-wabot_wabot_sessions` → `.../session-anandi-park`.
 - **Business number:** `+91 8007107799` (env `WHATSAPP_BUSINESS_NUMBER`, default `918007107799`).
 - The bridge source is NOT in this repo (it's a separate `citymaps` project on the VPS).
 - Public status/control endpoints (no auth, usable from a browser):
@@ -147,3 +149,44 @@ find /tmp -type f -atime +1 -delete 2>/dev/null; rm -rf /tmp/snap-private-tmp/* 
 ```
 If after this the status is `connected` and a test `/vps/send` returns `{"sent":true}`, you're done.
 If it stays `authenticated`, do §2 Step 3 (reset session + re-scan QR with 8007107799).
+
+---
+
+## 6. The `@lid` real-number edit in the bridge `server.js` (RE-APPLY if the image is rebuilt)
+
+WhatsApp hides some senders behind a privacy "linked id" like `24004639338554@lid`
+instead of a phone number. Our API handles this, but to get the REAL number we
+edited the bridge's incoming-message handler so it resolves the contact and
+forwards it as `senderPn`.
+
+**This edit lives INSIDE the container (`/app/server.js`) and is LOST if the
+image is rebuilt.** Backups made during the edit: `/app/server.js.bak` (in the
+container) and `/root/server.js` (on the host).
+
+The edit (inside `onMessage`, around the `axios.post(.../whatsapp-bot/incoming)`
+call): resolve the contact and add `senderPn` to the POST body:
+```js
+let senderPn = null;
+try {
+  const contact = await msg.getContact();
+  senderPn = (contact && (contact.number || (contact.id && contact.id.user))) || null;
+} catch (e) {}
+// ...then in the axios.post body:  { from: from, message: body, senderPn: senderPn }
+```
+To re-apply non-interactively on the VPS (edit a host copy, verify, copy back):
+```bash
+docker cp citymaps-wabot-wa-bot-1:/app/server.js /root/server.js   # or use /root/server.js backup
+# (edit it: add the getContact() block + senderPn in the POST body)
+node --check /root/server.js && echo "SYNTAX OK"                    # MUST print SYNTAX OK
+docker cp /root/server.js citymaps-wabot-wa-bot-1:/app/server.js
+docker restart citymaps-wabot-wa-bot-1
+```
+Our API side (`whatsapp-bot.controller.ts` `/incoming` + `whatsapp-bot.service.ts`)
+already reads `senderPn` and backfills the lead's phone, so no API change is
+needed — only re-applying the bridge edit.
+
+> ⚠️ Known quirk: on container restart the bridge can briefly loop
+> `init Runtime.callFunctionOn timed out` / `reaping idle session ...` for the
+> OTHER tenant sessions (a stale Chromium profile lock). As long as `anandi-park`
+> reaches `connected` and `/vps/send` returns `{"sent":true}`, our bot is fine;
+> that loop is a pre-existing multi-tenant issue, not caused by our edit.

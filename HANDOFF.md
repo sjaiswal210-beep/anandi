@@ -11,7 +11,13 @@ feature status.
 **Anandi Park** — a marketing + CRM system for selling **84 residential plots**
 by **Rich-Land Developers** (partners **Yuvraj Gade & Rajan Kute**) at GAT No. 279,
 Village Bakori, Wagholi-Bakori Road, Taluka Haveli, Dist Pune.
-Contact: **+91 75584 44117**.
+Contact: **+91 80071 07799** (WhatsApp `918007107799`).
+
+> ⚠️ **The business number was changed to +91 8007107799** (the WhatsApp-ads
+> number). The old number `+91 75584 44117` is retired. It's env-driven
+> (`WHATSAPP_BUSINESS_NUMBER`), used across site, dashboard, bot, AI and ads.
+> Some older brand/flex assets below still reference the old number — regenerate
+> them if you reprint.
 
 It is a Turborepo monorepo (originally a generic "RealtyOS" CRM) that has been
 heavily customised into a single-project app for Anandi Park.
@@ -31,7 +37,7 @@ heavily customised into a single-project app for Anandi Park.
 
 | Thing | Value |
 | --- | --- |
-| Public site | https://anandipark.in → redirects to `/project` |
+| Public site | https://anandipark.in → full `/project` site; **ad clicks** (fbclid/gclid/utm/ad) → `/offer` lead form |
 | Dashboard | https://anandipark.in/dashboard (password gate: `Kalpdev@1994`) |
 | API | https://api.anandipark.in |
 | GitHub | https://github.com/sjaiswal210-beep/anandi (⚠ PUBLIC) |
@@ -164,54 +170,155 @@ clean zip with the right exclusions.
 ## 6. Deployment workflow (unchanged, important)
 
 Deployment is **laptop → GitHub → VPS pulls**. Never push files directly to the
-VPS from a corporate laptop (see `.kiro/steering/corporate-infosec.md`).
+VPS from a corporate laptop (this was an enforced rule; the
+`.kiro/steering/corporate-infosec.md` file was deleted from the working tree but
+the policy still stands — do all VPS work from a phone/home PC, not the work
+laptop).
+
+**Branch note:** local work is on `master`; the remote default branch is `main`.
+Push with `git push origin master:main`. On Windows PowerShell, git prints its
+normal progress to stderr which PowerShell shows in red as if it were an error —
+the push still succeeds. Verify with
+`git ls-remote origin refs/heads/main` (compare the SHA to your last commit).
 
 ```bash
 # On the new laptop
-git add -A && git commit -m "..." && git push
+git add <specific files> && git commit -m "..." && git push origin master:main
 
-# On the VPS (from phone/home PC — NOT a corporate laptop)
-cd /opt/anandi-park/anandi && git pull
-cd apps/api && npx nest build && pm2 restart anandi-api
-cd ../web && npx next build && pm2 restart anandi-web
+# On the VPS (from phone / home PC — NOT a corporate laptop)
+cd /opt/anandi-park/anandi && bash deploy-latest.sh
 ```
 
-The web app MUST be rebuilt (`npx next build`) after any frontend change — a
-`git pull` alone does not update the served bundle.
+`deploy-latest.sh` does the whole routine: git pull → npm install → puppeteer
+chrome → prisma generate → build shared packages → build API (clears stale
+tsconfig.tsbuildinfo first) → `next build` → `pm2 restart`. The web app MUST be
+rebuilt after any frontend change — a `git pull` alone does not update the
+served bundle (deploy-latest.sh handles this).
+
+**⚠️ Schema changes need an extra step.** This project uses `prisma db push`,
+NOT tracked migrations (there is no `prisma/migrations/` folder, and
+`deploy-latest.sh` only runs `prisma generate`). After any `schema.prisma`
+change — e.g. the document-upload `DocumentType` enum additions — run this on
+the VPS before/with the deploy, or the new columns/enum values won't exist in
+Neon and inserts will fail:
+```bash
+cd /opt/anandi-park/anandi
+npx prisma db push --schema=packages/database/prisma/schema.prisma --accept-data-loss
+```
+(Adding enum values / nullable columns is additive and safe; `--accept-data-loss`
+is just Prisma's confirmation flag.)
 
 ---
 
 ## 7. Known open items (hand these to the next agent)
 
-1. **WhatsApp bot — now LINKED to +91 8007107799 and replying.** The recurring
+1. **WhatsApp bot — LINKED to +91 8007107799 and replying.** The recurring
    "connected but no replies" outage was traced to the **VPS disk filling to ~99%**
-   (mostly `/tmp` Chromium temp junk), which starves Chromium so the bridge reaps
-   the `anandi-park` session. ⚠️ **If the bot ever goes silent again, read
-   `WHATSAPP_TROUBLESHOOTING.md`** — it has the exact root cause, step-by-step fix
-   (free disk → restart bridge → if needed reset+re-scan the anandi-park session),
-   a one-liner recovery, and the prevention crons. Keep-alive + DB-fault-tolerance
-   are deployed in code; still add the auto-cleanup cron (see that doc §3).
-2. **Neon DB password** was published in the old `deploy.sh` in the public repo
+   (mostly `/tmp` Chromium temp junk) starving Chromium so the bridge reaps the
+   `anandi-park` session. ⚠️ **If the bot ever goes silent again, read
+   `WHATSAPP_TROUBLESHOOTING.md`** — exact root cause, step-by-step fix (free disk
+   → restart bridge → if needed reset+re-scan session), one-liner recovery, and
+   prevention crons. Keep-alive cron + DB-fault-tolerance are in code; the VPS
+   auto-cleanup crons (daily 3am + ≥90% safety valve) and docker log cap were
+   applied this session.
+2. **The WhatsApp bridge is `whatsapp-web.js`, NOT Baileys**, and it is a
+   SEPARATE project living INSIDE a docker container on the VPS
+   (`citymaps-wabot-wa-bot-1`, image code at `/app/server.js`, port 8300,
+   multi-tenant: 8 sessions, ours = `anandi-park`). It is NOT in this repo. A
+   two-line edit was made to `/app/server.js` this session so it resolves the
+   real phone behind privacy-masked `@lid` senders via `msg.getContact()` and
+   forwards it as `senderPn` to our `/whatsapp-bot/incoming`. ⚠️ **That edit lives
+   inside the container and is lost if the image is rebuilt** — a backup is at
+   `/app/server.js.bak` and `/root/server.js` on the VPS. If the bridge is ever
+   rebuilt, re-apply it (see `WHATSAPP_TROUBLESHOOTING.md`). Our API side already
+   reads `senderPn` and backfills the lead's phone.
+3. **`@lid` WhatsApp leads.** WhatsApp hides some senders behind a privacy
+   `@lid` id (no phone). We handle it 3 ways: (a) bridge `senderPn` resolution
+   (above), (b) the bot asks for a callback number and we parse it from chat
+   (`extractIndianPhone`), (c) leads with no number are stored with an empty
+   `phone`, a `number-hidden` tag + `waLid` in customFields, and the dashboard
+   shows "Number hidden (WhatsApp)". See `whatsapp-bot.service.ts`.
+4. **⏳ `prisma db push` pending on the VPS.** The document-upload feature added
+   enum values (`LAYOUT_PLAN, TITLE_DOCUMENT, NA_ORDER, PRICE_LIST, SITE_PHOTOS`)
+   to `DocumentType`. Run the `db push` command in section 6 on the VPS, or
+   uploading those categories will fail with a Postgres enum error. (I could not
+   reach Neon from the dev laptop to push it.)
+5. **Google AdSense pending approval.** Script + `google-adsense-account` meta
+   tag (client `ca-pub-3038930416209198`) are in the root layout; `ads.txt`,
+   privacy/terms/about/contact pages, footer links, and sitemap are added. ⚠️
+   **Verify the `ads.txt` hash** (`apps/web/public/ads.txt` currently uses the
+   standard `f08c47fec0942fa0`) against what the AdSense dashboard shows, then
+   request review.
+6. **Neon DB password** was published in the old `deploy.sh` in the public repo
    and has NOT been rotated. Rotate it in the Neon console and update
    `DATABASE_URL` on the VPS.
-3. **Repo is public.** Consider making it private.
-4. **Blog pages** (`apps/web/src/components/site/blog-content.ts`) were written
+7. **Repo is public.** Consider making it private.
+8. **Blog pages** (`apps/web/src/components/site/blog-content.ts`) were written
    but the `/blog/[slug]` pages are not wired up yet (SEO work in progress).
-5. **Meta lead forms** show empty until a Lead Ad form is created in Ads Manager.
+9. **Meta lead forms** show empty until a Lead Ad form is created in Ads Manager.
    (Meta IS connected — page token, publish, and diagnostics all verified working.)
-6. **Google Ads** has no API integration (dev-token approval takes weeks) —
-   spend is tracked manually in the Ads & Costs dashboard.
-7. **Exposed secrets in chat history.** The Meta system-user token and Sarvam key
-   were pasted in conversation. They work; rotate them when convenient.
+10. **Google Ads** has no API integration (dev-token approval takes weeks) —
+    spend is tracked manually in the Ads & Costs dashboard.
+11. **`uploads/` is a plain VPS directory** (prod runs via PM2, not
+    docker-compose), so uploaded documents persist on disk and are served at
+    `/uploads/documents/...` by the API's static handler. Not a container volume.
+12. **AI-calling pagination bug (unfixed):** `callRecord.findMany ... skip is
+    missing` Prisma error on the ai-calling records page. Low priority.
+13. **Exposed secrets in chat history.** The Meta system-user token, Gemini key,
+    and Sarvam key were pasted in conversation. They work; rotate when convenient.
 
 See `PROJECT_STATE.md` for the full per-feature status.
+
+---
+
+## 7a. What changed in the most recent sessions (newest work)
+
+Short changelog so a new agent knows what's fresh (all pushed to `main`):
+
+- **Business number unified to +91 8007107799** across site, dashboard, bot, AI,
+  ads (env `WHATSAPP_BUSINESS_NUMBER`). Old 75584 44117 retired.
+- **WhatsApp bot restored & hardened:** connected to 8007107799, keep-alive cron,
+  DB-fault-tolerant `handleIncomingMessage`, VPS disk-cleanup crons + docker log
+  cap. Full runbook in `WHATSAPP_TROUBLESHOOTING.md`.
+- **`@lid` real-number capture:** bridge `server.js` edit (getContact → senderPn)
+  + API `senderPn` ingestion + chat-number extraction + clean dashboard display.
+- **Throttled bulk WhatsApp "drip" sender** for the ~3000 imported CSV leads
+  (`apps/api/src/modules/customer-data/broadcast-drip.service.ts`): hourly cron,
+  business-hours only, daily cap (default 60), randomized delays, auto-pause on
+  bridge error, text + photo/PDF links (bridge has no media route). Dashboard UI
+  is the **Bulk Sender** tab on the WhatsApp page
+  (`apps/web/src/app/(dashboard)/whatsapp/BulkSenderPanel.tsx`). Ban-risk: start
+  with a low cap.
+- **Document upload now works** (`/documents`): real multipart upload via Multer
+  (`documents.controller.ts`), writes to `uploads/documents/`, 25MB limit, mime
+  allowlist; frontend file picker + category modal; axios FormData Content-Type
+  fix in `lib/api.ts`. ⏳ needs the `prisma db push` (open item #4).
+- **Homepage funnel:** `/` serves the full `/project` site by default (good for
+  SEO + AdSense); only ad clicks go to `/offer`. `/offer` + popup set a
+  `anandi_lead_captured` cookie via `markLeadCaptured()`.
+- **Google AdSense scaffolding:** adsbygoogle script + `google-adsense-account`
+  meta tag in root layout, `public/ads.txt`, and `/privacy /terms /about
+  /contact` content pages (shared `legal-page.tsx`) linked from the footer +
+  sitemap. ⏳ verify ads.txt hash & request review (open item #5).
+- **Bot persona softened:** answers questions directly; does NOT push a site
+  visit on every message; may state prices but deflects loan/EMI/process;
+  Marathi-first.
+- **`.kiro/steering/corporate-infosec.md` was deleted** from the working tree
+  (shows as a pending `D` in `git status`). The policy still applies — don't SSH
+  to the VPS from a work laptop.
 
 ---
 
 ## 8. Branding + Marketing assets (all in `brand/`)
 
 **Brand:** Rich-Land Developers (partners Yuvraj Gade & Rajan Kute). Contact
-**+91 75584 44117**. Colors: slate `#0F172A`, gold `#F59E0B`, emerald `#059669`.
+**+91 80071 07799** (current). Colors: slate `#0F172A`, gold `#F59E0B`,
+emerald `#059669`.
+
+> ⚠️ Brand/flex assets below were generated with the OLD number
+> `+91 75584 44117` (the flex WhatsApp QR points at `wa.me/917558444117`).
+> If you reprint any collateral, update the number to `918007107799` and
+> regenerate (the QR is rebuilt by `scripts/replace-flex-qr.js`).
 
 - **Logo:** master `brand/richlandlogo-master.png` (also `apps/web/public/rich-land-*.svg`).
   Regenerate the full HD kit (favicons, social, transparent/white/print variants)

@@ -9,21 +9,28 @@ lives, and what's done vs pending. Written for the next agent.
 
 - Developer / company: **Rich-Land Developers** (partners **Yuvraj Gade & Rajan Kute**).
   Display as "Rich-Land Developers" with "by Yuvraj Gade & Rajan Kute" where useful.
-- Contact number: **+91 75584 44117** (WhatsApp `917558444117`).
+- Contact number: **+91 80071 07799** (WhatsApp `918007107799`) — the current
+  unified number. Old `+91 75584 44117` is retired. Env: `WHATSAPP_BUSINESS_NUMBER`.
 - Logo assets: `apps/web/public/rich-land-logo.svg` (horizontal), `rich-land-mark.svg` (icon).
 - Product is **"residential plots"** — never "NA plots".
 - **NO RERA registration** — never claim it anywhere (site, bot, ads, captions).
-- Price is **₹18 Lakh+** (not ₹15 Lakh).
+- Price is **₹18 Lakh+** (not ₹15 Lakh). Prices are NOT shown on the site/ads
+  (lead-capture first); the bot MAY state prices but must NOT explain loan/EMI/process.
 - Location: **Bakori, Wagholi, Pune East**.
 - 84 plots, 1000–4510 sq.ft.
-- WhatsApp bot persona: **Priya**, polite female, Hinglish by default (Marathi if
-  the customer writes Marathi), no greeting in every message, proactive about
-  loan/EMI without waiting for a money objection.
+- Current offer hook: **Free TVS Jupiter with every plot booking** (limited period).
+- WhatsApp bot persona: **Priya**, polite female, **Marathi-first** (Hinglish/English
+  if the customer uses it), no greeting in every message. Answers questions
+  directly and does **NOT** push a site visit on every message. Deflects loan/EMI
+  ("details thodi der mein bhej deti hoon") rather than explaining the process.
 - Dashboard is private (password `Kalpdev@1994`); `/project` is the public site.
+  Root `/` → full `/project` by default; **ad clicks** (fbclid/gclid/utm/ad) → `/offer`.
 - Admin login: `Kalpdev@outlook.com` / `Kalpdev@1234`.
 - Hardcoded workspace ID: `cmsai8kh50001rapl8ioxehxe`.
-- Brand/company: **Rich-Land Developers** (Yuvraj Gade & Rajan Kute). Contact
-  **+91 75584 44117**. Colors: slate `#0F172A`, gold `#F59E0B`, emerald `#059669`.
+- WhatsApp bridge: **whatsapp-web.js** (NOT Baileys), separate project in docker
+  container `citymaps-wabot-wa-bot-1` on the VPS (`/app/server.js`, port 8300,
+  8-session multi-tenant, ours = `anandi-park`). Not in this repo.
+- Brand colors: slate `#0F172A`, gold `#F59E0B`, emerald `#059669`.
 
 ---
 
@@ -54,16 +61,31 @@ lives, and what's done vs pending. Written for the next agent.
 ### Public website — DONE
 - Path: `apps/web/src/app/(site)/` + `apps/web/src/components/site/`.
 - Content in `site-data.ts`. Corrected pricing, sizes, connectivity, no RERA/NA.
-- Root `/` redirects to `/project`.
+- **Root `/` (`apps/web/src/app/page.tsx`):** serves the full `/project` site by
+  default (SEO + AdSense friendly). Only **ad clicks** (query params `fbclid`,
+  `gclid`, `utm_source`, `utm_campaign`, `ad`) redirect to `/offer`, preserving
+  the params. `/offer` is the lightweight lead-capture landing page; on submit it
+  sets the `anandi_lead_captured` cookie (via `markLeadCaptured()` in
+  `site-api.ts`) and routes to `/project`.
 - SEO: full metadata + OG/Twitter + JSON-LD in `(site)/layout.tsx`; `robots.txt`
   and `sitemap.xml` in `apps/web/public/`. Google Search Console verified +
   indexed (verification file `public/google7721b779ee3afbac.html`).
+- **AdSense pages — DONE (approval pending):** `adsbygoogle` script +
+  `google-adsense-account` meta (client `ca-pub-3038930416209198`) in the ROOT
+  `apps/web/src/app/layout.tsx`; `public/ads.txt`; content pages `/privacy`,
+  `/terms`, `/about`, `/contact` under `(site)` via shared
+  `components/site/legal-page.tsx`, linked from the footer and sitemap.
+  ⚠️ verify the `ads.txt` relationship hash against the AdSense dashboard, then
+  request review.
 
 ### Entry lead-capture popup — DONE
 - `apps/web/src/components/site/lead-popup.tsx`, mounted in `(site)/layout.tsx`.
-- Shows 2.5s after load, once per session, never again after a submit.
+- Shows ~1.2s after load, once per session, never again after a submit.
 - Submits to `POST /website/public/anandi-park/inquiry`.
-- Shared API/URL/phone helpers in `site-api.ts` (also used by `contact.tsx`).
+- Shared API/URL/phone helpers in `site-api.ts` (also used by `contact.tsx` and
+  `/offer`). On successful submit it calls `markLeadCaptured()` which sets both
+  the `anandi-lead-captured` localStorage flag AND the `anandi_lead_captured`
+  cookie (the cookie is readable server-side by `page.tsx`).
 - **Resilient submit (added):** `submitLead()` retries 3× with backoff, then
   queues the lead in `localStorage` (`anandi-lead-queue`) and resends via
   `flushQueuedLeads()` (called on `LeadPopup` mount) on the next page load — so a
@@ -83,12 +105,65 @@ lives, and what's done vs pending. Written for the next agent.
   `whatsapp-bot.service.ts handleIncomingMessage`), tagged `ctwa-ad` when the
   text looks like a Click-to-WhatsApp ad referral.
 
-### WhatsApp bot (Priya) — DONE
-- `apps/api/src/modules/whatsapp-bot/whatsapp-bot.service.ts`.
-- Gemini `gemini-flash-latest`, `maxOutputTokens: 2048`, persists both directions,
-  language matching, financial advisory (appreciation estimates, EMI, honest tax).
-- Delivery via a separate WhatsApp bridge on the VPS (`VPS_WHATSAPP_URL`, 8300).
-  **Session must be QR-linked for messages to actually send.**
+### WhatsApp bot (Priya) — DONE & LIVE
+- `apps/api/src/modules/whatsapp-bot/whatsapp-bot.service.ts` + `whatsapp-bot.controller.ts`.
+- Gemini `gemini-flash-latest`, persists both directions, Marathi-first language
+  matching. **Persona softened:** answers questions directly, does NOT push a
+  site visit every message, may state prices but deflects loan/EMI/process.
+- Delivery via the **whatsapp-web.js** bridge on the VPS (`VPS_WHATSAPP_URL`,
+  127.0.0.1:8300), container `citymaps-wabot-wa-bot-1`. Linked to 8007107799.
+- **Resilience added:** `whatsapp-keepalive.service.ts` pings/restarts the
+  session every 5 min; `handleIncomingMessage` is DB-fault-tolerant (every prisma
+  call `.catch`es, falls back to workspace `cmsai8kh50001rapl8ioxehxe`) so a Neon
+  blip never silences the bot.
+- **`@lid` privacy-id handling:** `normalizeWhatsAppId()` detects WhatsApp's
+  masked `@lid` senders (no real phone). Real number is recovered when the bridge
+  forwards `senderPn` (its `server.js` was edited to call `msg.getContact()`), or
+  captured from chat text via `extractIndianPhone()`, or the lead is stored with
+  empty phone + `number-hidden` tag + `waLid` and shown as "Number hidden" in the
+  dashboard.
+- **Public endpoints** (controller): `GET /whatsapp-bot/vps/status|start|health`,
+  `POST /vps/send {to,message}`, `POST /vps/logout`, `POST /whatsapp-bot/incoming
+  {from,message,senderPn?}`.
+- ⚠️ **If it goes silent, see `WHATSAPP_TROUBLESHOOTING.md`** (root cause =
+  VPS disk full starving Chromium → session reaped).
+
+### Bulk WhatsApp "drip" sender — DONE (ban-safe, throttled)
+- For the ~3000 imported CSV/Excel leads. Blasting them would get the number
+  banned, so it drips slowly.
+- API: `apps/api/src/modules/customer-data/broadcast-drip.service.ts` —
+  `@Cron(EVERY_HOUR)`, IST business-hours gate (default 10:00–19:00), hard daily
+  cap (default 60, resets per IST day), small randomized batches (default 8/hr)
+  with randomized 25–75s gaps, pre-flight bridge status check, **auto-pauses the
+  campaign on any send failure** to protect the number. Sends text + photo/PDF as
+  LINKS (the whatsapp-web.js bridge has no media-upload route). Config + per-day
+  counter live in `BroadcastCampaign.metadata`; leads are `CustomerImport` rows
+  marked `broadcastSent`.
+- Controls in `customer-data.service.ts`: `startDripCampaign`, `pause`, `resume`,
+  `getDripStatus` (progress + ETA). Endpoints: `POST /customer-data/drip/start`,
+  `/drip/:id/pause`, `/drip/:id/resume`, `GET /drip/:id/status`; CSV import at
+  `POST /customer-data/import`.
+- Dashboard: the **Bulk Sender** tab on the WhatsApp page
+  (`apps/web/src/app/(dashboard)/whatsapp/BulkSenderPanel.tsx` + a Chats/Bulk
+  toggle in `whatsapp/page.tsx`): CSV paste/upload, message + photo URL + PDF URL,
+  throttle settings, live progress/ETA, pause/resume.
+- ⚠️ Ban risk: these are cold contacts. Start with a low daily cap and raise only
+  if there are no failures. Photo/PDF must be public URLs (e.g. anandipark.in/uploads/...).
+
+### Document upload — DONE (needs `prisma db push`)
+- `/documents` dashboard page previously had a dead "Upload" button and the API
+  had no file-receiving endpoint. Both built this session.
+- API: `apps/api/src/modules/documents/documents.controller.ts` — Multer
+  `FileInterceptor('file')` with disk storage to `uploads/documents/`, 25MB
+  limit, mime allowlist (pdf/jpg/png/webp/doc/docx/xls/xlsx), returns
+  `/uploads/documents/<file>`.
+- Schema: `DocumentType` enum extended with `LAYOUT_PLAN, TITLE_DOCUMENT,
+  NA_ORDER, PRICE_LIST, SITE_PHOTOS` to match the dashboard categories.
+  ⏳ **Run `prisma db push` on the VPS** (see HANDOFF §6) or those categories error.
+- Web: `apps/web/src/app/(dashboard)/documents/page.tsx` — file picker +
+  category/name confirm modal, FormData upload. `lib/api.ts` now drops the
+  hardcoded JSON `Content-Type` for FormData bodies (multipart was being
+  corrupted otherwise — this fix helps any future upload too).
 
 ### Social content generation — DONE
 - `apps/api/src/modules/social-media/social-media.service.ts` (captions/hashtags
@@ -228,12 +303,27 @@ lives, and what's done vs pending. Written for the next agent.
    clears the token on 401.
 2. **Next.js prod build fails on lint errors** (not warnings). Empty `catch {}`
    trips `no-empty` — put a comment inside.
-3. **`git pull` doesn't update the web frontend** — you must `npx next build`.
-4. **PowerShell:** `&&` is invalid, use `;`. Paths with `(dashboard)` need quotes.
+3. **`git pull` doesn't update the web frontend** — you must `npx next build`
+   (`deploy-latest.sh` does this).
+4. **PowerShell:** `&&` is invalid, use `;`. Paths with `(dashboard)`/`(site)`
+   need quotes when passed to git/tools. **Git push on Windows:** stderr prints in
+   red and PowerShell flags it as an error, but `git push origin master:main`
+   still succeeds — verify with `git ls-remote origin refs/heads/main`. Local
+   branch is `master`, remote default is `main`.
 5. **Meta needs a Page token, not a user/system-user token directly** for
    publishing and lead forms — the services do the exchange automatically.
 6. **HyperFrames:** one root `index.html` only. Multiple root files with the same
    `data-composition-id` caused duplicate/broken audio. Node ≥22, ffmpeg required.
+7. **No tracked Prisma migrations** — this project uses `prisma db push`.
+   `deploy-latest.sh` only runs `prisma generate`, so after any `schema.prisma`
+   change you must run `npx prisma db push --schema=packages/database/prisma/schema.prisma
+   --accept-data-loss` on the VPS yourself.
+8. **API builds to a NESTED path:** `apps/api/dist/apps/api/src/main.js` (PM2 +
+   deploy scripts expect this; don't "fix" it). Clear `tsconfig.tsbuildinfo`
+   before `nest build` — stale buildinfo has caused empty compiles.
+9. **The WhatsApp bridge is whatsapp-web.js in a docker container, not in this
+   repo.** Edits to its `/app/server.js` are lost on image rebuild (backups:
+   `/app/server.js.bak`, `/root/server.js` on the VPS).
 
 ---
 
@@ -264,7 +354,13 @@ Env-heavy scripts read the root `.env`.
 | `POST /social-media/:id/publish` | publish to FB/IG |
 | `GET /social-media/publish-diagnostics` | Meta publish config (public) |
 | `GET /meta/diagnostics` | Meta lead config (public) |
-| `GET /whatsapp-bot/vps/health` / `.../status` | WhatsApp bridge state |
+| `GET /whatsapp-bot/vps/health` / `.../status` | WhatsApp bridge state (public) |
+| `POST /whatsapp-bot/vps/send` | `{to,message}` send one WhatsApp msg (public) |
+| `POST /whatsapp-bot/incoming` | `{from,message,senderPn?}` bridge → bot reply (public) |
+| `POST /customer-data/import` | `{records:[{name,phone,...}]}` CSV lead import |
+| `POST /customer-data/drip/start` | start throttled bulk sender |
+| `GET /customer-data/drip/:id/status` | drip progress + ETA |
+| `POST /documents` | multipart file upload (field `file`) |
 
 All authed endpoints need `Authorization: Bearer <token>` and
 `X-Workspace-Id: cmsai8kh50001rapl8ioxehxe`.
