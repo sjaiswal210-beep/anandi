@@ -71,7 +71,7 @@ lives, and what's done vs pending. Written for the next agent.
   and `sitemap.xml` in `apps/web/public/`. Google Search Console verified +
   indexed (verification file `public/google7721b779ee3afbac.html`).
 - **AdSense pages — DONE (approval pending):** `adsbygoogle` script +
-  `google-adsense-account` meta (client `ca-pub-3038930416209198`) in the ROOT
+  `google-adsense-account` meta (client `ca-pub-2769110615032852`) in the ROOT
   `apps/web/src/app/layout.tsx`; `public/ads.txt`; content pages `/privacy`,
   `/terms`, `/about`, `/contact` under `(site)` via shared
   `components/site/legal-page.tsx`, linked from the footer and sitemap.

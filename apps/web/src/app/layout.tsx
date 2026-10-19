@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   // Google AdSense account ownership verification meta tag (site-wide).
   other: {
-    'google-adsense-account': 'ca-pub-3038930416209198',
+    'google-adsense-account': 'ca-pub-2769110615032852',
   },
 };
 
@@ -32,7 +32,7 @@ export default function RootLayout({
         {/* Google AdSense — site-wide verification + ad serving script. */}
         <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3038930416209198"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2769110615032852"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />

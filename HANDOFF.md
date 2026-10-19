@@ -244,7 +244,7 @@ is just Prisma's confirmation flag.)
    uploading those categories will fail with a Postgres enum error. (I could not
    reach Neon from the dev laptop to push it.)
 5. **Google AdSense pending approval.** Script + `google-adsense-account` meta
-   tag (client `ca-pub-3038930416209198`) are in the root layout; `ads.txt`,
+   tag (client `ca-pub-2769110615032852`) are in the root layout; `ads.txt`,
    privacy/terms/about/contact pages, footer links, and sitemap are added. ⚠️
    **Verify the `ads.txt` hash** (`apps/web/public/ads.txt` currently uses the
    standard `f08c47fec0942fa0`) against what the AdSense dashboard shows, then
