@@ -2,11 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import axios from 'axios';
+import OpenAI from 'openai';
 
 @Injectable()
 export class WhatsAppBotService {
   private readonly logger = new Logger(WhatsAppBotService.name);
   private geminiModel: any = null;
+  private openaiClient: OpenAI | null = null;
   private readonly vpsUrl: string;
   private readonly vpsSecret: string;
   private readonly vpsBizId: string;
@@ -107,6 +109,7 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
       .get<string>('WHATSAPP_BUSINESS_NUMBER', '918007107799')
       .replace(/[^0-9]/g, '');
     this.initGemini();
+    this.initOpenAI();
   }
 
   private async initGemini() {
@@ -118,6 +121,17 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
         this.geminiModel = genAI.getGenerativeModel({ model: this.configService.get<string>('GEMINI_MODEL', 'gemini-flash-latest') });
       }
     } catch (e) { this.logger.error('Gemini init failed'); }
+  }
+
+  private initOpenAI() {
+    try {
+      const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+      if (apiKey) {
+        this.openaiClient = new OpenAI({ apiKey });
+      }
+    } catch (e) {
+      this.logger.error('OpenAI init failed', e);
+    }
   }
 
   /**
@@ -409,34 +423,90 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
 
     const isFirstMessage = chatHistory.filter((h) => h.role === 'user').length <= 1;
 
-    let reply = 'Ji, thoda rukiye — main abhi aapko details bhejti hoon. 🙂';
+    const fullPrompt =
+      this.projectContext +
+      leadNote +
+      (isFirstMessage
+        ? '\n\n(Yeh customer ka pehla message hai — ek short greeting theek hai.)'
+        : '\n\n(Yeh continuing chat hai — greeting mat karo, seedha jawab do.)');
+
+    let reply = '';
+
+    // 1. Try Gemini
     if (this.geminiModel) {
       try {
+        const geminiHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [
+          { role: 'user', parts: [{ text: fullPrompt }] },
+          { role: 'model', parts: [{ text: 'Ji bilkul, main Priya bol rahi hoon Anandi Park se. Batayiye main kaise help karoon? 🙂' }] },
+        ];
+
+        for (const item of chatHistory.slice(-16)) {
+          const role = item.role === 'user' ? 'user' : 'model';
+          const text = item.parts[0]?.text || '';
+          if (!text) continue;
+
+          const last = geminiHistory[geminiHistory.length - 1];
+          if (last && last.role === role) {
+            last.parts[0].text += '\n' + text;
+          } else {
+            geminiHistory.push({ role, parts: [{ text }] });
+          }
+        }
+
+        if (geminiHistory[geminiHistory.length - 1]?.role === 'user') {
+          geminiHistory.pop();
+        }
+
         const chat = this.geminiModel.startChat({
-          history: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text:
-                    this.projectContext +
-                    leadNote +
-                    (isFirstMessage
-                      ? '\n\n(Yeh customer ka pehla message hai — ek short greeting theek hai.)'
-                      : '\n\n(Yeh continuing chat hai — greeting mat karo, seedha jawab do.)'),
-                },
-              ],
-            },
-            { role: 'model', parts: [{ text: 'Ji bilkul, main Priya bol rahi hoon Anandi Park se. Batayiye main kaise help karoon? 🙂' }] },
-            ...chatHistory.slice(-16),
-          ],
-          // High enough to leave room for the model's thinking tokens plus a
-          // full reply — a low limit truncates the answer mid-sentence.
+          history: geminiHistory,
           generationConfig: { temperature: 0.9, maxOutputTokens: 2048 },
         });
+
         const result = await chat.sendMessage(message);
-        reply = result.response.text().trim();
-      } catch (err: any) { this.logger.error('Gemini reply failed:', err.message); }
+        const text = result.response.text().trim();
+        if (text) {
+          reply = text;
+        }
+      } catch (err: any) {
+        this.logger.warn(`Gemini reply failed: ${err?.message || err}. Trying OpenAI fallback...`);
+      }
+    }
+
+    // 2. Try OpenAI Fallback
+    if (!reply && this.openaiClient) {
+      try {
+        const openaiMessages: any[] = [{ role: 'system', content: fullPrompt }];
+
+        for (const m of history.slice(-16)) {
+          const body = (m.content as any)?.text?.body;
+          if (!body) continue;
+          openaiMessages.push({
+            role: m.direction === 'incoming' ? 'user' : 'assistant',
+            content: body,
+          });
+        }
+        openaiMessages.push({ role: 'user', content: message });
+
+        const modelName = this.configService.get<string>('OPENAI_MODEL', 'gpt-4o-mini');
+        const response = await this.openaiClient.chat.completions.create({
+          model: modelName,
+          messages: openaiMessages,
+          temperature: 0.9,
+          max_tokens: 1000,
+        });
+
+        const text = response.choices[0]?.message?.content?.trim();
+        if (text) {
+          reply = text;
+          this.logger.log(`Generated reply via OpenAI fallback (${modelName}).`);
+        }
+      } catch (err: any) {
+        this.logger.error(`OpenAI reply failed: ${err?.message || err}`);
+      }
+    }
+
+    if (!reply) {
+      reply = 'Ji, thoda rukiye — main abhi aapko details bhejti hoon. 🙂';
     }
     const intent = this.detectIntent(message);
     if (intent === 'HOT' && lead) {
