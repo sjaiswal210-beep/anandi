@@ -540,7 +540,7 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
   }
 
   private detectIntent(message: string): string {
-    const lower = message.toLowerCase();
+    const lower = (message || '').toLowerCase();
     if (['book', 'buy', 'price', 'rate', 'visit', 'interested', 'khareedna', 'dekhna', 'payment'].some(k => lower.includes(k))) return 'HOT';
     if (['not interested', 'no', 'stop', 'later', 'busy'].some(k => lower.includes(k))) return 'COLD';
     return 'WARM';
