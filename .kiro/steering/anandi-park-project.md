@@ -64,7 +64,13 @@ Turborepo: `apps/api` (NestJS+Prisma, :4000), `apps/web` (Next.js 15, :3000),
 ## Pending / watch-outs
 - ⏳ Run `prisma db push` on the VPS for the document-upload `DocumentType` enum
   additions (LAYOUT_PLAN, TITLE_DOCUMENT, NA_ORDER, PRICE_LIST, SITE_PHOTOS).
-- ⏳ Google AdSense: verify `apps/web/public/ads.txt` hash vs the AdSense
-  dashboard, then request review (script + meta tag + pages already in place).
+- Google AdSense "Low Value Content" Resolution:
+  - Re-architected `/project` to full SSR pre-rendering (135+ KB of static text HTML per GET).
+  - Built 5 high-value real estate guides (`/blog`, `/blog/[slug]`) with JSON-LD schema.
+  - Built EMI, Stamp Duty, and Plot Unit calculators under `/tools/`.
+  - Added Disclaimer page (`/disclaimer`), HTML sitemap (`/sitemap-page`), dynamic `sitemap.xml`, and `robots.txt`. Re-review can now be requested on AdSense console.
+- WhatsApp Bot Restoration:
+  - Configured `GEMINI_MODEL=gemini-flash-latest` with key `AQ.Ab8RN6IrhAOT...` on VPS.
+  - Enriched fallback response in `whatsapp-bot.service.ts`. Live AI responses verified.
 - Rotate the Neon DB password (was in the public repo's old deploy.sh) and the
   Meta/Gemini/Sarvam keys (pasted in chat history). Consider making the repo private.
