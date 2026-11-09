@@ -506,7 +506,8 @@ Yaad rakho: customer ki language match karo (Hinglish default, Marathi agar woh 
     }
 
     if (!reply) {
-      reply = 'Ji, thoda rukiye — main abhi aapko details bhejti hoon. 🙂';
+      this.logger.warn('AI reply generation failed (check GEMINI_API_KEY / OPENAI_API_KEY in .env); using default project response.');
+      reply = 'Namaste! Anandi Park (Bakori, Wagholi) madhe residential plots uplabdha aahet. Sizes 1000 se 4510 sq.ft, price starting Rs 18 Lakh. Aamhi tumhala thodyach velat call/message karun purna details deto. Contact: +91 80071 07799 🙂';
     }
     const intent = this.detectIntent(message);
     if (intent === 'HOT' && lead) {
