@@ -135,7 +135,9 @@ curl -s https://api.anandipark.in/api/v1/whatsapp-bot/vps/send -X POST \
 
 ---
 
-## 4. Secondary issues seen in the same logs (not the bot outage, but worth noting)
+## 4. Secondary issues & AI Model Configuration
+- **Gemini Model Deprecation:** Google deprecated older model names like `gemini-1.5-flash` and `gemini-2.0-flash`. The API's `.env` on the VPS MUST set `GEMINI_MODEL=gemini-flash-latest` with a valid Google AI Studio key (`GEMINI_API_KEY=AQ.Ab8RN6Irh...`).
+- **Fallback Mechanism:** If the Gemini API fails or times out, `whatsapp-bot.service.ts` auto-replies with accurate project details (plots from 1000 sq.ft @ 18 Lakhs in Bakori, Wagholi, TVS Jupiter offer, contact +91 80071 07799).
 - **Neon DB drops connections** (`Can't reach database server ... 57P01`): Neon auto-suspends
   on idle. Handled in code now (see §3.3), but a paid/always-on Neon tier would remove the blips.
 - **`callRecord.findMany ... skip is missing`**: a Prisma pagination bug on the AI-calling

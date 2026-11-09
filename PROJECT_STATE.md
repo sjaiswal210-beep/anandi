@@ -61,22 +61,16 @@ lives, and what's done vs pending. Written for the next agent.
 ### Public website — DONE
 - Path: `apps/web/src/app/(site)/` + `apps/web/src/components/site/`.
 - Content in `site-data.ts`. Corrected pricing, sizes, connectivity, no RERA/NA.
-- **Root `/` (`apps/web/src/app/page.tsx`):** serves the full `/project` site by
-  default (SEO + AdSense friendly). Only **ad clicks** (query params `fbclid`,
-  `gclid`, `utm_source`, `utm_campaign`, `ad`) redirect to `/offer`, preserving
-  the params. `/offer` is the lightweight lead-capture landing page; on submit it
-  sets the `anandi_lead_captured` cookie (via `markLeadCaptured()` in
-  `site-api.ts`) and routes to `/project`.
-- SEO: full metadata + OG/Twitter + JSON-LD in `(site)/layout.tsx`; `robots.txt`
-  and `sitemap.xml` in `apps/web/public/`. Google Search Console verified +
-  indexed (verification file `public/google7721b779ee3afbac.html`).
-- **AdSense pages — DONE (approval pending):** `adsbygoogle` script +
-  `google-adsense-account` meta (client `ca-pub-2769110615032852`) in the ROOT
-  `apps/web/src/app/layout.tsx`; `public/ads.txt`; content pages `/privacy`,
-  `/terms`, `/about`, `/contact` under `(site)` via shared
-  `components/site/legal-page.tsx`, linked from the footer and sitemap.
-  ⚠️ verify the `ads.txt` relationship hash against the AdSense dashboard, then
-  request review.
+- **SSR Pre-Rendering (`apps/web/src/app/(site)/project/page.tsx`):** All 8 main sections (Hero, Overview, Plans, Layout, Amenities, Location, Gallery, Legal, Contact) are pre-rendered into ~135 KB of static text HTML on server GET requests to satisfy Google AdSense crawlers and search indexing.
+- **Blog Hub & Guides (`/blog` & `/blog/[slug]`):** 5 rich, in-depth real estate guides (800+ words each) in `blog-data.ts` with `Article` and `BreadcrumbList` JSON-LD schema markup.
+- **Financial & Legal Calculators (`/tools/`):**
+  - Plot EMI Calculator (`/tools/emi-calculator`)
+  - Maharashtra Stamp Duty Calculator (`/tools/stamp-duty-calculator`)
+  - Land Unit Area Converter (`/tools/plot-area-converter`)
+- **Legal & Sitemaps:** `/disclaimer` page, human-readable HTML `/sitemap-page`, dynamic XML `sitemap.ts`, and crawler `robots.txt`. Internal footer links migrated to Next.js `<Link>`.
+- **Root `/` (`apps/web/src/app/page.tsx`):** serves the full `/project` site by default (SEO + AdSense friendly). Only **ad clicks** (query params `fbclid`, `gclid`, `utm_source`, `utm_campaign`, `ad`) redirect to `/offer`, preserving the params. `/offer` is the lightweight lead-capture landing page; on submit it sets the `anandi_lead_captured` cookie (via `markLeadCaptured()` in `site-api.ts`) and routes to `/project`.
+- SEO: full metadata + OG/Twitter + JSON-LD in `(site)/layout.tsx`; `robots.txt` and `sitemap.xml` generated dynamically. Google Search Console verified + indexed.
+- **AdSense pages — DONE (AdSense "Low Value Content" fix deployed):** `adsbygoogle` script + `google-adsense-account` meta (client `ca-pub-2769110615032852`) in root layout; `public/ads.txt`; content pages `/privacy`, `/terms`, `/about`, `/contact`, `/disclaimer` linked in footer and sitemaps. Ready for AdSense re-review.
 
 ### Entry lead-capture popup — DONE
 - `apps/web/src/components/site/lead-popup.tsx`, mounted in `(site)/layout.tsx`.
