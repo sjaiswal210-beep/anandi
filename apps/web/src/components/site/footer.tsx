@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Phone } from 'lucide-react';
 import { PROJECT } from './site-data';
 import { useLanguage } from './language-context';
@@ -8,11 +9,12 @@ export function SiteFooter() {
   const { t } = useLanguage();
 
   const links = [
-    { href: '#overview', label: t('nav.overview') },
-    { href: '#plans', label: t('nav.plans') },
-    { href: '#amenities', label: t('nav.amenities') },
-    { href: '#gallery', label: t('gallery.tag') },
-    { href: '#location', label: t('nav.location') },
+    { href: '/project', label: t('nav.overview') },
+    { href: '/project#plans', label: t('nav.plans') },
+    { href: '/project#amenities', label: t('nav.amenities') },
+    { href: '/project#location', label: t('nav.location') },
+    { href: '/blog', label: 'Blog & Market Guides' },
+    { href: '/tools', label: 'Plot Loan & Area Calculators' },
   ];
 
   return (
@@ -28,14 +30,14 @@ export function SiteFooter() {
             <p className="mt-4 text-xs text-slate-500 font-bold">{t('hero.badge')}</p>
           </div>
 
-          <nav aria-label="Footer">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">{t('nav.overview')}</h2>
+          <nav aria-label="Footer Navigation">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">Project &amp; Tools</h2>
             <ul className="mt-4 space-y-2.5">
               {links.map((l) => (
                 <li key={l.href}>
-                  <a href={l.href} className="text-sm text-slate-400 font-semibold transition hover:text-amber-400">
+                  <Link href={l.href} className="text-sm text-slate-400 font-semibold transition hover:text-amber-400">
                     {l.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -60,11 +62,15 @@ export function SiteFooter() {
         </div>
 
         {/* Legal / info pages — linked so they're discoverable (SEO + AdSense). */}
-        <nav aria-label="Legal" className="mt-10 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-7 text-sm font-semibold text-slate-400">
-          <a href="/about" className="hover:text-amber-400">About Us</a>
-          <a href="/contact" className="hover:text-amber-400">Contact Us</a>
-          <a href="/privacy" className="hover:text-amber-400">Privacy Policy</a>
-          <a href="/terms" className="hover:text-amber-400">Terms &amp; Conditions</a>
+        <nav aria-label="Legal Directory" className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/10 pt-7 text-sm font-semibold text-slate-400">
+          <Link href="/about" className="hover:text-amber-400">About Us</Link>
+          <Link href="/contact" className="hover:text-amber-400">Contact Us</Link>
+          <Link href="/blog" className="hover:text-amber-400">Real Estate Blog</Link>
+          <Link href="/tools" className="hover:text-amber-400">Plot Calculators</Link>
+          <Link href="/privacy" className="hover:text-amber-400">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-amber-400">Terms &amp; Conditions</Link>
+          <Link href="/disclaimer" className="hover:text-amber-400">Disclaimer</Link>
+          <Link href="/sitemap-page" className="hover:text-amber-400">HTML Sitemap</Link>
         </nav>
 
         <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between font-medium">

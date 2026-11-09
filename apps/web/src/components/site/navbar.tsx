@@ -13,12 +13,13 @@ export function SiteNavbar() {
   const { language, setLanguage, t } = useLanguage();
 
   const links = [
-    { href: '#overview', label: t('nav.overview') },
-    { href: '#plans', label: t('nav.plans') },
-    { href: '#amenities', label: t('nav.amenities') },
-    { href: '#location', label: t('nav.location') },
-    { href: '#blog', label: t('nav.insights') },
-    { href: '#contact', label: t('nav.contact') },
+    { href: '/project', label: t('nav.overview') },
+    { href: '/project#plans', label: t('nav.plans') },
+    { href: '/project#amenities', label: t('nav.amenities') },
+    { href: '/blog', label: 'Blog & Guides' },
+    { href: '/tools', label: 'Calculators' },
+    { href: '/about', label: 'About' },
+    { href: '/contact', label: t('nav.contact') },
   ];
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export function SiteNavbar() {
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4" aria-label="Main">
-        <a href="#top" className="flex items-center gap-3 text-white">
+        <a href="/project" className="flex items-center gap-3 text-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/richland-transparent.png" alt="Rich-Land Developers" className="h-10 w-10 object-contain" />
           <span className="leading-tight">
@@ -52,7 +53,7 @@ export function SiteNavbar() {
             <li key={l.href}>
               <a
                 href={l.href}
-                className="text-sm text-slate-200 transition-colors hover:text-amber-400"
+                className="text-sm text-slate-200 transition-colors hover:text-amber-400 font-medium"
               >
                 {l.label}
               </a>
@@ -100,14 +101,14 @@ export function SiteNavbar() {
 
           <a
             href={`tel:${PROJECT.phone.replace(/\s/g, '')}`}
-            className="flex items-center gap-2 text-sm text-slate-200 hover:text-white"
+            className="flex items-center gap-2 text-sm text-slate-200 hover:text-white font-medium"
           >
             <Phone className="h-4 w-4" aria-hidden="true" />
             {PROJECT.phone}
           </a>
           <a
-            href="#contact"
-            className="rounded-full bg-amber-500 px-5 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-amber-400"
+            href="/contact"
+            className="rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-400"
           >
             {t('nav.book')}
           </a>
@@ -169,7 +170,7 @@ export function SiteNavbar() {
                 <a
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"
+                  className="block rounded-lg px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5 font-medium"
                 >
                   {l.label}
                 </a>
@@ -177,9 +178,9 @@ export function SiteNavbar() {
             ))}
           </ul>
           <a
-            href="#contact"
+            href="/contact"
             onClick={() => setOpen(false)}
-            className="mt-3 block rounded-full bg-amber-500 px-5 py-3 text-center text-sm font-medium text-slate-950"
+            className="mt-3 block rounded-full bg-amber-500 px-5 py-3 text-center text-sm font-bold text-slate-950"
           >
             {t('nav.book')}
           </a>

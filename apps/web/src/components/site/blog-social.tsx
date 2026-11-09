@@ -70,7 +70,7 @@ export function SiteBlog() {
               </div>
               <div className="px-6 pb-6">
                 <a
-                  href="#contact"
+                  href={`/blog/${post.slug}`}
                   className="group/link inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400"
                 >
                   {t('blog.readmore')}

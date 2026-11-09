@@ -1,0 +1,20 @@
+export declare function generateSlug(text: string): string;
+export declare function formatCurrency(amount: number, currency?: string): string;
+export declare function formatIndianNumber(num: number): string;
+export declare function generateBookingNumber(): string;
+export declare function calculateLeadScore(factors: {
+    hasEmail: boolean;
+    hasPhone: boolean;
+    hasBudget: boolean;
+    hasTimeline: boolean;
+    hasPreferredLocation: boolean;
+    responseTime: number;
+    engagementCount: number;
+    visitCount: number;
+    source: string;
+}): number;
+export declare function formatPhoneNumber(phone: string): string;
+export declare function generateApiKey(): string;
+export declare function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T;
+export declare function delay(ms: number): Promise<void>;
+export declare function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries?: number, baseDelay?: number): Promise<T>;
